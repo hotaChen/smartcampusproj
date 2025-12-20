@@ -1,0 +1,54 @@
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    operations-sorter: alpha
+    tags-sorter: alpha
+    doc-expansion: none
+    disable-swagger-default-url: false
+    display-request-duration: true
+    filter: true
+  packages-to-scan: com.example.smartcampus.controller
+  paths-to-match: /api/**
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
+
+spring:
+  application:
+    name: smart-campus
+  profiles:
+    active: dev
+  datasource:
+    url: jdbc:h2:~/smartcampus
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+      settings:
+        web-allow-others: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+logging:
+  level:
+    com.example.smartcampus: DEBUG
+    org.springframework.security: INFO
+    org.springdoc: DEBUG
+    org.hibernate.SQL: DEBUG
