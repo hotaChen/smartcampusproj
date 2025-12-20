@@ -82,11 +82,22 @@ public class SecurityConfig {
                         // 需要认证的接口
                         .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/api/appointments/**").authenticated()
+                        .requestMatchers("/api/classrooms/**").authenticated()
+                        .requestMatchers("/api/courses/**").authenticated()
+                        .requestMatchers("/api/timetables/**")
+                        .hasAnyAuthority("ROLE_STUDENT", "ROLE_TEACHER", "ROLE_ADMIN")
+
+
+
 
                         // 基于角色的接口
+
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/teacher/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers("/api/student/**").hasAnyRole("STUDENT", "TEACHER", "ADMIN")
+
+
+
 
                         // 其他所有请求需要认证
                         .anyRequest().authenticated()
