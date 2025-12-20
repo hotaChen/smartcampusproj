@@ -17,7 +17,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,22 +32,6 @@ public class SecurityConfig {
         this.customUserDetailsService = customUserDetailsService;
         this.jwtUtil = jwtUtil;
     }
-
-
-
-    @Bean
-    public WebSecurityCustomizer webSecurityCustomizer() {
-        return web -> web.ignoring().requestMatchers(
-                "/login.html",
-                "/index.html",
-                "/favicon.ico",
-                "/css/**",
-                "/js/**",
-                "/images/**"
-        );
-    }
-
-
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -66,7 +49,6 @@ public class SecurityConfig {
                                 "/",
                                 "/health",
                                 "/index.html",
-                                "/login.html",
                                 "/favicon.ico",
                                 "/**/*.html",
                                 "/**/*.css",
@@ -100,23 +82,14 @@ public class SecurityConfig {
                         // 需要认证的接口
                         .requestMatchers("/api/users/**").authenticated()
                         .requestMatchers("/api/appointments/**").authenticated()
-                        .requestMatchers("/api/classrooms/**").authenticated()
-                        .requestMatchers("/api/courses/**").authenticated()
-                        .requestMatchers("/api/timetables/**")
-                        .hasAnyAuthority("ROLE_STUDENT", "ROLE_TEACHER", "ROLE_ADMIN")
-
-
-
 
                         // 基于角色的接口
-
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .requestMatchers("/api/teacher/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers("/api/student/**").hasAnyRole("STUDENT", "TEACHER", "ADMIN")
 
                         // 其他所有请求需要认证
-                        .requestMatchers("/api/**").authenticated()
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated()
                 )
                 // 添加JWT过滤器
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

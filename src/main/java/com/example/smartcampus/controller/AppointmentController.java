@@ -1,18 +1,12 @@
 package com.example.smartcampus.controller;
 
 import com.example.smartcampus.entity.Appointment;
-import com.example.smartcampus.security.CustomUserDetails;
 import com.example.smartcampus.service.AppointmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
-import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @RestController
@@ -26,78 +20,41 @@ public class AppointmentController {
         this.appointmentService = appointmentService;
     }
 
-    /**
-     * 学生创建预约
-     */
     @PostMapping
-    @PreAuthorize("hasRole('STUDENT')")
-    public ResponseEntity<?> createAppointment(@RequestParam String serviceType,
-                                               @RequestParam String appointmentTime,
-                                               @AuthenticationPrincipal CustomUserDetails user) {
-        try {
-            LocalDateTime time = LocalDateTime.parse(appointmentTime); // 格式错误会抛 DateTimeParseException
-            Appointment appt = appointmentService.createAppointment(user.getUserId(), time, serviceType);
-            return ResponseEntity.ok(appt);
-        } catch (DateTimeParseException e) {
-            return ResponseEntity.badRequest().body("时间格式错误，格式应为: yyyy-MM-ddTHH:mm");
-        } catch (RuntimeException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("创建预约失败：" + e.getMessage());
-        }
-    }
-
-
-    /**
-     * 学生查询自己的预约
-     */
-    @GetMapping("/mine")
-    @PreAuthorize("hasRole('STUDENT')")
-    @Operation(summary = "查询我的预约", description = "学生查询自己的预约记录")
-    public List<Appointment> getMyAppointments(
-            @AuthenticationPrincipal CustomUserDetails userDetails
+    @Operation(summary = "创建预约", description = "学生创建新的服务预约")
+    public Appointment createAppointment(
+            @RequestParam Long studentId,
+            @RequestParam String serviceType,
+            @RequestParam String appointmentTime
     ) {
-        return appointmentService.getAppointmentsByStudent(userDetails.getUserId());
+        return appointmentService.createAppointment(
+                studentId,
+                LocalDateTime.parse(appointmentTime),
+                serviceType
+        );
     }
 
-    /**
-     * 学生取消自己的预约
-     */
-    @PutMapping("/{id}/cancel")
-    @PreAuthorize("hasRole('STUDENT')")
-    @Operation(summary = "取消预约", description = "学生取消自己的预约")
-    public Appointment cancel(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @PathVariable Long id
-    ) {
-        return appointmentService.cancelAppointment(id, userDetails.getUserId());
+    @GetMapping("/student/{studentId}")
+    @Operation(summary = "查询学生预约", description = "查询指定学生的所有预约记录")
+    public List<Appointment> getAppointments(@PathVariable Long studentId) {
+        return appointmentService.getAppointmentsByStudent(studentId);
     }
 
-    /**
-     * 管理员查询所有预约
-     */
-    @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
-    @Operation(summary = "查询所有预约", description = "管理员查询所有预约记录")
-    public List<Appointment> getAllAppointments() {
-        return appointmentService.getAllAppointments();
-    }
-
-    /**
-     * 管理员审批预约
-     */
     @PutMapping("/{id}/approve")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "审批预约", description = "管理员审批待处理的预约")
     public Appointment approve(@PathVariable Long id) {
         return appointmentService.approveAppointment(id);
     }
 
-    /**
-     * 管理员完成预约
-     */
     @PutMapping("/{id}/complete")
-    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "完成预约", description = "管理员标记预约为已完成")
     public Appointment complete(@PathVariable Long id) {
         return appointmentService.completeAppointment(id);
+    }
+
+    @PutMapping("/{id}/cancel")
+    @Operation(summary = "取消预约", description = "学生取消自己的预约")
+    public Appointment cancel(@PathVariable Long id) {
+        return appointmentService.cancelAppointment(id);
     }
 }

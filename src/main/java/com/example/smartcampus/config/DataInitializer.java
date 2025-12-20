@@ -71,23 +71,6 @@ public class DataInitializer implements CommandLineRunner {
                     new Permission("编辑课程", "course:update", "编辑课程信息", "课程管理"),
                     new Permission("删除课程", "course:delete", "删除课程", "课程管理"),
 
-                    //选课权限
-                    new Permission("选择课程", "courseselection:create", "选择课程", "选课管理"),
-                    new Permission("查看所选课程", "courseselection:read", "查看所选课程", "选课管理"),
-                    new Permission("取消课程", "courseselection:delete", "取消所选课程", "选课管理"),
-
-                    //课程大纲相关权限
-                    new Permission("创建课程大纲", "syllabus:create", "新建课程大纲", "课程大纲管理"),
-                    new Permission("查看大纲", "syllabus:read", "查看所选课程大纲", "课程大纲管理"),
-                    new Permission("删除大纲", "syllabus:delete", "删除所选课程大纲", "课程大纲管理"),
-
-
-                    //课程表权限
-                    new Permission("查看课程时间表", "timetable:read", "查看课程对应时间表信息", "课程表管理"),
-                    new Permission("创建课程表", "timetable:create", "创建新课程时间表", "课程表管理"),
-                    new Permission("编辑课程表", "timetable:update", "编辑课程表信息", "课程表管理"),
-                    new Permission("删除课程表", "timetable:delete", "删除课程表", "课程表管理"),
-
                     // 预约管理权限
                     new Permission("查看预约", "appointment:read", "查看预约信息", "预约管理"),
                     new Permission("创建预约", "appointment:create", "创建新预约", "预约管理"),
@@ -98,24 +81,11 @@ public class DataInitializer implements CommandLineRunner {
                     new Permission("查看成绩", "grade:read", "查看成绩信息", "成绩管理"),
                     new Permission("录入成绩", "grade:create", "录入成绩", "成绩管理"),
                     new Permission("修改成绩", "grade:update", "修改成绩", "成绩管理"),
-                    new Permission("生成成绩单", "grade:report", "生成学生成绩单", "成绩管理"),
-
-                    // 补考管理权限
-                    new Permission("查看补考", "makeup:read", "查看补考信息", "补考管理"),
-                    new Permission("申请补考", "makeup:apply", "申请补考", "补考管理"),
-                    new Permission("审批补考", "makeup:approve", "审批补考申请", "补考管理"),
-                    new Permission("录入补考成绩", "makeup:grade", "录入补考成绩", "补考管理"),
-                    new Permission("删除补考", "makeup:delete", "删除补考记录", "补考管理"),
 
                     // 系统管理权限
                     new Permission("系统设置", "system:config", "系统配置", "系统管理"),
                     new Permission("数据备份", "system:backup", "数据备份恢复", "系统管理"),
-                    new Permission("日志查看", "system:log", "查看系统日志", "系统管理"),
-
-                    //教师查看课表权限
-                    new Permission("教师查看课程表", "teachertimetable:read", "查看教师课程表", "教师课程表管理"),
-                    //学生查看课表权限
-                    new Permission("学生查看课程表", "studenttimetable:read", "查看学生课程表", "学生课程表管理")
+                    new Permission("日志查看", "system:log", "查看系统日志", "系统管理")
             );
 
             permissionRepository.saveAll(permissions);
@@ -138,12 +108,11 @@ public class DataInitializer implements CommandLineRunner {
             adminRole.setPermissions(allPermissions);
             roleRepository.save(adminRole);
 
-            // 教师角色 - 拥有课程、预约、成绩、补考相关权限
+            // 教师角色 - 拥有课程、预约、成绩相关权限
             List<Permission> teacherPermissions = allPermissions.stream()
                     .filter(p -> p.getModule().equals("课程管理") ||
                             p.getModule().equals("预约管理") ||
                             p.getModule().equals("成绩管理") ||
-                            p.getModule().equals("补考管理") ||
                             p.getCode().equals("user:read"))
                     .toList();
 
@@ -151,15 +120,12 @@ public class DataInitializer implements CommandLineRunner {
             teacherRole.setPermissions(teacherPermissions);
             roleRepository.save(teacherRole);
 
-            // 学生角色 - 只有查看权限、生成成绩单权限和申请补考权限
+            // 学生角色 - 只有查看权限
             List<Permission> studentPermissions = allPermissions.stream()
                     .filter(p -> p.getCode().equals("user:read") ||
                             p.getCode().equals("course:read") ||
                             p.getCode().equals("appointment:read") ||
-                            p.getCode().equals("grade:read") ||
-                            p.getCode().equals("grade:report") ||
-                            p.getCode().equals("makeup:read") ||
-                            p.getCode().equals("makeup:apply"))
+                            p.getCode().equals("grade:read"))
                     .toList();
 
             Role studentRole = new Role("ROLE_STUDENT", "学生");
