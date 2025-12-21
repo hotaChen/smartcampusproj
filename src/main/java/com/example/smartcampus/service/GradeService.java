@@ -1,6 +1,7 @@
 package com.example.smartcampus.service;
 
 import com.example.smartcampus.dto.GradeEntryRequest;
+import com.example.smartcampus.dto.GradeReportDTO;
 import com.example.smartcampus.entity.Grade;
 
 import java.util.List;
@@ -94,4 +95,12 @@ public interface GradeService {
      * @return 平均分
      */
     Float calculateAverageScoreByCourseAndSemester(String courseCode, String semester);
+    
+    /**
+     * 生成学生成绩单
+     * @param studentId 学生ID
+     * @param semester 学期（可选，如果为空则生成所有学期的成绩单）
+     * @return 成绩单数据
+     */
+    GradeReportDTO generateGradeReport(Long studentId, String semester);
 }
