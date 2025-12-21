@@ -25,9 +25,15 @@ public class AuthController {
 
     @PostMapping("/login")
     @Operation(summary = "用户登录", description = "用户登录接口，返回JWT Token")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {
-        LoginResponse response = authService.login(loginRequest);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+        try {
+            LoginResponse response = authService.login(loginRequest);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity
+                    .status(401)
+                    .body(e.getMessage());
+        }
     }
 
     @PostMapping("/register")
