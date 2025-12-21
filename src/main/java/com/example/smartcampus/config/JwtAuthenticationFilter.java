@@ -21,14 +21,41 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtUtil jwtUtil;
     private final CustomUserDetailsService customUserDetailsService;
 
+
+
     public JwtAuthenticationFilter(JwtUtil jwtUtil, CustomUserDetailsService customUserDetailsService) {
         this.jwtUtil = jwtUtil;
         this.customUserDetailsService = customUserDetailsService;
     }
 
     @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        String path = request.getServletPath();
+
+        // 只拦截 API
+        return !path.startsWith("/api/");
+    }
+
+    @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
+
+        String uri = request.getRequestURI();
+
+        //  放行静态资源 & 登录
+        if (
+                uri.startsWith("/login.html") ||
+                        uri.endsWith(".html") ||
+                        uri.endsWith(".css") ||
+                        uri.endsWith(".js") ||
+                        uri.endsWith(".png") ||
+                        uri.endsWith(".jpg") ||
+                        uri.endsWith(".gif") ||
+                        uri.startsWith("/api/auth/")
+        ) {
+            chain.doFilter(request, response);
+            return;
+        }
 
         final String authorizationHeader = request.getHeader("Authorization");
         System.out.println("=== JWT过滤器开始 ===");

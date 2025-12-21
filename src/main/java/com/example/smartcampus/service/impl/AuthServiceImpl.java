@@ -74,7 +74,7 @@ public class AuthServiceImpl implements AuthService {
             );
 
         } catch (Exception e) {
-            return new LoginResponse("登录失败: " + e.getMessage());
+            throw new RuntimeException("用户名或密码错误");
         }
     }
 

@@ -17,6 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 
 import java.util.Arrays;
 import java.util.List;
@@ -32,6 +33,22 @@ public class SecurityConfig {
         this.customUserDetailsService = customUserDetailsService;
         this.jwtUtil = jwtUtil;
     }
+
+
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.ignoring().requestMatchers(
+                "/login.html",
+                "/index.html",
+                "/favicon.ico",
+                "/css/**",
+                "/js/**",
+                "/images/**"
+        );
+    }
+
+
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -49,6 +66,7 @@ public class SecurityConfig {
                                 "/",
                                 "/health",
                                 "/index.html",
+                                "/login.html",
                                 "/favicon.ico",
                                 "/**/*.html",
                                 "/**/*.css",
@@ -96,11 +114,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/teacher/**").hasAnyRole("TEACHER", "ADMIN")
                         .requestMatchers("/api/student/**").hasAnyRole("STUDENT", "TEACHER", "ADMIN")
 
-
-
-
                         // 其他所有请求需要认证
-                        .anyRequest().authenticated()
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().permitAll()
                 )
                 // 添加JWT过滤器
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
