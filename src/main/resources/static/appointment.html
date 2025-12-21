@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>预约模块</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .appointment-section { margin-top: 20px; padding: 15px; border: 1px solid #ccc; min-width: 300px; }
+        button { margin: 3px; padding: 3px 8px; }
+        ul { padding-left: 20px; }
+    </style>
+</head>
+<body>
+<h1>预约模块</h1>
+<button onclick="goBack()">返回首页</button>
+
+<div class="appointment-section" id="appointment-section">
+    <p>正在加载功能...</p>
+</div>
+
+<script>
+    const token = localStorage.getItem('token');
+
+    function goBack() {
+        window.location.href = 'index.html';
+    }
+
+    if (!token) {
+        document.getElementById('appointment-section').innerHTML = '<p style="color:red;">未检测到登录信息，请重新登录</p>';
+    } else {
+        fetch(`/api/auth/user-info?token=${token}`)
+            .then(resp => resp.json())
+            .then(user => {
+                const section = document.getElementById('appointment-section');
+                let html = '';
+                if (user.userType === 'STUDENT') {
+                    html = `
+                    <button onclick="createAppointment()">创建预约</button>
+                    <button onclick="viewMyAppointments()">查看我的预约</button>
+                    <div id="student-appointments"></div>
+                `;
+                } else if (user.userType === 'ADMIN') {
+                    html = `
+                    <button onclick="viewAllAppointments()">查看所有预约</button>
+                    <div id="admin-appointments"></div>
+                `;
+                } else {
+                    html = '<p>无预约权限</p>';
+                }
+                section.innerHTML = html;
+            });
+    }
+
+    // ---------- 学生功能 ----------
+    function createAppointment() {
+        const serviceType = prompt('请输入预约服务类型:');
+        const appointmentTime = prompt('请输入预约时间 (格式: 2025-12-21T10:00):');
+        fetch('/api/appointments', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Authorization': 'Bearer ' + token },
+            body: `serviceType=${encodeURIComponent(serviceType)}&appointmentTime=${encodeURIComponent(appointmentTime)}`
+        })
+            .then(resp => resp.json())
+            .then(data => { alert('预约成功！ID: ' + data.id); viewMyAppointments(); });
+    }
+
+    function viewMyAppointments() {
+        fetch('/api/appointments/mine', { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(resp => resp.json())
+            .then(list => {
+                const container = document.getElementById('student-appointments');
+                if (!list.length) { container.innerHTML = '<p>暂无预约记录</p>'; return; }
+                container.innerHTML = '<ul>' + list.map(a =>
+                    `<li>${a.serviceType} - ${a.appointmentTime} - 状态: ${a.status}
+            <button onclick="cancelAppointment(${a.id})">取消</button></li>`
+                ).join('') + '</ul>';
+            });
+    }
+
+    function cancelAppointment(id) {
+        fetch(`/api/appointments/${id}/cancel`, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token } })
+            .then(resp => resp.json())
+            .then(() => { alert('已取消预约'); viewMyAppointments(); });
+    }
+
+    // ---------- 管理员功能 ----------
+    function viewAllAppointments() {
+        fetch('/api/appointments', { headers: { 'Authorization': 'Bearer ' + token } })
+            .then(resp => resp.json())
+            .then(list => {
+                const container = document.getElementById('admin-appointments');
+                if (!list.length) {
+                    container.innerHTML = '<p>暂无预约记录</p>';
+                    return;
+                }
+
+                container.innerHTML = '<ul>' + list.map(a => {
+                    let btns = '';
+                    if(a.status === 'PENDING') btns += `<button onclick="approveAppointment(${a.id})">审批</button>`;
+                    if(a.status !== 'COMPLETED') btns += `<button onclick="completeAppointment(${a.id})">完成</button>`;
+
+                    // 安全判断 student 是否存在
+                    const studentName = a.student ? a.student.realName : '-';
+                    const studentNo = a.student ? a.student.studentId : '-';
+
+                    return `<li>${a.serviceType} - ${a.appointmentTime} - 学生姓名: ${studentName} - 学号: ${studentNo} - 状态: ${a.status} ${btns}</li>`;
+                }).join('') + '</ul>';
+            });
+    }
+
+
+    function approveAppointment(id) {
+        fetch(`/api/appointments/${id}/approve`, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token } })
+            .then(resp => resp.json())
+            .then(() => { alert('预约已审批'); viewAllAppointments(); });
+    }
+
+    function completeAppointment(id) {
+        fetch(`/api/appointments/${id}/complete`, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token } })
+            .then(resp => resp.json())
+            .then(() => { alert('预约已完成'); viewAllAppointments(); });
+    }
+</script>
+</body>
+</html>

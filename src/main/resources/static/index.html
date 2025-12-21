@@ -4,23 +4,11 @@
     <meta charset="UTF-8">
     <title>首页</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-        .user-info {
-            margin-top: 20px;
-            padding: 15px;
-            border: 1px solid #ccc;
-            display: inline-block;
-            min-width: 300px;
-        }
-        h2 {
-            margin-top: 0;
-        }
-        p {
-            margin: 5px 0;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .user-info { margin-top: 20px; padding: 15px; border: 1px solid #ccc; min-width: 300px; }
+        h2 { margin-top: 0; }
+        p { margin: 5px 0; }
+        button { margin-top: 10px; padding: 5px 10px; }
     </style>
 </head>
 <body>
@@ -32,16 +20,13 @@
 </div>
 
 <script>
-    const token = localStorage.getItem('token'); // 登录后存储的 JWT
+    const token = localStorage.getItem('token'); // 登录后存储 JWT
 
     if (!token) {
         document.getElementById('user-info').innerHTML = '<p style="color:red;">未检测到登录信息，请重新登录</p>';
     } else {
         fetch(`/api/auth/user-info?token=${token}`)
-            .then(response => {
-                if (!response.ok) throw new Error('获取用户信息失败');
-                return response.json();
-            })
+            .then(resp => resp.json())
             .then(user => {
                 const div = document.getElementById('user-info');
                 let html = `<h2>用户信息</h2>
@@ -51,7 +36,6 @@
                         <p><strong>电话：</strong>${user.phone || '-'}</p>
                         <p><strong>身份：</strong>${user.userType}</p>`;
 
-                // 根据用户类型展示不同字段
                 if (user.userType === 'STUDENT') {
                     html += `<hr>
                          <p><strong>学号：</strong>${user.studentId || '-'}</p>
@@ -64,15 +48,21 @@
                          <p><strong>工号：</strong>${user.teacherId || '-'}</p>
                          <p><strong>职称：</strong>${user.title || '-'}</p>`;
                 } else if (user.userType === 'ADMIN') {
-                    html += `<hr>
-                         <p>管理员用户，无额外信息</p>`;
+                    html += `<hr><p>管理员用户，无额外信息</p>`;
                 }
+
+                // 添加跳转按钮
+                html += `<button onclick="goToAppointment()">进入预约模块</button>`;
 
                 div.innerHTML = html;
             })
-            .catch(error => {
-                document.getElementById('user-info').innerHTML = `<p style="color:red;">${error.message}</p>`;
+            .catch(err => {
+                document.getElementById('user-info').innerHTML = `<p style="color:red;">${err.message}</p>`;
             });
+    }
+
+    function goToAppointment() {
+        window.location.href = 'appointment.html';
     }
 </script>
 </body>
