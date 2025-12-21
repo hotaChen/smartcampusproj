@@ -1,6 +1,7 @@
 package com.example.smartcampus.controller;
 
 import com.example.smartcampus.dto.GradeEntryRequest;
+import com.example.smartcampus.dto.GradeReportDTO;
 import com.example.smartcampus.entity.Grade;
 import com.example.smartcampus.entity.User;
 import com.example.smartcampus.service.GradeService;
@@ -237,6 +238,45 @@ public class GradeController {
         try {
             Float averageScore = gradeService.calculateAverageScoreByCourseAndSemester(courseCode, semester);
             return ResponseEntity.ok(averageScore);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * 生成学生成绩单
+     */
+    @GetMapping("/report/{studentId}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN') or hasRole('STUDENT')")
+    @Operation(summary = "生成学生成绩单", description = "生成学生的成绩单，包含成绩统计信息")
+    public ResponseEntity<?> generateGradeReport(@PathVariable Long studentId,
+                                                 @RequestParam(required = false) String semester) {
+        try {
+            User currentUser = getCurrentUser();
+            
+            // 学生只能查看自己的成绩单
+            if ("STUDENT".equals(currentUser.getUserType()) && !currentUser.getId().equals(studentId)) {
+                return ResponseEntity.status(403).body("无权限查看其他学生的成绩单");
+            }
+            
+            GradeReportDTO report = gradeService.generateGradeReport(studentId, semester);
+            return ResponseEntity.ok(report);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * 生成当前登录学生的成绩单
+     */
+    @GetMapping("/report/my")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
+    @Operation(summary = "生成我的成绩单", description = "生成当前登录学生的成绩单")
+    public ResponseEntity<?> generateMyGradeReport(@RequestParam(required = false) String semester) {
+        try {
+            User currentUser = getCurrentUser();
+            GradeReportDTO report = gradeService.generateGradeReport(currentUser.getId(), semester);
+            return ResponseEntity.ok(report);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

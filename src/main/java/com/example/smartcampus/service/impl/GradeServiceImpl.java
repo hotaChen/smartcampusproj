@@ -1,6 +1,7 @@
 package com.example.smartcampus.service.impl;
 
 import com.example.smartcampus.dto.GradeEntryRequest;
+import com.example.smartcampus.dto.GradeReportDTO;
 import com.example.smartcampus.entity.Grade;
 import com.example.smartcampus.entity.User;
 import com.example.smartcampus.repository.GradeRepository;
@@ -172,5 +173,86 @@ public class GradeServiceImpl implements GradeService {
     public Float calculateAverageScoreByCourseAndSemester(String courseCode, String semester) {
         Float avgScore = gradeRepository.calculateAverageScoreByCourseAndSemester(courseCode, semester);
         return avgScore != null ? avgScore : 0.0f;
+    }
+    
+    @Override
+    public GradeReportDTO generateGradeReport(Long studentId, String semester) {
+        // 获取学生信息
+        User student = userRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("学生不存在"));
+        
+        // 获取成绩列表
+        List<Grade> grades;
+        if (semester != null && !semester.isEmpty()) {
+            grades = gradeRepository.findByStudentIdAndSemester(studentId, semester);
+        } else {
+            grades = gradeRepository.findByStudentId(studentId);
+        }
+        
+        // 创建成绩单DTO
+        GradeReportDTO report = new GradeReportDTO();
+        report.setStudentId(studentId);
+        report.setStudentName(student.getRealName());
+        report.setStudentIdNumber(student.getStudentId());
+        report.setDepartment(student.getDepartment());
+        report.setMajor(student.getMajor());
+        report.setClassName(student.getClassName());
+        report.setGrade(student.getGrade());
+        report.setSemester(semester);
+        report.setGenerateTime(LocalDateTime.now());
+        
+        // 转换成绩为DTO并计算统计信息
+        List<GradeReportDTO.CourseGradeDTO> courseGrades = new ArrayList<>();
+        Integer totalCourses = 0;
+        Float totalCredits = 0.0f;
+        Float totalScore = 0.0f;
+        Float totalGPA = 0.0f;
+        Integer passedCourses = 0;
+        Integer failedCourses = 0;
+        
+        for (Grade grade : grades) {
+            GradeReportDTO.CourseGradeDTO courseGrade = new GradeReportDTO.CourseGradeDTO();
+            courseGrade.setCourseCode(grade.getCourseCode());
+            courseGrade.setCourseName(grade.getCourseName());
+            courseGrade.setCredit(grade.getCredit());
+            courseGrade.setExamType(grade.getExamType());
+            courseGrade.setScore(grade.getScore());
+            courseGrade.setGradeLevel(grade.getGradeLevel());
+            courseGrade.setGpa(grade.getGrade());
+            courseGrade.setRemark(grade.getRemark());
+            
+            // 判断是否通过
+            boolean passed = grade.getScore() >= 60.0f;
+            courseGrade.setStatus(passed ? "通过" : "不通过");
+            
+            courseGrades.add(courseGrade);
+            
+            // 累计统计信息
+            totalCourses++;
+            if (grade.getCredit() != null) {
+                totalCredits += grade.getCredit();
+            }
+            totalScore += grade.getScore();
+            if (grade.getGrade() != null) {
+                totalGPA += grade.getGrade();
+            }
+            if (passed) {
+                passedCourses++;
+            } else {
+                failedCourses++;
+            }
+        }
+        
+        // 设置统计信息
+        report.setCourseGrades(courseGrades);
+        report.setTotalCourses(totalCourses);
+        report.setTotalCredits(totalCredits);
+        report.setAverageScore(totalCourses > 0 ? totalScore / totalCourses : 0.0f);
+        report.setAverageGPA(totalCourses > 0 ? totalGPA / totalCourses : 0.0f);
+        report.setPassedCourses(passedCourses);
+        report.setFailedCourses(failedCourses);
+        report.setPassRate(totalCourses > 0 ? (float) passedCourses / totalCourses * 100 : 0.0f);
+        
+        return report;
     }
 }
