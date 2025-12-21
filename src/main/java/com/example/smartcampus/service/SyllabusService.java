@@ -7,4 +7,6 @@ public interface SyllabusService {
     Syllabus createOrUpdate(Long courseId, String content);
 
     Syllabus getByCourse(Long courseId);
+
+    void deleteByCourseId(Long courseId);
 }

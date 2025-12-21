@@ -1,10 +1,13 @@
 package com.example.smartcampus.controller;
 
 import com.example.smartcampus.dto.TimetableDTO;
+import com.example.smartcampus.entity.Course;
 import com.example.smartcampus.entity.Timetable;
+import com.example.smartcampus.security.CustomUserDetails;
 import com.example.smartcampus.service.TimetableService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.DayOfWeek;
@@ -41,11 +44,37 @@ public class TimetableController {
         );
     }
 
+    /** 修改排课（管理员 / 教务） */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Timetable update(
+            @PathVariable Long id,
+            @RequestParam Long classroomId,
+            @RequestParam DayOfWeek dayOfWeek,
+            @RequestParam String startTime,
+            @RequestParam String endTime
+    ) {
+        return service.updateTimetable(
+                id,
+                classroomId,
+                dayOfWeek,
+                LocalTime.parse(startTime),
+                LocalTime.parse(endTime)
+        );
+    }
+
+    /** 删除排课（管理员 / 教务） */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public void delete(@PathVariable Long id) {
+        service.deleteTimetable(id);
+    }
+
     /** 查看课程课表 */
     @GetMapping("/course/{courseId}")
     public List<TimetableDTO> courseTimetable(@PathVariable Long courseId) {
         return service.getCourseTimetable(courseId);
     }
-
 }
+
 
