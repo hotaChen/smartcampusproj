@@ -93,6 +93,37 @@ public class TimetableServiceImpl implements TimetableService {
                 })
                 .toList();
     }
+    @Override
+    public Timetable updateTimetable(
+            Long id,
+            Long classroomId,
+            DayOfWeek dayOfWeek,
+            LocalTime startTime,
+            LocalTime endTime
+    ) {
+        Timetable t = timetableRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("课表不存在"));
+
+        Classroom classroom = classroomRepo.findById(classroomId)
+                .orElseThrow(() -> new RuntimeException("教室不存在"));
+
+        t.setClassroom(classroom);
+        t.setDayOfWeek(dayOfWeek);
+        t.setStartTime(startTime);
+        t.setEndTime(endTime);
+
+        return timetableRepo.save(t);
+    }
+
+
+    @Override
+    public void deleteTimetable(Long id) {
+        if (!timetableRepo.existsById(id)) {
+            throw new RuntimeException("课表不存在");
+        }
+        timetableRepo.deleteById(id);
+    }
+
 
 
 

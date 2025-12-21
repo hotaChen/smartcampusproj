@@ -71,6 +71,23 @@ public class DataInitializer implements CommandLineRunner {
                     new Permission("编辑课程", "course:update", "编辑课程信息", "课程管理"),
                     new Permission("删除课程", "course:delete", "删除课程", "课程管理"),
 
+                    //选课权限
+                    new Permission("选择课程", "courseselection:create", "选择课程", "选课管理"),
+                    new Permission("查看所选课程", "courseselection:read", "查看所选课程", "选课管理"),
+                    new Permission("取消课程", "courseselection:delete", "取消所选课程", "选课管理"),
+
+                    //课程大纲相关权限
+                    new Permission("创建课程大纲", "syllabus:create", "新建课程大纲", "课程大纲管理"),
+                    new Permission("查看大纲", "syllabus:read", "查看所选课程大纲", "课程大纲管理"),
+                    new Permission("删除大纲", "syllabus:delete", "删除所选课程大纲", "课程大纲管理"),
+
+
+                    //课程表权限
+                    new Permission("查看课程时间表", "timetable:read", "查看课程对应时间表信息", "课程表管理"),
+                    new Permission("创建课程表", "timetable:create", "创建新课程时间表", "课程表管理"),
+                    new Permission("编辑课程表", "timetable:update", "编辑课程表信息", "课程表管理"),
+                    new Permission("删除课程表", "timetable:delete", "删除课程表", "课程表管理"),
+
                     // 预约管理权限
                     new Permission("查看预约", "appointment:read", "查看预约信息", "预约管理"),
                     new Permission("创建预约", "appointment:create", "创建新预约", "预约管理"),
@@ -85,7 +102,12 @@ public class DataInitializer implements CommandLineRunner {
                     // 系统管理权限
                     new Permission("系统设置", "system:config", "系统配置", "系统管理"),
                     new Permission("数据备份", "system:backup", "数据备份恢复", "系统管理"),
-                    new Permission("日志查看", "system:log", "查看系统日志", "系统管理")
+                    new Permission("日志查看", "system:log", "查看系统日志", "系统管理"),
+
+                    //教师查看课表权限
+                    new Permission("教师查看课程表", "teachertimetable:read", "查看教师课程表", "教师课程表管理"),
+                    //学生查看课表权限
+                    new Permission("学生查看课程表", "studenttimetable:read", "查看学生课程表", "学生课程表管理")
             );
 
             permissionRepository.saveAll(permissions);
