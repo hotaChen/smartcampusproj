@@ -5,6 +5,12 @@
 2. [数据库设计](#数据库设计)
 3. [系统架构](#系统架构)
 4. [功能模块](#功能模块)
+   - [用户认证模块](#用户认证模块)
+   - [成绩管理模块](#成绩管理模块)
+   - [课程管理模块](#课程管理模块)
+   - [预约管理模块](#预约管理模块)
+   - [成绩单生成模块](#成绩单生成模块)
+   - [补考管理模块](#补考管理模块)
 5. [配置说明](#配置说明)
 6. [API文档与测试](#api文档与测试)
 7. [部署指南](#部署指南)
@@ -414,6 +420,94 @@ flowchart TD
     M --> E
 ```
 
+### 成绩单生成模块
+
+#### 成绩单生成序列图
+
+```mermaid
+sequenceDiagram
+    participant S as 学生/教师/管理员
+    participant C as GradeController
+    participant G as GradeService
+    participant R as GradeRepository
+    participant DB as 数据库
+
+    S->>C: GET /api/grades/report/{studentId}
+    C->>G: 请求生成成绩单
+    G->>R: 查询学生成绩
+    R->>DB: SELECT * FROM grades WHERE student_id = ?
+    DB-->>R: 返回成绩数据
+    R-->>G: 返回成绩列表
+    G->>G: 计算GPA、学分统计
+    G->>G: 生成成绩单数据结构
+    G-->>C: 返回成绩单数据
+    C-->>S: 返回成绩单响应
+```
+
+### 补考管理模块
+
+#### 补考申请流程图
+
+```mermaid
+flowchart TD
+    A[开始] --> B[学生登录系统]
+    B --> C[选择补考申请]
+    C --> D[选择原成绩记录]
+    D --> E[填写补考申请信息]
+    E --> F[系统验证申请信息]
+    F --> G{信息有效?}
+    G -->|是| H[提交补考申请]
+    H --> I[更新申请状态为待审批]
+    I --> J[发送通知给教师]
+    J --> K[结束]
+    G -->|否| L[返回错误信息]
+    L --> M[重新填写信息]
+    M --> E
+```
+
+#### 补考审批活动图
+
+```mermaid
+flowchart TD
+    A[开始] --> B[教师登录系统]
+    B --> C[查看待审批补考申请]
+    C --> D[选择补考申请]
+    D --> E[查看申请详情]
+    E --> F[做出审批决定]
+    F --> G{审批结果}
+    G -->|批准| H[填写审批意见]
+    H --> I[更新申请状态为已批准]
+    I --> J[安排补考时间和地点]
+    J --> K[通知学生]
+    K --> L[结束]
+    G -->|拒绝| M[填写拒绝理由]
+    M --> N[更新申请状态为已拒绝]
+    N --> O[通知学生]
+    O --> L
+```
+
+#### 补考成绩录入序列图
+
+```mermaid
+sequenceDiagram
+    participant T as 教师
+    participant C as MakeupExamController
+    participant S as MakeupExamService
+    participant R as MakeupExamRepository
+    participant DB as 数据库
+
+    T->>C: PUT /api/makeup-exams/{makeupExamId}/grade
+    C->>S: 录入补考成绩请求
+    S->>S: 验证补考状态
+    S->>R: 更新补考成绩
+    R->>DB: UPDATE makeup_exams SET score = ?, grade_level = ?, comment = ?
+    DB-->>R: 返回更新结果
+    R-->>S: 返回更新后的补考记录
+    S->>S: 更新原成绩状态
+    S-->>C: 返回操作结果
+    C-->>T: 返回成功响应
+```
+
 ## 配置说明
 
 ### 端口配置
@@ -626,6 +720,68 @@ Content-Type: application/json
   "studentId": 1,
   "comment": "表现良好"
 }
+```
+
+#### 生成成绩单
+```http
+GET /api/grades/report/{studentId}
+Authorization: Bearer <JWT_TOKEN>
+```
+
+### 补考管理接口
+
+#### 申请补考
+```http
+POST /api/makeup-exams/apply
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/json
+
+{
+  "originalGradeId": 24,
+  "courseCode": "CS101",
+  "courseName": "计算机基础",
+  "examDate": "2026-02-15T14:00:00",
+  "examLocation": "教学楼A101",
+  "semester": "2023-2024-1",
+  "applyReason": "因病请假未能参加期末考试"
+}
+```
+
+#### 审批补考申请
+```http
+PUT /api/makeup-exams/{makeupExamId}/approve
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/json
+
+{
+  "status": "已批准",
+  "approvalRemark": "已核实情况，同意补考"
+}
+```
+
+#### 录入补考成绩
+```http
+PUT /api/makeup-exams/{makeupExamId}/grade
+Authorization: Bearer <JWT_TOKEN>
+Content-Type: application/json
+
+{
+  "score": 78.5,
+  "gradeLevel": "中等",
+  "comment": "补考成绩合格"
+}
+```
+
+#### 获取学生补考记录
+```http
+GET /api/makeup-exams/student/{studentId}
+Authorization: Bearer <JWT_TOKEN>
+```
+
+#### 获取待审批补考申请
+```http
+GET /api/makeup-exams/pending
+Authorization: Bearer <JWT_TOKEN>
 ```
 
 ## 部署指南
