@@ -241,6 +241,94 @@ http://localhost:8080/swagger-ui.html
 - **权限**: 教师、管理员
 - **请求头**: `Authorization: Bearer {token}`
 
+### 7. 学费管理模块 (Tuition Management)
+
+#### 创建学费记录
+- **路径**: `/api/tuitions`
+- **方法**: POST
+- **描述**: 为学生创建学费记录
+- **权限**: 管理员
+- **请求头**: `Authorization: Bearer {token}`
+- **请求参数**:
+  ```json
+  {
+    "studentId": 3,
+    "amount": 5000.00,
+    "semester": "2023-2024学年第一学期",
+    "dueDate": "2023-09-30T23:59:59",
+    "description": "2023-2024学年第一学期学费"
+  }
+  ```
+
+#### 批量创建学费记录
+- **路径**: `/api/tuitions/batch`
+- **方法**: POST
+- **描述**: 为多个学生批量创建学费记录
+- **权限**: 管理员
+- **请求头**: `Authorization: Bearer {token}`
+- **请求参数**:
+  ```json
+  {
+    "semester": "2023-2024学年第一学期",
+    "amount": 5000.00,
+    "department": "计算机科学与技术学院",
+    "grade": 3,
+    "dueDate": "2023-09-30T23:59:59",
+    "description": "2023-2024学年第一学期学费"
+  }
+  ```
+
+#### 学费缴费
+- **路径**: `/api/tuitions/payment`
+- **方法**: POST
+- **描述**: 为学生缴纳学费
+- **权限**: 管理员、学生
+- **请求头**: `Authorization: Bearer {token}`
+- **请求参数**:
+  ```json
+  {
+    "tuitionId": 1,
+    "paymentAmount": 2000.00,
+    "paymentMethod": "银行卡",
+    "description": "第一次缴费"
+  }
+  ```
+
+#### 获取学生学费记录
+- **路径**: `/api/tuitions/student/{studentId}`
+- **方法**: GET
+- **描述**: 获取学生的学费记录列表
+- **权限**: 管理员、学生
+- **请求头**: `Authorization: Bearer {token}`
+
+#### 获取学期学费记录
+- **路径**: `/api/tuitions/semester/{semester}`
+- **方法**: GET
+- **描述**: 获取指定学期的学费记录列表
+- **权限**: 管理员
+- **请求头**: `Authorization: Bearer {token}`
+
+#### 获取逾期未缴学费记录
+- **路径**: `/api/tuitions/overdue`
+- **方法**: GET
+- **描述**: 获取逾期未缴的学费记录列表
+- **权限**: 管理员
+- **请求头**: `Authorization: Bearer {token}`
+
+#### 获取学费统计信息
+- **路径**: `/api/tuitions/statistics/{semester}`
+- **方法**: GET
+- **描述**: 获取指定学期的学费统计信息
+- **权限**: 管理员
+- **请求头**: `Authorization: Bearer {token}`
+
+#### 获取院系学费统计信息
+- **路径**: `/api/tuitions/statistics/department/{department}/{semester}`
+- **方法**: GET
+- **描述**: 获取指定院系和学期的学费统计信息
+- **权限**: 管理员
+- **请求头**: `Authorization: Bearer {token}`
+
 ## 使用Swagger测试接口
 
 1. **登录获取令牌**
@@ -280,6 +368,20 @@ http://localhost:8080/swagger-ui.html
 2. 生成该学生的成绩单
 3. 查看成绩单中的统计信息
 
+### 场景4：学费管理
+1. 使用管理员账号(admin)登录
+2. 创建学费记录，为学生(student001)设置学费
+3. 批量创建学费记录，为计算机学院三年级学生设置学费
+4. 使用学生账号(student001)登录，查看自己的学费记录
+5. 进行学费缴费操作
+6. 查看学费统计信息
+
+### 场景5：学费催缴管理
+1. 使用管理员账号(admin)登录
+2. 查询逾期未缴的学费记录
+3. 查看院系学费统计信息
+4. 查看学期学费统计信息
+
 ## 注意事项
 
 1. 所有需要认证的接口都必须在请求头中携带有效的JWT令牌
@@ -288,6 +390,10 @@ http://localhost:8080/swagger-ui.html
 4. 管理员拥有所有权限
 5. 某些操作有状态限制，例如只能为"待审核"状态的补考申请进行审批
 6. 测试时请遵循业务流程，例如必须先申请补考，然后才能审批和录入成绩
+7. 学费管理模块中，只有管理员可以创建和批量创建学费记录
+8. 学生只能查看自己的学费记录和进行缴费操作
+9. 学费缴费金额不能超过未缴金额
+10. 批量创建学费记录时，可以根据院系、专业、年级、班级等条件筛选学生
 
 ## 常见错误处理
 
