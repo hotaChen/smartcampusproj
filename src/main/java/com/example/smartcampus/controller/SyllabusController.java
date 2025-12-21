@@ -16,11 +16,15 @@ public class SyllabusController {
         this.syllabusService = syllabusService;
     }
 
+    /**
+     * 创建或更新教学大纲（教师 / 管理员）
+     */
     @PostMapping("/{courseId}")
     @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     public SyllabusDTO createOrUpdate(
             @PathVariable Long courseId,
-            @RequestBody String content) {
+            @RequestBody String content
+    ) {
         Syllabus syllabus = syllabusService.createOrUpdate(courseId, content);
         return new SyllabusDTO(
                 syllabus.getId(),
@@ -30,6 +34,9 @@ public class SyllabusController {
         );
     }
 
+    /**
+     * 查看教学大纲（所有已登录用户）
+     */
     @GetMapping("/{courseId}")
     @PreAuthorize("isAuthenticated()")
     public SyllabusDTO get(@PathVariable Long courseId) {
@@ -40,5 +47,14 @@ public class SyllabusController {
                 syllabus.getContent(),
                 syllabus.getUpdatedAt()
         );
+    }
+
+    /**
+     * 删除教学大纲（教师 / 管理员）
+     */
+    @DeleteMapping("/{courseId}")
+    @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
+    public void delete(@PathVariable Long courseId) {
+        syllabusService.deleteByCourseId(courseId);
     }
 }

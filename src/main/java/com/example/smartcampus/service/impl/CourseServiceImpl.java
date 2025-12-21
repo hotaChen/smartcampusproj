@@ -9,8 +9,8 @@ import com.example.smartcampus.repository.CourseRepository;
 import com.example.smartcampus.repository.UserRepository;
 import com.example.smartcampus.security.CustomUserDetails;
 import com.example.smartcampus.service.CourseService;
-import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.GetMapping;
 
 import java.util.List;
 
@@ -28,6 +28,7 @@ public class CourseServiceImpl implements CourseService {
         this.courseRepository = courseRepository;
         this.classroomRepository = classroomRepository;
         this.userRepository = userRepository;
+
     }
 
     public Course createCourse(CreateCourseRequest req, CustomUserDetails userDetails) {
@@ -90,8 +91,5 @@ public class CourseServiceImpl implements CourseService {
         courseRepository.deleteById(id);
     }
 
-    @Override
-    public List<Course> findAll() {
-        return courseRepository.findAll();
-    }
+    @Override public List<Course> findAll() { return courseRepository.findAll(); }
 }

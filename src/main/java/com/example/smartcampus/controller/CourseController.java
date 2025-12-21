@@ -1,6 +1,7 @@
 package com.example.smartcampus.controller;
 
 import com.example.smartcampus.dto.CreateCourseRequest;
+import com.example.smartcampus.dto.CourseDTO;
 import com.example.smartcampus.entity.Course;
 import com.example.smartcampus.security.CustomUserDetails;
 import com.example.smartcampus.service.CourseService;
@@ -21,6 +22,22 @@ public class CourseController {
     public CourseController(CourseService courseService) {
         this.courseService = courseService;
     }
+
+    private CourseDTO toDTO(Course course) {
+        return new CourseDTO(
+                course.getId(),
+                course.getCourseCode(),
+                course.getName(),
+                course.getCredit(),
+                course.getCapacity(),
+                course.getTeacher().getId(),
+                course.getTeacherName(),
+                course.getClassroom().getId(),
+                course.getClassroom().getBuilding() + "-" +
+                        course.getClassroom().getRoomNumber()
+        );
+    }
+
 
     @PostMapping
     @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
@@ -52,8 +69,11 @@ public class CourseController {
     }
 
     @GetMapping
-    public List<Course> list() {
-        return courseService.findAll();
+    public List<CourseDTO> get() {
+        return courseService.findAll()
+                .stream()
+                .map(this::toDTO)
+                .toList();
     }
 
     private void checkAdmin(CustomUserDetails user) {

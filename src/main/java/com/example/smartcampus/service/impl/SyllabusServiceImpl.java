@@ -47,4 +47,11 @@ public class SyllabusServiceImpl implements SyllabusService {
         return syllabusRepo.findByCourseId(courseId)
                 .orElseThrow(() -> new RuntimeException("该课程尚未设置教学大纲"));
     }
+    @Override
+    public void deleteByCourseId(Long courseId) {
+        Syllabus syllabus = syllabusRepo.findByCourseId(courseId)
+                .orElseThrow(() -> new RuntimeException("教学大纲不存在"));
+        syllabusRepo.delete(syllabus);
+    }
+
 }

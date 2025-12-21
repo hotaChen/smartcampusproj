@@ -18,5 +18,9 @@ public interface TimetableService {
     );
 
     List<TimetableDTO> getCourseTimetable(Long courseId);
+
+    Timetable updateTimetable(Long id, Long classroomId, DayOfWeek dayOfWeek, LocalTime parse, LocalTime parse1);
+
+    void deleteTimetable(Long id);
 }
 
