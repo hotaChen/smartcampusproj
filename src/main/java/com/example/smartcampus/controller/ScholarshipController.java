@@ -209,6 +209,28 @@ public class ScholarshipController {
         }
     }
 
+    @GetMapping("/student/number/{studentNumber}")
+    @Operation(summary = "根据学号获取奖学金记录", description = "根据学号获取奖学金记录列表")
+    public ResponseEntity<List<ScholarshipResponse>> getScholarshipsByStudentNumber(@PathVariable String studentNumber) {
+        logger.info("=== ScholarshipController.getScholarshipsByStudentNumber() 被调用 ===");
+        logger.info("查询学生奖学金记录: 学号={}", studentNumber);
+
+        try {
+            List<Scholarship> scholarships = scholarshipService.getScholarshipsByStudentStudentId(studentNumber);
+            
+            List<ScholarshipResponse> responses = scholarships.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+            
+            logger.info("✅ 成功获取学号 {} 的 {} 条奖学金记录", studentNumber, responses.size());
+            return ResponseEntity.ok(responses);
+            
+        } catch (Exception e) {
+            logger.error("获取学生奖学金记录失败: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @GetMapping("/semester/{semester}")
     @Operation(summary = "根据学期获取奖学金记录", description = "根据学期获取奖学金记录列表")
     public ResponseEntity<List<ScholarshipResponse>> getScholarshipsBySemester(@PathVariable String semester) {
@@ -290,6 +312,29 @@ public class ScholarshipController {
                     .collect(Collectors.toList());
             
             logger.info("✅ 成功获取学生 {} 学期 {} 的 {} 条奖学金记录", studentId, semester, responses.size());
+            return ResponseEntity.ok(responses);
+            
+        } catch (Exception e) {
+            logger.error("获取学生学期奖学金记录失败: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/student/number/{studentNumber}/semester/{semester}")
+    @Operation(summary = "根据学号和学期获取奖学金记录", description = "根据学号和学期获取奖学金记录列表")
+    public ResponseEntity<List<ScholarshipResponse>> getScholarshipsByStudentNumberAndSemester(
+            @PathVariable String studentNumber, @PathVariable String semester) {
+        logger.info("=== ScholarshipController.getScholarshipsByStudentNumberAndSemester() 被调用 ===");
+        logger.info("查询学生学期奖学金记录: 学号={}, 学期={}", studentNumber, semester);
+
+        try {
+            List<Scholarship> scholarships = scholarshipService.getScholarshipsByStudentStudentIdAndSemester(studentNumber, semester);
+            
+            List<ScholarshipResponse> responses = scholarships.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+            
+            logger.info("✅ 成功获取学号 {} 学期 {} 的 {} 条奖学金记录", studentNumber, semester, responses.size());
             return ResponseEntity.ok(responses);
             
         } catch (Exception e) {

@@ -19,6 +19,12 @@ public interface MakeupExamRepository extends JpaRepository<MakeupExam, Long> {
     List<MakeupExam> findByStudentId(Long studentId);
 
     /**
+     * 根据学号查找补考记录
+     */
+    @Query("SELECT m FROM MakeupExam m WHERE m.student.studentId = :studentId")
+    List<MakeupExam> findByStudentStudentId(@Param("studentId") String studentId);
+
+    /**
      * 根据教师ID查找补考记录
      */
     List<MakeupExam> findByTeacherId(Long teacherId);
@@ -47,6 +53,12 @@ public interface MakeupExamRepository extends JpaRepository<MakeupExam, Long> {
      * 根据学生ID和学期查找补考记录
      */
     List<MakeupExam> findByStudentIdAndSemester(Long studentId, String semester);
+
+    /**
+     * 根据学号和学期查找补考记录
+     */
+    @Query("SELECT m FROM MakeupExam m WHERE m.student.studentId = :studentId AND m.semester = :semester")
+    List<MakeupExam> findByStudentStudentIdAndSemester(@Param("studentId") String studentId, @Param("semester") String semester);
 
     /**
      * 根据原始成绩ID查找补考记录

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>补考管理</title>
+    <script src="../js/api.js"></script>
+    <script src="../js/auth.js"></script>
+</head>
+<body>
+    <h1>补考管理</h1>
+    <div>
+        <a href="grade-index.html">返回成绩管理</a> |
+        <a href="grade-entry.html">成绩录入</a> |
+        <a href="grade-query.html">成绩查询</a> |
+        <a href="grade-stats.html">成绩统计</a> |
+        <a href="grade-report.html">成绩单生成</a> |
+        <a href="../index.html">返回首页</a>
+    </div>
+
+    <h2>补考管理</h2>
+    
+    <div class="form-row">
+        <div class="form-group">
+            <label for="makeupStudentId">学号:</label>
+            <input type="text" id="makeupStudentId">
+        </div>
+        <div class="form-group">
+            <label for="makeupCourseCode">课程代码:</label>
+            <input type="text" id="makeupCourseCode">
+        </div>
+        <div class="form-group">
+            <label for="makeupSemester">学期:</label>
+            <input type="text" id="makeupSemester" value="2023-2024-1">
+        </div>
+    </div>
+    
+    <button onclick="queryMakeupExams()">查询补考安排</button>
+    <button onclick="queryMyMakeupExams()">查询我的补考</button>
+    <button onclick="scheduleMakeupExam()">安排补考</button>
+    <button onclick="enterMakeupGrade()">录入补考成绩</button>
+    
+    <table id="makeupExamTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>学号</th>
+                <th>课程代码</th>
+                <th>课程名称</th>
+                <th>原成绩</th>
+                <th>补考时间</th>
+                <th>补考地点</th>
+                <th>补考成绩</th>
+                <th>状态</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 补考数据将通过JavaScript动态填充 -->
+        </tbody>
+    </table>
+
+    <div id="makeupExamForm" style="display: none;">
+        <h3>安排补考</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="scheduleStudentId">学号:</label>
+                <input type="text" id="scheduleStudentId" required>
+            </div>
+            <div class="form-group">
+                <label for="scheduleCourseCode">课程代码:</label>
+                <input type="text" id="scheduleCourseCode" required>
+            </div>
+            <div class="form-group">
+                <label for="makeupDate">补考时间:</label>
+                <input type="datetime-local" id="makeupDate" required>
+            </div>
+            <div class="form-group">
+                <label for="makeupLocation">补考地点:</label>
+                <input type="text" id="makeupLocation" required>
+            </div>
+        </div>
+        <button onclick="submitMakeupSchedule()">提交安排</button>
+        <button onclick="cancelMakeupSchedule()">取消</button>
+    </div>
+
+    <div id="makeupGradeForm" style="display: none;">
+        <h3>录入补考成绩</h3>
+        <div class="form-row">
+            <div class="form-group">
+                <label for="gradeMakeupId">补考ID:</label>
+                <input type="number" id="gradeMakeupId" required>
+            </div>
+            <div class="form-group">
+                <label for="makeupScore">补考成绩:</label>
+                <input type="number" id="makeupScore" min="0" max="100" required>
+            </div>
+            <div class="form-group">
+                <label for="makeupComment">评语:</label>
+                <textarea id="makeupComment"></textarea>
+            </div>
+        </div>
+        <button onclick="submitMakeupGrade()">提交成绩</button>
+        <button onclick="cancelMakeupGrade()">取消</button>
+    </div>
+
+    <script>
+        // 当前用户信息
+        let currentUser = null;
+        
+        // 显示消息
+        function showMessage(message, isError = false) {
+            // 创建消息元素
+            const messageDiv = document.createElement('div');
+            messageDiv.textContent = message;
+            messageDiv.className = isError ? 'message error' : 'message success';
+            messageDiv.style.display = 'block';
+            messageDiv.style.position = 'fixed';
+            messageDiv.style.top = '20px';
+            messageDiv.style.left = '50%';
+            messageDiv.style.transform = 'translateX(-50%)';
+            messageDiv.style.padding = '10px 20px';
+            messageDiv.style.borderRadius = '4px';
+            messageDiv.style.zIndex = '1000';
+            messageDiv.style.backgroundColor = isError ? '#f44336' : '#4CAF50';
+            messageDiv.style.color = 'white';
+            
+            // 添加到页面
+            document.body.appendChild(messageDiv);
+            
+            // 3秒后自动移除
+            setTimeout(() => {
+                if (messageDiv.parentNode) {
+                    messageDiv.parentNode.removeChild(messageDiv);
+                }
+            }, 3000);
+        }
+
+        // 页面加载时检查用户角色并调整界面
+        document.addEventListener('DOMContentLoaded', function() {
+            checkUserRole();
+            loadMakeupExams();
+        });
+
+        // 检查用户角色并调整界面
+        function checkUserRole() {
+            apiRequest(API_ENDPOINTS.USER_INFO)
+            .then(resp => resp.json())
+            .then(data => {
+                // 保存当前用户信息
+                currentUser = data;
+                const role = data.userType;
+                
+                // 如果是学生，隐藏一些功能
+                if (role === 'STUDENT') {
+                    // 隐藏学号输入框，因为学生只能查看自己的补考
+                    document.getElementById('makeupStudentId').parentElement.style.display = 'none';
+                    
+                    // 隐藏课程代码输入框，因为学生只能查看自己的补考
+                    document.getElementById('makeupCourseCode').parentElement.style.display = 'none';
+                    
+                    // 隐藏查询补考安排按钮
+                    const queryBtn = document.querySelector('button[onclick="queryMakeupExams()"]');
+                    if (queryBtn) queryBtn.style.display = 'none';
+                    
+                    // 隐藏安排补考按钮
+                    const scheduleBtn = document.querySelector('button[onclick="scheduleMakeupExam()"]');
+                    if (scheduleBtn) scheduleBtn.style.display = 'none';
+                    
+                    // 隐藏录入补考成绩按钮
+                    const gradeBtn = document.querySelector('button[onclick="enterMakeupGrade()"]');
+                    if (gradeBtn) gradeBtn.style.display = 'none';
+                    
+                    // 自动查询学生的补考
+                    queryMyMakeupExams();
+                }
+            })
+            .catch(err => {
+                console.error('获取用户信息失败:', err);
+                showMessage('获取用户信息失败，请刷新页面重试', true);
+            });
+        }
+
+        // 加载补考列表
+        function loadMakeupExams() {
+            apiRequest(API_ENDPOINTS.MAKEUP_BY_TEACHER)
+                .then(resp => resp.json())
+                .then(data => {
+                    displayMakeupExams(data);
+                })
+                .catch(error => {
+                    console.error('加载补考列表失败:', error);
+                    showMessage('加载补考列表失败: ' + error.message, true);
+                });
+        }
+
+        // 显示补考列表
+        function displayMakeupExams(makeupExams) {
+            const tableBody = document.querySelector('#makeupExamTable tbody');
+            tableBody.innerHTML = '';
+            
+            if (!makeupExams || makeupExams.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center;">暂无补考记录</td></tr>';
+                return;
+            }
+            
+            makeupExams.forEach(makeup => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${makeup.id}</td>
+                    <td>${makeup.student ? makeup.student.studentId : '-'}</td>
+                    <td>${makeup.courseCode}</td>
+                    <td>${makeup.courseName || '-'}</td>
+                    <td>${makeup.originalGrade || '-'}</td>
+                    <td>${formatDateTime(makeup.examDate)}</td>
+                    <td>${makeup.examLocation || '-'}</td>
+                    <td>${makeup.score || '-'}</td>
+                    <td>${getMakeupStatusText(makeup.status)}</td>
+                    <td>
+                        ${getMakeupActions(makeup)}
+                    </td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // 获取补考状态文本
+        function getMakeupStatusText(status) {
+            switch (status) {
+                case '待审批': return '待审批';
+                case '已批准': return '已安排';
+                case '已完成': return '已完成';
+                case '已取消': return '已取消';
+                default: return status || '未知';
+            }
+        }
+
+        // 获取补考操作按钮
+        function getMakeupActions(makeup) {
+            const role = currentUser ? currentUser.userType : '';
+            
+            let actions = '';
+            
+            // 教师和管理员可以编辑补考安排
+            if (role === 'TEACHER' || role === 'ADMIN') {
+                if (makeup.status === '已批准') {
+                    actions += `<button onclick="editMakeupExam(${makeup.id})">编辑</button> `;
+                    actions += `<button onclick="cancelMakeupExam(${makeup.id})">取消</button> `;
+                }
+                
+                if (makeup.status === '已批准' || makeup.status === '已完成') {
+                    if (!makeup.score) {
+                        actions += `<button onclick="showMakeupGradeForm(${makeup.id})">录入成绩</button> `;
+                    }
+                }
+            }
+            
+            // 学生可以查看详情
+            if (role === 'STUDENT') {
+                actions += `<button onclick="viewMakeupDetails(${makeup.id})">查看详情</button> `;
+            }
+            
+            return actions;
+        }
+
+        // 查询补考安排
+        function queryMakeupExams() {
+            const studentId = document.getElementById('makeupStudentId').value;
+            const courseCode = document.getElementById('makeupCourseCode').value;
+            const semester = document.getElementById('makeupSemester').value;
+            
+            let url;
+            if (studentId && courseCode && semester) {
+                url = API_ENDPOINTS.MAKEUP_TEACHER_COURSE_SEMESTER(courseCode, semester);
+            } else if (studentId) {
+                url = API_ENDPOINTS.MAKEUP_BY_STUDENT_NUMBER(studentId);
+            } else {
+                url = API_ENDPOINTS.MAKEUP_BY_TEACHER;
+            }
+            
+            apiRequest(url)
+                .then(resp => resp.json())
+                .then(data => {
+                    displayMakeupExams(data);
+                })
+                .catch(error => {
+                    console.error('查询补考安排失败:', error);
+                    showMessage('查询补考安排失败: ' + error.message, true);
+                });
+        }
+
+        // 查询我的补考
+        function queryMyMakeupExams() {
+            apiRequest(API_ENDPOINTS.MAKEUP_MY)
+                .then(resp => resp.json())
+                .then(data => {
+                    displayMakeupExams(data);
+                })
+                .catch(error => {
+                    console.error('查询我的补考失败:', error);
+                    showMessage('查询我的补考失败: ' + error.message, true);
+                });
+        }
+
+        // 显示安排补考表单
+        function scheduleMakeupExam() {
+            document.getElementById('makeupExamForm').style.display = 'block';
+        }
+
+        // 取消安排补考
+        function cancelMakeupSchedule() {
+            document.getElementById('makeupExamForm').style.display = 'none';
+            // 清空表单
+            document.getElementById('scheduleStudentId').value = '';
+            document.getElementById('scheduleCourseCode').value = '';
+            document.getElementById('makeupDate').value = '';
+            document.getElementById('makeupLocation').value = '';
+        }
+
+        // 提交补考安排
+        function submitMakeupSchedule() {
+            const studentId = document.getElementById('scheduleStudentId').value;
+            const courseCode = document.getElementById('scheduleCourseCode').value;
+            const examTime = document.getElementById('makeupDate').value;
+            const examLocation = document.getElementById('makeupLocation').value;
+            
+            if (!studentId || !courseCode || !examTime || !examLocation) {
+                showMessage('请填写所有必填字段', true);
+                return;
+            }
+            
+            const makeupData = {
+                studentNumber: studentId,  // 使用studentNumber而不是studentId
+                courseCode: courseCode,
+                examDate: examTime,
+                examLocation: examLocation,
+                status: '已批准'
+            };
+            
+            apiRequest(API_ENDPOINTS.MAKEUP_APPLY, {
+                method: 'POST',
+                body: JSON.stringify(makeupData)
+            })
+                .then(resp => {
+                    if (resp.ok) {
+                        showMessage('补考安排成功');
+                        cancelMakeupSchedule();
+                        loadMakeupExams();
+                    } else {
+                        showMessage('补考安排失败', true);
+                    }
+                })
+                .catch(error => {
+                    console.error('安排补考失败:', error);
+                    showMessage('安排补考失败: ' + error.message, true);
+                });
+        }
+
+        // 显示录入补考成绩表单
+        function enterMakeupGrade() {
+            document.getElementById('makeupGradeForm').style.display = 'block';
+        }
+
+        // 显示录入补考成绩表单（带补考ID）
+        function showMakeupGradeForm(makeupId) {
+            document.getElementById('gradeMakeupId').value = makeupId;
+            document.getElementById('makeupGradeForm').style.display = 'block';
+        }
+
+        // 取消录入补考成绩
+        function cancelMakeupGrade() {
+            document.getElementById('makeupGradeForm').style.display = 'none';
+            // 清空表单
+            document.getElementById('gradeMakeupId').value = '';
+            document.getElementById('makeupScore').value = '';
+            document.getElementById('makeupComment').value = '';
+        }
+
+        // 提交补考成绩
+        function submitMakeupGrade() {
+            const makeupId = document.getElementById('gradeMakeupId').value;
+            const makeupScore = document.getElementById('makeupScore').value;
+            const comment = document.getElementById('makeupComment').value;
+            
+            if (!makeupId || !makeupScore) {
+                showMessage('请填写补考ID和成绩', true);
+                return;
+            }
+            
+            const gradeData = {
+                score: parseInt(makeupScore),
+                comment: comment
+            };
+            
+            apiRequest(API_ENDPOINTS.MAKEUP_GRADE(makeupId), {
+                method: 'PUT',
+                body: JSON.stringify(gradeData)
+            })
+                .then(resp => {
+                    if (resp.ok) {
+                        showMessage('补考成绩录入成功');
+                        cancelMakeupGrade();
+                        loadMakeupExams();
+                    } else {
+                        showMessage('补考成绩录入失败', true);
+                    }
+                })
+                .catch(error => {
+                    console.error('录入补考成绩失败:', error);
+                    showMessage('录入补考成绩失败: ' + error.message, true);
+                });
+        }
+
+        // 编辑补考安排
+        function editMakeupExam(makeupId) {
+            // 这里可以实现编辑补考安排的功能
+            alert('编辑补考安排功能待实现');
+        }
+
+        // 取消补考
+        function cancelMakeupExam(makeupId) {
+            if (!confirm('确定要取消这个补考安排吗？')) {
+                return;
+            }
+            
+            apiRequest(API_ENDPOINTS.MAKEUP_DELETE(makeupId), {
+                method: 'DELETE'
+            })
+                .then(resp => {
+                    if (resp.ok) {
+                        showMessage('补考已取消');
+                        loadMakeupExams();
+                    } else {
+                        showMessage('取消补考失败', true);
+                    }
+                })
+                .catch(error => {
+                    console.error('取消补考失败:', error);
+                    showMessage('取消补考失败: ' + error.message, true);
+                });
+        }
+
+        // 查看补考详情
+        function viewMakeupDetails(makeupId) {
+            // 这里可以实现查看补考详情的功能
+            alert('查看补考详情功能待实现');
+        }
+
+        // 格式化日期时间
+        function formatDateTime(dateTimeStr) {
+            if (!dateTimeStr) return '-';
+            
+            const date = new Date(dateTimeStr);
+            return date.toLocaleString('zh-CN');
+        }
+    </script>
+</body>
+</html>

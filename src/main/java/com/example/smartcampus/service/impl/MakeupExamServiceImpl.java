@@ -34,9 +34,9 @@ public class MakeupExamServiceImpl implements MakeupExamService {
     }
 
     @Override
-    public MakeupExam applyForMakeupExam(MakeupExamRequest makeupExamRequest, Long studentId) {
+    public MakeupExam applyForMakeupExam(MakeupExamRequest makeupExamRequest, String studentId) {
         // 获取学生信息
-        User student = userRepository.findById(studentId)
+        User student = userRepository.findByStudentId(studentId)
                 .orElseThrow(() -> new RuntimeException("学生不存在"));
         
         // 获取原始成绩信息
@@ -44,7 +44,7 @@ public class MakeupExamServiceImpl implements MakeupExamService {
                 .orElseThrow(() -> new RuntimeException("原始成绩不存在"));
         
         // 验证成绩是否属于该学生
-        if (!originalGrade.getStudent().getId().equals(studentId)) {
+        if (!originalGrade.getStudent().getStudentId().equals(studentId)) {
             throw new RuntimeException("该成绩不属于当前学生");
         }
         
@@ -132,6 +132,11 @@ public class MakeupExamServiceImpl implements MakeupExamService {
     }
 
     @Override
+    public List<MakeupExam> getMakeupExamsByStudentStudentId(String studentId) {
+        return makeupExamRepository.findByStudentStudentId(studentId);
+    }
+
+    @Override
     public List<MakeupExam> getMakeupExamsByTeacherId(Long teacherId) {
         return makeupExamRepository.findByTeacherId(teacherId);
     }
@@ -139,6 +144,21 @@ public class MakeupExamServiceImpl implements MakeupExamService {
     @Override
     public List<MakeupExam> getStudentMakeupExamsBySemester(Long studentId, String semester) {
         return makeupExamRepository.findStudentMakeupExamsBySemester(studentId, semester);
+    }
+
+    @Override
+    public List<MakeupExam> getStudentMakeupExamsByStudentIdAndSemester(String studentId, String semester) {
+        return makeupExamRepository.findByStudentStudentIdAndSemester(studentId, semester);
+    }
+
+    @Override
+    public List<MakeupExam> getMakeupExamsByCourseCodeAndSemester(String courseCode, String semester) {
+        return makeupExamRepository.findByCourseCodeAndSemester(courseCode, semester);
+    }
+
+    @Override
+    public List<MakeupExam> getAllMakeupExams() {
+        return makeupExamRepository.findAll();
     }
 
     @Override

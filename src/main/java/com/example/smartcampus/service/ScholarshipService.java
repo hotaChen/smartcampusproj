@@ -19,6 +19,13 @@ public interface ScholarshipService {
     
     List<Scholarship> getScholarshipsByStudent(Long studentId);
     
+    /**
+     * 根据学号获取学生的所有奖学金记录
+     * @param studentId 学号
+     * @return 奖学金记录列表
+     */
+    List<Scholarship> getScholarshipsByStudentStudentId(String studentId);
+    
     List<Scholarship> getScholarshipsBySemester(String semester);
     
     List<Scholarship> getScholarshipsByStatus(Integer status);
@@ -26,6 +33,14 @@ public interface ScholarshipService {
     List<Scholarship> getScholarshipsByType(String type);
     
     List<Scholarship> getScholarshipsByStudentAndSemester(Long studentId, String semester);
+    
+    /**
+     * 根据学号和学期获取学生的奖学金记录
+     * @param studentId 学号
+     * @param semester 学期
+     * @return 奖学金记录列表
+     */
+    List<Scholarship> getScholarshipsByStudentStudentIdAndSemester(String studentId, String semester);
     
     List<Scholarship> getScholarshipsByDepartmentAndSemester(String department, String semester);
     

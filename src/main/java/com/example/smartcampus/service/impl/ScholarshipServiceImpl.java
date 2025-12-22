@@ -112,6 +112,13 @@ public class ScholarshipServiceImpl implements ScholarshipService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<Scholarship> getScholarshipsByStudentStudentId(String studentId) {
+        logger.debug("查询学生奖学金记录: 学号={}", studentId);
+        return scholarshipRepository.findByStudentStudentId(studentId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Scholarship> getScholarshipsBySemester(String semester) {
         logger.debug("查询学期奖学金记录: 学期={}", semester);
         return scholarshipRepository.findBySemester(semester);
@@ -136,6 +143,13 @@ public class ScholarshipServiceImpl implements ScholarshipService {
     public List<Scholarship> getScholarshipsByStudentAndSemester(Long studentId, String semester) {
         logger.debug("查询学生学期奖学金记录: 学生ID={}, 学期={}", studentId, semester);
         return scholarshipRepository.findByStudentIdAndSemester(studentId, semester);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<Scholarship> getScholarshipsByStudentStudentIdAndSemester(String studentId, String semester) {
+        logger.debug("查询学生学期奖学金记录: 学号={}, 学期={}", studentId, semester);
+        return scholarshipRepository.findByStudentStudentIdAndSemester(studentId, semester);
     }
 
     @Override

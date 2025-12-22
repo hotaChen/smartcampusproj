@@ -51,7 +51,7 @@ public class MakeupExamController {
     public ResponseEntity<?> applyForMakeupExam(@Valid @RequestBody MakeupExamRequest makeupExamRequest) {
         try {
             User currentUser = getCurrentUser();
-            MakeupExam makeupExam = makeupExamService.applyForMakeupExam(makeupExamRequest, currentUser.getId());
+            MakeupExam makeupExam = makeupExamService.applyForMakeupExam(makeupExamRequest, currentUser.getStudentId());
             return ResponseEntity.ok(makeupExam);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -134,6 +134,28 @@ public class MakeupExamController {
     }
 
     /**
+     * 根据学号获取学生的所有补考记录
+     */
+    @GetMapping("/student/number/{studentNumber}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
+    @Operation(summary = "根据学号获取学生补考记录", description = "根据学号获取所有补考记录")
+    public ResponseEntity<?> getMakeupExamsByStudentNumber(@PathVariable String studentNumber) {
+        try {
+            User currentUser = getCurrentUser();
+            
+            // 学生只能查看自己的补考记录
+            if ("STUDENT".equals(currentUser.getUserType()) && !currentUser.getStudentId().equals(studentNumber)) {
+                return ResponseEntity.status(403).body("无权限查看其他学生的补考记录");
+            }
+            
+            List<MakeupExam> makeupExams = makeupExamService.getMakeupExamsByStudentStudentId(studentNumber);
+            return ResponseEntity.ok(makeupExams);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
      * 获取教师审批的所有补考记录
      */
     @GetMapping("/teacher")
@@ -166,6 +188,29 @@ public class MakeupExamController {
             }
             
             List<MakeupExam> makeupExams = makeupExamService.getStudentMakeupExamsBySemester(studentId, semester);
+            return ResponseEntity.ok(makeupExams);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * 根据学号获取学生在某学期的补考记录
+     */
+    @GetMapping("/student/number/{studentNumber}/semester/{semester}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
+    @Operation(summary = "根据学号获取学生学期补考记录", description = "根据学号获取学生在某学期的所有补考记录")
+    public ResponseEntity<?> getStudentMakeupExamsByStudentNumberAndSemester(@PathVariable String studentNumber, 
+                                                                              @PathVariable String semester) {
+        try {
+            User currentUser = getCurrentUser();
+            
+            // 学生只能查看自己的补考记录
+            if ("STUDENT".equals(currentUser.getUserType()) && !currentUser.getStudentId().equals(studentNumber)) {
+                return ResponseEntity.status(403).body("无权限查看其他学生的补考记录");
+            }
+            
+            List<MakeupExam> makeupExams = makeupExamService.getStudentMakeupExamsByStudentIdAndSemester(studentNumber, semester);
             return ResponseEntity.ok(makeupExams);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -222,6 +267,36 @@ public class MakeupExamController {
     }
 
     /**
+     * 获取所有补考记录（支持按学号、课程代码、学期查询）
+     */
+    @GetMapping
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @Operation(summary = "获取补考记录列表", description = "获取所有补考记录，支持按学号、课程代码、学期查询")
+    public ResponseEntity<?> getAllMakeupExams(
+            @RequestParam(required = false) String studentNumber,
+            @RequestParam(required = false) String courseCode,
+            @RequestParam(required = false) String semester) {
+        try {
+            List<MakeupExam> makeupExams;
+            
+            if (studentNumber != null) {
+                // 按学号查询
+                makeupExams = makeupExamService.getMakeupExamsByStudentStudentId(studentNumber);
+            } else if (courseCode != null && semester != null) {
+                // 按课程代码和学期查询
+                makeupExams = makeupExamService.getMakeupExamsByCourseCodeAndSemester(courseCode, semester);
+            } else {
+                // 获取所有补考记录
+                makeupExams = makeupExamService.getAllMakeupExams();
+            }
+            
+            return ResponseEntity.ok(makeupExams);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
      * 获取当前登录学生的补考记录
      */
     @GetMapping("/my")
@@ -230,7 +305,7 @@ public class MakeupExamController {
     public ResponseEntity<?> getMyMakeupExams() {
         try {
             User currentUser = getCurrentUser();
-            List<MakeupExam> makeupExams = makeupExamService.getMakeupExamsByStudentId(currentUser.getId());
+            List<MakeupExam> makeupExams = makeupExamService.getMakeupExamsByStudentStudentId(currentUser.getStudentId());
             return ResponseEntity.ok(makeupExams);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

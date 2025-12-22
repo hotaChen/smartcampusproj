@@ -132,6 +132,15 @@ public class TuitionServiceImpl implements TuitionService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<Tuition> getTuitionsByStudentStudentId(String studentId) {
+        logger.info("=== TuitionServiceImpl.getTuitionsByStudentStudentId() 开始 ===");
+        logger.info("查询学生学费记录: 学号={}", studentId);
+        
+        return tuitionRepository.findByStudentStudentId(studentId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<Tuition> getTuitionsBySemester(String semester) {
         logger.info("=== TuitionServiceImpl.getTuitionsBySemester() 开始 ===");
         logger.info("查询学期学费记录: 学期={}", semester);
@@ -155,6 +164,15 @@ public class TuitionServiceImpl implements TuitionService {
         logger.info("查询学生学期学费记录: 学生ID={}, 学期={}", studentId, semester);
         
         return tuitionRepository.findByStudentIdAndSemester(studentId, semester);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<Tuition> getTuitionByStudentStudentIdAndSemester(String studentId, String semester) {
+        logger.info("=== TuitionServiceImpl.getTuitionByStudentStudentIdAndSemester() 开始 ===");
+        logger.info("查询学生学期学费记录: 学号={}, 学期={}", studentId, semester);
+        
+        return tuitionRepository.findByStudentStudentIdAndSemester(studentId, semester);
     }
 
     @Override

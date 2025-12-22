@@ -10,6 +10,7 @@ public interface UserService {
     void deleteUser(Long id);
     User getUserById(Long id);
     Optional<User> getUserByUsername(String username);
+    Optional<User> getUserByStudentId(String studentId);
     List<User> getAllUsers();
     List<User> getUsersByType(String userType);
     List<User> getUsersByRole(Long roleId);

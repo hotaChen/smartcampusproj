@@ -27,6 +27,9 @@ public interface TuitionService {
     // 根据学生获取学费记录
     List<Tuition> getTuitionsByStudent(Long studentId);
     
+    // 根据学号获取学费记录
+    List<Tuition> getTuitionsByStudentStudentId(String studentId);
+    
     // 根据学期获取学费记录
     List<Tuition> getTuitionsBySemester(String semester);
     
@@ -35,6 +38,9 @@ public interface TuitionService {
     
     // 根据学生和学期获取学费记录
     Optional<Tuition> getTuitionByStudentAndSemester(Long studentId, String semester);
+    
+    // 根据学号和学期获取学费记录
+    Optional<Tuition> getTuitionByStudentStudentIdAndSemester(String studentId, String semester);
     
     // 获取逾期未缴的学费记录
     List<Tuition> getOverdueTuitions();

@@ -116,6 +116,28 @@ public class GradeController {
     }
 
     /**
+     * 根据学号获取学生的所有成绩
+     */
+    @GetMapping("/student/number/{studentNumber}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
+    @Operation(summary = "根据学号获取学生成绩", description = "根据学号获取所有成绩")
+    public ResponseEntity<?> getGradesByStudentNumber(@PathVariable String studentNumber) {
+        try {
+            User currentUser = getCurrentUser();
+            
+            // 学生只能查看自己的成绩
+            if ("STUDENT".equals(currentUser.getUserType()) && !currentUser.getStudentId().equals(studentNumber)) {
+                return ResponseEntity.status(403).body("无权限查看其他学生的成绩");
+            }
+            
+            List<Grade> grades = gradeService.getGradesByStudentStudentId(studentNumber);
+            return ResponseEntity.ok(grades);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
      * 获取教师录入的所有成绩
      */
     @GetMapping("/teacher")
@@ -148,6 +170,29 @@ public class GradeController {
             }
             
             List<Grade> grades = gradeService.getStudentGradesBySemester(studentId, semester);
+            return ResponseEntity.ok(grades);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * 根据学号获取学生在某学期的成绩
+     */
+    @GetMapping("/student/number/{studentNumber}/semester/{semester}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
+    @Operation(summary = "根据学号获取学生学期成绩", description = "根据学号获取学生在某学期的所有成绩")
+    public ResponseEntity<?> getStudentGradesByStudentNumberAndSemester(@PathVariable String studentNumber, 
+                                                                        @PathVariable String semester) {
+        try {
+            User currentUser = getCurrentUser();
+            
+            // 学生只能查看自己的成绩
+            if ("STUDENT".equals(currentUser.getUserType()) && !currentUser.getStudentId().equals(studentNumber)) {
+                return ResponseEntity.status(403).body("无权限查看其他学生的成绩");
+            }
+            
+            List<Grade> grades = gradeService.getStudentGradesByStudentIdAndSemester(studentNumber, semester);
             return ResponseEntity.ok(grades);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -228,6 +273,29 @@ public class GradeController {
     }
 
     /**
+     * 根据学号计算学生的平均分
+     */
+    @GetMapping("/student/number/{studentNumber}/average/{semester}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
+    @Operation(summary = "根据学号计算学生平均分", description = "根据学号计算学生在某学期的平均分")
+    public ResponseEntity<?> calculateAverageScoreByStudentNumberAndSemester(@PathVariable String studentNumber, 
+                                                                            @PathVariable String semester) {
+        try {
+            User currentUser = getCurrentUser();
+            
+            // 学生只能查看自己的成绩
+            if ("STUDENT".equals(currentUser.getUserType()) && !currentUser.getStudentId().equals(studentNumber)) {
+                return ResponseEntity.status(403).body("无权限查看其他学生的成绩");
+            }
+            
+            Float averageScore = gradeService.calculateAverageScoreByStudentNumberAndSemester(studentNumber, semester);
+            return ResponseEntity.ok(averageScore);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
      * 计算课程的平均分
      */
     @GetMapping("/course/{courseCode}/average/{semester}")
@@ -276,6 +344,33 @@ public class GradeController {
         try {
             User currentUser = getCurrentUser();
             GradeReportDTO report = gradeService.generateGradeReport(currentUser.getId(), semester);
+            return ResponseEntity.ok(report);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * 根据学号生成学生成绩单
+     */
+    @GetMapping("/report/student/number/{studentNumber}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
+    @Operation(summary = "根据学号生成学生成绩单", description = "根据学号生成学生的成绩单，包含成绩统计信息")
+    public ResponseEntity<?> generateGradeReportByStudentNumber(@PathVariable String studentNumber,
+                                                               @RequestParam(required = false) String semester) {
+        try {
+            User currentUser = getCurrentUser();
+            
+            // 根据学号查找学生
+            User student = userService.getUserByStudentId(studentNumber)
+                    .orElseThrow(() -> new RuntimeException("学号为" + studentNumber + "的学生不存在"));
+            
+            // 学生只能查看自己的成绩单
+            if ("STUDENT".equals(currentUser.getUserType()) && !currentUser.getStudentId().equals(studentNumber)) {
+                return ResponseEntity.status(403).body("无权限查看其他学生的成绩单");
+            }
+            
+            GradeReportDTO report = gradeService.generateGradeReport(student.getId(), semester);
             return ResponseEntity.ok(report);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());

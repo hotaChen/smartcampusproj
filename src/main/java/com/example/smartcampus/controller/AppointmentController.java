@@ -59,6 +59,28 @@ public class AppointmentController {
     }
 
     /**
+     * 根据学号查询学生的预约
+     */
+    @GetMapping("/student/number/{studentNumber}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
+    @Operation(summary = "根据学号查询学生预约", description = "根据学号查询学生的预约记录")
+    public ResponseEntity<?> getAppointmentsByStudentNumber(@PathVariable String studentNumber,
+                                                            @AuthenticationPrincipal CustomUserDetails userDetails) {
+        try {
+            // 学生只能查看自己的预约
+            if ("STUDENT".equals(userDetails.getAuthorities().iterator().next().getAuthority()) 
+                && !userDetails.getUsername().equals(studentNumber)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("无权限查看其他学生的预约记录");
+            }
+            
+            List<Appointment> appointments = appointmentService.getAppointmentsByStudentStudentId(studentNumber);
+            return ResponseEntity.ok(appointments);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("查询预约记录失败：" + e.getMessage());
+        }
+    }
+
+    /**
      * 学生取消自己的预约
      */
     @PutMapping("/{id}/cancel")

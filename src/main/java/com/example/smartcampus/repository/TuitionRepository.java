@@ -18,12 +18,24 @@ public interface TuitionRepository extends JpaRepository<Tuition, Long> {
 
     List<Tuition> findByStudentId(Long studentId);
 
+    /**
+     * 根据学号查找学费记录
+     */
+    @Query("SELECT t FROM Tuition t WHERE t.student.studentId = :studentId")
+    List<Tuition> findByStudentStudentId(@Param("studentId") String studentId);
+
     List<Tuition> findBySemester(String semester);
 
     List<Tuition> findByStatus(Integer status);
 
     @Query("SELECT t FROM Tuition t WHERE t.student.id = :studentId AND t.semester = :semester")
     Optional<Tuition> findByStudentIdAndSemester(@Param("studentId") Long studentId, @Param("semester") String semester);
+
+    /**
+     * 根据学号和学期查找学费记录
+     */
+    @Query("SELECT t FROM Tuition t WHERE t.student.studentId = :studentId AND t.semester = :semester")
+    Optional<Tuition> findByStudentStudentIdAndSemester(@Param("studentId") String studentId, @Param("semester") String semester);
 
     @Query("SELECT t FROM Tuition t WHERE t.dueDate < :currentDate AND t.status != 2")
     List<Tuition> findOverdueTuitions(@Param("currentDate") LocalDateTime currentDate);
@@ -55,6 +67,12 @@ public interface TuitionRepository extends JpaRepository<Tuition, Long> {
 
     @Query("SELECT t FROM Tuition t WHERE t.student.id = :studentId ORDER BY t.semester DESC")
     List<Tuition> findByStudentIdOrderBySemesterDesc(@Param("studentId") Long studentId);
+
+    /**
+     * 根据学号查找学费记录并按学期降序排序
+     */
+    @Query("SELECT t FROM Tuition t WHERE t.student.studentId = :studentId ORDER BY t.semester DESC")
+    List<Tuition> findByStudentStudentIdOrderBySemesterDesc(@Param("studentId") String studentId);
     // TuitionRepository.java
     @Query("SELECT SUM(t.amount) FROM Tuition t")
     Double sumTotalAmount();

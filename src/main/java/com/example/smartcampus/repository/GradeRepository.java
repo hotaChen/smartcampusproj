@@ -19,6 +19,12 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
     List<Grade> findByStudentId(Long studentId);
 
     /**
+     * 根据学号查找成绩
+     */
+    @Query("SELECT g FROM Grade g WHERE g.student.studentId = :studentId")
+    List<Grade> findByStudentStudentId(@Param("studentId") String studentId);
+
+    /**
      * 根据教师ID查找成绩
      */
     List<Grade> findByTeacherId(Long teacherId);
@@ -37,6 +43,12 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
      * 根据学生ID和学期查找成绩
      */
     List<Grade> findByStudentIdAndSemester(Long studentId, String semester);
+
+    /**
+     * 根据学号和学期查找成绩
+     */
+    @Query("SELECT g FROM Grade g WHERE g.student.studentId = :studentId AND g.semester = :semester AND g.status = 1")
+    List<Grade> findByStudentStudentIdAndSemester(@Param("studentId") String studentId, @Param("semester") String semester);
 
     /**
      * 根据教师ID和学期查找成绩
@@ -96,5 +108,40 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
             "FROM Grade g JOIN g.course c GROUP BY c.id, c.name")
     List<Object[]> findCourseGradeStatistics();
 
+    /**
+     * 根据学号和学期计算学生的平均分
+     * @param studentNumber 学号
+     * @param semester 学期
+     * @return 平均分
+     */
+    @Query("SELECT AVG(g.score) FROM Grade g WHERE g.student.studentId = :studentNumber AND g.semester = :semester")
+    Float calculateAverageScoreByStudentNumberAndSemester(@Param("studentNumber") String studentNumber, @Param("semester") String semester);
+
+    /**
+     * 根据学号和学期统计学生的课程数量
+     * @param studentNumber 学号
+     * @param semester 学期
+     * @return 课程数量
+     */
+    @Query("SELECT COUNT(g) FROM Grade g WHERE g.student.studentId = :studentNumber AND g.semester = :semester")
+    Long countCoursesByStudentNumberAndSemester(@Param("studentNumber") String studentNumber, @Param("semester") String semester);
+
+    /**
+     * 根据学号和学期获取学生的最高分
+     * @param studentNumber 学号
+     * @param semester 学期
+     * @return 最高分
+     */
+    @Query("SELECT MAX(g.score) FROM Grade g WHERE g.student.studentId = :studentNumber AND g.semester = :semester")
+    Float findMaxScoreByStudentNumberAndSemester(@Param("studentNumber") String studentNumber, @Param("semester") String semester);
+
+    /**
+     * 根据学号和学期获取学生的最低分
+     * @param studentNumber 学号
+     * @param semester 学期
+     * @return 最低分
+     */
+    @Query("SELECT MIN(g.score) FROM Grade g WHERE g.student.studentId = :studentNumber AND g.semester = :semester")
+    Float findMinScoreByStudentNumberAndSemester(@Param("studentNumber") String studentNumber, @Param("semester") String semester);
 
 }

@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>成绩查询</title>
+</head>
+<body>
+    <h1>成绩查询</h1>
+    <div>
+        <a href="grade-index.html">返回成绩管理</a> |
+        <a href="grade-entry.html">成绩录入</a> |
+        <a href="grade-stats.html">成绩统计</a> |
+        <a href="grade-report.html">成绩单生成</a> |
+        <a href="makeup-exam.html">补考管理</a> |
+        <a href="../index.html">返回首页</a>
+    </div>
+    
+    <div id="message" class="message" style="display: none;"></div>
+    
+    <h2>成绩查询</h2>
+    
+    <div class="form-row">
+        <div class="form-group">
+            <label for="queryStudentId">学号:</label>
+            <input type="text" id="queryStudentId">
+        </div>
+        <div class="form-group">
+            <label for="querySemester">学期:</label>
+            <input type="text" id="querySemester" value="2023-2024-1">
+        </div>
+    </div>
+    
+    <button onclick="queryGrades()">查询成绩</button>
+    <button onclick="queryMyGrades()">查询我的成绩</button>
+    
+    <table id="gradeQueryTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>学号</th>
+                <th>课程代码</th>
+                <th>课程名称</th>
+                <th>考试类型</th>
+                <th>分数</th>
+                <th>成绩等级</th>
+                <th>学期</th>
+                <th>学分</th>
+                <th>评语</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 成绩数据将通过JavaScript动态填充 -->
+        </tbody>
+    </table>
+
+<script src="../js/api.js"></script>
+<script>
+// 页面加载时获取用户信息
+document.addEventListener('DOMContentLoaded', function() {
+    getUserInfo();
+});
+
+// 获取用户信息
+function getUserInfo() {
+    apiRequest(API_ENDPOINTS.USER_INFO)
+    .then(resp => resp.json())
+    .then(data => {
+        if (data.userType === 'STUDENT') {
+            // 如果是学生，隐藏学生ID输入框
+            document.getElementById('queryStudentId').parentElement.style.display = 'none';
+            // 隐藏"查询成绩"按钮，因为这是用来查询其他学生成绩的
+            document.querySelector('button[onclick="queryGrades()"]').style.display = 'none';
+            // 自动查询该学生的成绩
+            queryMyGrades();
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('获取用户信息失败，请刷新页面重试', true);
+    });
+}
+
+// 显示消息
+function showMessage(message, isError = false) {
+    const messageDiv = document.getElementById('message');
+    messageDiv.textContent = message;
+    messageDiv.className = isError ? 'message error' : 'message success';
+    messageDiv.style.display = 'block';
+    
+    setTimeout(() => {
+        messageDiv.style.display = 'none';
+    }, 3000);
+}
+
+// 查询成绩
+function queryGrades() {
+    const studentId = document.getElementById('queryStudentId').value;
+    const semester = document.getElementById('querySemester').value;
+    
+    let url;
+    
+    if (studentId && semester) {
+        url = API_ENDPOINTS.GRADES_STUDENT_NUMBER_SEMESTER(studentId, semester);
+    } else if (studentId) {
+        url = API_ENDPOINTS.GRADES_BY_STUDENT_NUMBER(studentId);
+    } else {
+        url = API_ENDPOINTS.GRADES_BY_TEACHER;
+    }
+    
+    apiRequest(url)
+    .then(resp => resp.json())
+    .then(data => {
+        displayGrades(data);
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('查询成绩失败', true);
+    });
+}
+
+// 查询我的成绩
+function queryMyGrades() {
+    apiRequest(API_ENDPOINTS.USER_INFO)
+    .then(resp => resp.json())
+    .then(userInfo => {
+        const studentId = userInfo.studentId; // 使用学号而不是ID
+        const semester = document.getElementById('querySemester').value;
+        
+        let url;
+        if (semester) {
+            url = API_ENDPOINTS.GRADES_STUDENT_NUMBER_SEMESTER(studentId, semester);
+        } else {
+            url = API_ENDPOINTS.GRADES_BY_STUDENT_NUMBER(studentId);
+        }
+        
+        apiRequest(url)
+        .then(resp => resp.json())
+        .then(data => {
+            displayGrades(data);
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            showMessage('查询成绩失败', true);
+        });
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('获取用户信息失败', true);
+    });
+}
+
+// 显示成绩数据
+function displayGrades(grades) {
+    const tableBody = document.querySelector('#gradeQueryTable tbody');
+    tableBody.innerHTML = '';
+    
+    if (!grades || grades.length === 0) {
+        const row = document.createElement('tr');
+        row.innerHTML = '<td colspan="11">没有找到成绩记录</td>';
+        tableBody.appendChild(row);
+        return;
+    }
+    
+    grades.forEach(grade => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${grade.id}</td>
+            <td>${grade.student ? grade.student.studentId : ''}</td>
+            <td>${grade.courseCode}</td>
+            <td>${grade.courseName}</td>
+            <td>${grade.examType}</td>
+            <td>${grade.score}</td>
+            <td>${grade.gradeLevel}</td>
+            <td>${grade.semester}</td>
+            <td>${grade.credit}</td>
+            <td>${grade.comment || ''}</td>
+            <td>
+                <button onclick="viewGradeDetails(${grade.id})">查看详情</button>
+            </td>
+        `;
+        tableBody.appendChild(row);
+    });
+}
+
+// 查看成绩详情
+function viewGradeDetails(id) {
+    apiRequest(API_ENDPOINTS.GRADES_BY_ID(id))
+    .then(resp => resp.json())
+    .then(grade => {
+        const details = `
+            成绩ID: ${grade.id}
+            学号: ${grade.student ? grade.student.studentId : ''}
+            课程代码: ${grade.courseCode}
+            课程名称: ${grade.courseName}
+            考试类型: ${grade.examType}
+            分数: ${grade.score}
+            成绩等级: ${grade.gradeLevel}
+            学期: ${grade.semester}
+            学分: ${grade.credit}
+            评语: ${grade.comment || '无'}
+            创建时间: ${grade.createTime || '未知'}
+            更新时间: ${grade.updateTime || '未知'}
+        `;
+        alert(details);
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('获取成绩详情失败', true);
+    });
+}
+</script>
+</body>
+</html>

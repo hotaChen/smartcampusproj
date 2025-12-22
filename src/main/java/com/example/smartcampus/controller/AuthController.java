@@ -7,6 +7,7 @@ import com.example.smartcampus.service.AuthService;
 import com.example.smartcampus.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -84,8 +85,24 @@ public class AuthController {
 
     @GetMapping("/user-info")
     @Operation(summary = "获取用户信息", description = "根据Token获取用户信息")
-    public ResponseEntity<?> getUserInfo(@RequestParam String token) {
+    public ResponseEntity<?> getUserInfo(HttpServletRequest request) {
         try {
+            // 从Authorization header中获取token
+            String token = null;
+            String bearerToken = request.getHeader("Authorization");
+            if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+                token = bearerToken.substring(7);
+            }
+            
+            if (token == null) {
+                // 如果header中没有token，尝试从请求参数中获取
+                token = request.getParameter("token");
+            }
+            
+            if (token == null) {
+                return ResponseEntity.badRequest().body("Token不能为空");
+            }
+            
             User user = authService.getUserFromToken(token);
             return ResponseEntity.ok(user);
         } catch (Exception e) {
