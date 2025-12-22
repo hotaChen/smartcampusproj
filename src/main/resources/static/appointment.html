@@ -18,6 +18,7 @@
     <p>正在加载功能...</p>
 </div>
 
+<script src="/js/api.js"></script>
 <script>
     const token = localStorage.getItem('token');
 
@@ -28,7 +29,7 @@
     if (!token) {
         document.getElementById('appointment-section').innerHTML = '<p style="color:red;">未检测到登录信息，请重新登录</p>';
     } else {
-        fetch(`/api/auth/user-info?token=${token}`)
+        apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
             .then(resp => resp.json())
             .then(user => {
                 const section = document.getElementById('appointment-section');
@@ -61,11 +62,10 @@
             return;
         }
 
-        fetch('/api/appointments', {
+        apiRequest(API_ENDPOINTS.APPOINTMENTS, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
-                'Authorization': 'Bearer ' + token
+                'Content-Type': 'application/x-www-form-urlencoded'
             },
             body: `serviceType=${encodeURIComponent(serviceType)}&appointmentTime=${encodeURIComponent(appointmentTime)}`
         })
@@ -82,7 +82,7 @@
 
 
     function viewMyAppointments() {
-        fetch('/api/appointments/mine', { headers: { 'Authorization': 'Bearer ' + token } })
+        apiRequest(API_ENDPOINTS.MY_APPOINTMENTS)
             .then(resp => resp.json())
             .then(list => {
                 const container = document.getElementById('student-appointments');
@@ -95,14 +95,14 @@
     }
 
     function cancelAppointment(id) {
-        fetch(`/api/appointments/${id}/cancel`, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token } })
+        apiRequest(API_ENDPOINTS.CANCEL_APPOINTMENT(id), { method: 'PUT' })
             .then(resp => resp.json())
             .then(() => { alert('已取消预约'); viewMyAppointments(); });
     }
 
     // ---------- 管理员功能 ----------
     function viewAllAppointments() {
-        fetch('/api/appointments', { headers: { 'Authorization': 'Bearer ' + token } })
+        apiRequest(API_ENDPOINTS.APPOINTMENTS)
             .then(resp => resp.json())
             .then(list => {
                 const container = document.getElementById('admin-appointments');
@@ -127,13 +127,13 @@
 
 
     function approveAppointment(id) {
-        fetch(`/api/appointments/${id}/approve`, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token } })
+        apiRequest(API_ENDPOINTS.APPROVE_APPOINTMENT(id), { method: 'PUT' })
             .then(resp => resp.json())
             .then(() => { alert('预约已审批'); viewAllAppointments(); });
     }
 
     function completeAppointment(id) {
-        fetch(`/api/appointments/${id}/complete`, { method: 'PUT', headers: { 'Authorization': 'Bearer ' + token } })
+        apiRequest(API_ENDPOINTS.COMPLETE_APPOINTMENT(id), { method: 'PUT' })
             .then(resp => resp.json())
             .then(() => { alert('预约已完成'); viewAllAppointments(); });
     }

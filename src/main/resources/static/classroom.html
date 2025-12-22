@@ -146,6 +146,7 @@
     </div>
 </div>
 
+<script src="/js/api.js"></script>
 <script>
     let classrooms = [];
     let currentUser = null;
@@ -155,7 +156,7 @@
         alert('未检测到登录信息，请重新登录');
         window.location.href = 'login.html';
     } else {
-        fetch(`/api/auth/user-info?token=${token}`)
+        apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
             .then(resp => resp.json())
             .then(user => {
                 currentUser = user;
@@ -173,7 +174,7 @@
     function goBack() { window.location.href = 'index.html'; }
 
     function loadClassrooms() {
-        fetch('/api/classrooms', { headers: { 'Authorization': 'Bearer ' + token } })
+        apiRequest(API_ENDPOINTS.CLASSROOMS)
             .then(resp => resp.json())
             .then(data => {
                 classrooms = Array.isArray(data) ? data : [];
@@ -246,15 +247,14 @@
         }
 
         const payload = { building, roomNumber, capacity };
-        let url = '/api/classrooms';
+        let url = API_ENDPOINTS.CLASSROOMS;
         let method = 'POST';
-        if (id) { url += `/${id}`; method = 'PUT'; }
+        if (id) { url = API_ENDPOINTS.CLASSROOM(id); method = 'PUT'; }
 
-        fetch(url, {
+        apiRequest(url, {
             method,
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + token
+                'Content-Type': 'application/json'
             },
             body: JSON.stringify(payload)
         })
@@ -274,9 +274,8 @@
 
     function deleteClassroom(id) {
         if (!confirm('确定删除该教室吗？')) return;
-        fetch(`/api/classrooms/${id}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': 'Bearer ' + token }
+        apiRequest(API_ENDPOINTS.CLASSROOM(id), {
+            method: 'DELETE'
         })
             .then(resp => {
                 if (!resp.ok) throw new Error('删除失败: ' + resp.status);

@@ -68,13 +68,14 @@
     </div>
 </div>
 
+<script src="/js/api.js"></script>
 <script>
     const token = localStorage.getItem('token');
     let currentUser = null;
     let timetables = [];
 
     // 获取用户信息
-    fetch(`/api/auth/user-info?token=${token}`)
+    apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
         .then(resp => resp.json())
         .then(user => {
             currentUser = user;
@@ -89,7 +90,7 @@
     function loadTimetable() {
         const courseId = document.getElementById('courseIdInput').value;
         if (!courseId) return alert('请输入课程ID');
-        fetch(`/api/timetables/course/${courseId}`, { headers: { 'Authorization': 'Bearer ' + token } })
+        apiRequest(API_ENDPOINTS.TIMETABLES_BY_COURSE(courseId))
             .then(resp => resp.json())
             .then(data => {
                 timetables = Array.isArray(data) ? data : [];
@@ -157,9 +158,8 @@
             courseId, classroomId, dayOfWeek, startTime, endTime
         });
 
-        fetch(`/api/timetables?${params.toString()}`, {
-            method: 'POST',
-            headers: { 'Authorization': 'Bearer ' + token }
+        apiRequest(`${API_ENDPOINTS.TIMETABLES}?${params.toString()}`, {
+            method: 'POST'
         })
             .then(resp => {
                 if (!resp.ok) throw new Error('新增失败');
@@ -174,7 +174,7 @@
 
     function deleteTimetable(id) {
         if (!confirm('确定删除该排课吗？')) return;
-        fetch(`/api/timetables/${id}`, { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } })
+        apiRequest(API_ENDPOINTS.TIMETABLE(id), { method: 'DELETE' })
             .then(resp => {
                 if (!resp.ok) throw new Error('删除失败');
                 loadTimetable();

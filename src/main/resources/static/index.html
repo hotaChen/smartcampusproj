@@ -47,6 +47,7 @@
     </div>
 </div>
 
+<script src="/js/api.js"></script>
 <script>
     const token = localStorage.getItem('token'); // 登录后存储 JWT
     let currentUser = null;
@@ -54,7 +55,7 @@
     if (!token) {
         document.getElementById('user-info').innerHTML = '<p style="color:red;">未检测到登录信息，请重新登录</p>';
     } else {
-        fetch(`/api/auth/user-info?token=${token}`)
+        apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
             .then(resp => resp.json())
             .then(user => {
                 currentUser = user;
@@ -131,7 +132,7 @@
     function submitChangePassword() {
         const oldPwd = document.getElementById('oldPassword').value;
         const newPwd = document.getElementById('newPassword').value;
-        fetch(`/api/auth/change-password?userId=${currentUser.id}&oldPassword=${oldPwd}&newPassword=${newPwd}`, {
+        apiRequest(`${API_ENDPOINTS.CHANGE_PASSWORD}?userId=${currentUser.id}&oldPassword=${oldPwd}&newPassword=${newPwd}`, {
             method: 'POST'
         })
             .then(resp => resp.text())
@@ -153,7 +154,7 @@
     function submitResetPassword() {
         const username = document.getElementById('resetUsername').value;
         const newPwd = document.getElementById('resetNewPassword').value;
-        fetch(`/api/auth/reset-password?username=${username}&newPassword=${newPwd}`, {
+        apiRequest(`${API_ENDPOINTS.RESET_PASSWORD}?username=${username}&newPassword=${newPwd}`, {
             method: 'POST'
         })
             .then(resp => resp.text())

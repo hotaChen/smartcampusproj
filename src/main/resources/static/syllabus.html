@@ -32,6 +32,7 @@
     <button onclick="deleteSyllabus()">删除</button>
 </div>
 
+<script src="/js/api.js"></script>
 <script>
     const token = localStorage.getItem('token');
     let currentUser = null;
@@ -40,7 +41,7 @@
         alert('未检测到登录信息，请重新登录');
         window.location.href = 'login.html';
     } else {
-        fetch(`/api/auth/user-info?token=${token}`)
+        apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
             .then(resp => resp.json())
             .then(user => {
                 currentUser = user;
@@ -59,7 +60,7 @@
     function goBack() { window.location.href = 'index.html'; }
 
     function loadAllCourses() {
-        fetch('/api/courses', { headers: { 'Authorization': 'Bearer ' + token } })
+        apiRequest(API_ENDPOINTS.COURSES)
             .then(resp => resp.json())
             .then(courses => {
                 const select = document.getElementById('courseSelect');
@@ -83,7 +84,7 @@
 
         if (!courseId) { textarea.value = ''; return; }
 
-        fetch(`/api/syllabus/${courseId}`, { headers: { 'Authorization': 'Bearer ' + token } })
+        apiRequest(API_ENDPOINTS.SYLLABUS(courseId))
             .then(resp => resp.ok ? resp.json() : null)
             .then(data => {
                 if (!data) {
@@ -104,15 +105,13 @@
             });
     }
 
-
     function deleteSyllabus() {
         const courseId = document.getElementById('courseSelect').value;
         if (!courseId) { alert('请先选择课程'); return; }
         if (!confirm('确定删除该教学大纲吗？')) return;
 
-        fetch(`/api/syllabus/${courseId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': 'Bearer ' + token }
+        apiRequest(API_ENDPOINTS.SYLLABUS(courseId), {
+            method: 'DELETE'
         })
             .then(resp => {
                 if (!resp.ok) throw new Error('删除失败');

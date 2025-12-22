@@ -33,6 +33,7 @@
     </tbody>
 </table>
 
+<script src="/js/api.js"></script>
 <script>
     const token = localStorage.getItem('token');
 
@@ -40,9 +41,7 @@
         alert('未检测到登录信息，请重新登录');
         window.location.href = 'login.html';
     } else {
-        fetch('/api/student/timetable/me', {
-            headers: { 'Authorization': 'Bearer ' + token }
-        })
+        apiRequest(API_ENDPOINTS.STUDENT_TIMETABLE)
             .then(resp => resp.json())
             .then(data => renderTimetable(data))
             .catch(err => console.error(err));
