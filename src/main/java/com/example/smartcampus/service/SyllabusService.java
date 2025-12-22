@@ -9,4 +9,6 @@ public interface SyllabusService {
     Syllabus getByCourse(Long courseId);
 
     void deleteByCourseId(Long courseId);
+
+    boolean isTeacherOfCourse(Long userId, Long courseId);
 }

@@ -44,25 +44,6 @@ public class TimetableController {
         );
     }
 
-    /** 修改排课（管理员 / 教务） */
-    @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public Timetable update(
-            @PathVariable Long id,
-            @RequestParam Long classroomId,
-            @RequestParam DayOfWeek dayOfWeek,
-            @RequestParam String startTime,
-            @RequestParam String endTime
-    ) {
-        return service.updateTimetable(
-                id,
-                classroomId,
-                dayOfWeek,
-                LocalTime.parse(startTime),
-                LocalTime.parse(endTime)
-        );
-    }
-
     /** 删除排课（管理员 / 教务） */
     @DeleteMapping("/{id}")
     @PreAuthorize("hasRole('ADMIN')")

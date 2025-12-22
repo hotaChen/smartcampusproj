@@ -85,7 +85,6 @@ public class DataInitializer implements CommandLineRunner {
                     //课程表权限
                     new Permission("查看课程时间表", "timetable:read", "查看课程对应时间表信息", "课程表管理"),
                     new Permission("创建课程表", "timetable:create", "创建新课程时间表", "课程表管理"),
-                    new Permission("编辑课程表", "timetable:update", "编辑课程表信息", "课程表管理"),
                     new Permission("删除课程表", "timetable:delete", "删除课程表", "课程表管理"),
 
                     // 预约管理权限

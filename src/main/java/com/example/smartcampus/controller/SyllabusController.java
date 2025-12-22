@@ -2,8 +2,10 @@ package com.example.smartcampus.controller;
 
 import com.example.smartcampus.dto.SyllabusDTO;
 import com.example.smartcampus.entity.Syllabus;
+import com.example.smartcampus.security.CustomUserDetails;
 import com.example.smartcampus.service.SyllabusService;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,12 +21,19 @@ public class SyllabusController {
     /**
      * 创建或更新教学大纲（教师 / 管理员）
      */
-    @PostMapping("/{courseId}")
-    @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     public SyllabusDTO createOrUpdate(
             @PathVariable Long courseId,
-            @RequestBody String content
+            @RequestBody String content,
+            @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
+        // 如果是教师
+        if ("TEACHER".equals(userDetails.getUserType())) {
+            boolean isTeacherOfCourse = syllabusService.isTeacherOfCourse(userDetails.getUserId(), courseId);
+            if (!isTeacherOfCourse) {
+                throw new RuntimeException("您无权修改该课程的大纲");
+            }
+        }
+
         Syllabus syllabus = syllabusService.createOrUpdate(courseId, content);
         return new SyllabusDTO(
                 syllabus.getId(),

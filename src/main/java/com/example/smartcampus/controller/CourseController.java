@@ -50,14 +50,16 @@ public class CourseController {
 
 
     @PutMapping("/{id}")
-    public Course update(
+    public CourseDTO update(
             @AuthenticationPrincipal CustomUserDetails user,
             @PathVariable Long id,
             @RequestBody Course course
     ) {
         checkAdmin(user);
-        return courseService.update(id, course);
+        Course updated = courseService.update(id, course);
+        return toDTO(updated); // 返回 DTO，不直接返回 JPA 实体
     }
+
 
     @DeleteMapping("/{id}")
     public void delete(

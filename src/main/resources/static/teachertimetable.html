@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>教师课表</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { margin-bottom: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background-color: #f4f4f4; }
+        button { padding: 5px 10px; margin: 2px; }
+    </style>
+</head>
+<body>
+<h1>教师课表</h1>
+<button onclick="goBack()">返回首页</button>
+
+<table id="timetable">
+    <thead>
+    <tr>
+        <th>课程ID</th>
+        <th>课程名称</th>
+        <th>教师</th>
+        <th>教室</th>
+        <th>星期</th>
+        <th>开始时间</th>
+        <th>结束时间</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr><td colspan="7">正在加载课表...</td></tr>
+    </tbody>
+</table>
+
+<script>
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        alert('未检测到登录信息，请重新登录');
+        window.location.href = 'login.html';
+    } else {
+        fetch('/api/teacher/timetable/me', {
+            headers: { 'Authorization': 'Bearer ' + token }
+        })
+            .then(resp => resp.json())
+            .then(data => renderTimetable(data))
+            .catch(err => console.error(err));
+    }
+
+    function goBack() { window.location.href = 'index.html'; }
+
+    function renderTimetable(list) {
+        const tbody = document.querySelector('#timetable tbody');
+        if (!list.length) {
+            tbody.innerHTML = '<tr><td colspan="7">暂无课程安排</td></tr>';
+            return;
+        }
+
+        const dayOrder = {
+            'MONDAY': 1,
+            'TUESDAY': 2,
+            'WEDNESDAY': 3,
+            'THURSDAY': 4,
+            'FRIDAY': 5,
+            'SATURDAY': 6,
+            'SUNDAY': 7
+        };
+
+        list.sort((a, b) => {
+            const dayA = dayOrder[a.dayOfWeek] || 8;
+            const dayB = dayOrder[b.dayOfWeek] || 8;
+            if (dayA !== dayB) return dayA - dayB;
+            return a.startTime.localeCompare(b.startTime);
+        });
+
+        tbody.innerHTML = '';
+        list.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${item.courseId}</td>
+                <td>${item.courseName || '-'}</td>
+                <td>${item.teacherName || '-'}</td>
+                <td>${item.classroom || '-'}</td>
+                <td>${item.dayOfWeek || '-'}</td>
+                <td>${item.startTime || '-'}</td>
+                <td>${item.endTime || '-'}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+</script>
+</body>
+</html>

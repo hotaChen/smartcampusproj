@@ -1,5 +1,6 @@
 package com.example.smartcampus.service.impl;
 
+import com.example.smartcampus.dto.CourseDTO;
 import com.example.smartcampus.entity.Course;
 import com.example.smartcampus.entity.CourseSelection;
 import com.example.smartcampus.entity.Timetable;
@@ -100,11 +101,31 @@ public class CourseSelectionServiceImpl implements CourseSelectionService {
     }
 
     @Override
-    public List<Course> getMyCourses(Long studentId) {
+    public List<CourseDTO> getMyCourses(Long studentId) {
         return selectionRepo.findByStudentId(studentId)
                 .stream()
-                .map(CourseSelection::getCourse)
+                .map(selection -> {
+                    Course c = selection.getCourse();
+                    Long teacherId = c.getTeacher() != null ? c.getTeacher().getId() : null;
+                    String teacherName = c.getTeacher() != null ? c.getTeacher().getRealName() : "-";
+                    Long classroomId = c.getClassroom() != null ? c.getClassroom().getId() : null;
+                    String classroomName = c.getClassroom() != null ? c.getClassroom().getBuilding() + "-" + c.getClassroom().getRoomNumber() : "-";
+
+                    return new CourseDTO(
+                            c.getId(),
+                            c.getCourseCode(),
+                            c.getName(),
+                            c.getCredit(),
+                            c.getCapacity(),
+                            teacherId,
+                            teacherName,
+                            classroomId,
+                            classroomName
+                    );
+                })
                 .toList();
     }
+
+
 }
 

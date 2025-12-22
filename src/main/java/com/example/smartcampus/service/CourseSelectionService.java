@@ -1,5 +1,6 @@
 package com.example.smartcampus.service;
 
+import com.example.smartcampus.dto.CourseDTO;
 import com.example.smartcampus.entity.Course;
 
 import java.util.List;
@@ -10,6 +11,6 @@ public interface CourseSelectionService {
 
     void dropCourse(Long studentId, Long courseId);
 
-    List<Course> getMyCourses(Long studentId);
+    List<CourseDTO> getMyCourses(Long studentId);
 }
 

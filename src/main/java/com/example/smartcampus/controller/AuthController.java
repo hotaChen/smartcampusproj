@@ -8,6 +8,7 @@ import com.example.smartcampus.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -37,6 +38,7 @@ public class AuthController {
     }
 
     @PostMapping("/register")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "用户注册", description = "新用户注册接口")
     public ResponseEntity<?> register(@RequestBody User user) {
         try {
@@ -61,6 +63,7 @@ public class AuthController {
     }
 
     @PostMapping("/reset-password")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "重置密码", description = "管理员重置用户密码接口")
     public ResponseEntity<?> resetPassword(@RequestParam String username,
                                            @RequestParam String newPassword) {

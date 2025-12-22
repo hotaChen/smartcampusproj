@@ -54,4 +54,10 @@ public class SyllabusServiceImpl implements SyllabusService {
         syllabusRepo.delete(syllabus);
     }
 
+    public boolean isTeacherOfCourse(Long teacherId, Long courseId) {
+        Course course = courseRepo.findById(courseId).orElse(null);
+        return course != null && course.getTeacher().getId().equals(teacherId);
+    }
+
+
 }

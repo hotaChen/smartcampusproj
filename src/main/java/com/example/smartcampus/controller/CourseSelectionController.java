@@ -1,5 +1,6 @@
 package com.example.smartcampus.controller;
 
+import com.example.smartcampus.dto.CourseDTO;
 import com.example.smartcampus.entity.Course;
 import com.example.smartcampus.security.CustomUserDetails;
 import com.example.smartcampus.service.CourseSelectionService;
@@ -44,7 +45,7 @@ public class CourseSelectionController {
     /** 查看我的课程 */
     @GetMapping("/my")
     @PreAuthorize("hasRole('STUDENT')")
-    public List<Course> myCourses(
+    public List<CourseDTO> myCourses(
             @AuthenticationPrincipal CustomUserDetails user) {
 
         return service.getMyCourses(user.getUserId());

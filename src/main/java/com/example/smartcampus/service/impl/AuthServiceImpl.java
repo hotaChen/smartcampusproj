@@ -90,6 +90,55 @@ public class AuthServiceImpl implements AuthService {
             throw new RuntimeException("邮箱已存在");
         }
 
+        // 必填字段校验
+        if (user.getUsername() == null || user.getUsername().isBlank()) {
+            throw new RuntimeException("用户名不能为空");
+        }
+        if (user.getRealName() == null || user.getRealName().isBlank()) {
+            throw new RuntimeException("真实姓名不能为空");
+        }
+        if (user.getUserType() == null || user.getUserType().isBlank()) {
+            throw new RuntimeException("用户类型不能为空");
+        }
+
+        // 根据角色校验必填字段
+        String type = user.getUserType().toUpperCase();
+        switch (type) {
+            case "STUDENT":
+                if (user.getStudentId() == null || user.getStudentId().isBlank()) {
+                    throw new RuntimeException("学生学号不能为空");
+                }
+                if (user.getDepartment() == null || user.getDepartment().isBlank()) {
+                    throw new RuntimeException("院系不能为空");
+                }
+                if (user.getMajor() == null || user.getMajor().isBlank()) {
+                    throw new RuntimeException("专业不能为空");
+                }
+                if (user.getGrade() == null) {
+                    throw new RuntimeException("年级不能为空");
+                }
+                if (user.getClassName() == null || user.getClassName().isBlank()) {
+                    throw new RuntimeException("班级不能为空");
+                }
+                break;
+            case "TEACHER":
+                if (user.getTeacherId() == null || user.getTeacherId().isBlank()) {
+                    throw new RuntimeException("教师工号不能为空");
+                }
+                if (user.getTitle() == null || user.getTitle().isBlank()) {
+                    throw new RuntimeException("职称不能为空");
+                }
+                if (user.getDepartment() == null || user.getDepartment().isBlank()) {
+                    throw new RuntimeException("院系不能为空");
+                }
+                break;
+            case "ADMIN":
+                // 管理员不需要额外字段
+                break;
+            default:
+                throw new RuntimeException("未知用户类型: " + user.getUserType());
+        }
+
         // 设置默认密码并加密
         if (user.getPassword() == null) {
             user.setPassword("123456"); // 默认密码
@@ -98,18 +147,19 @@ public class AuthServiceImpl implements AuthService {
 
         // 设置默认角色
         if (user.getRole() == null) {
-            String roleName = "ROLE_" + user.getUserType().toUpperCase();
+            String roleName = "ROLE_" + type;
             Role defaultRole = roleRepository.findByName(roleName)
                     .orElseThrow(() -> new RuntimeException("默认角色不存在: " + roleName));
             user.setRole(defaultRole);
         }
 
-        // 设置创建时间
+        // 设置创建时间与状态
         user.setCreateTime(LocalDateTime.now());
         user.setStatus(1); // 启用状态
 
         userRepository.save(user);
     }
+
 
     @Override
     public void changePassword(Long userId, String oldPassword, String newPassword) {
