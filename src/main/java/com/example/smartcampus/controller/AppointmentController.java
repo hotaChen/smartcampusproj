@@ -5,11 +5,14 @@ import com.example.smartcampus.security.CustomUserDetails;
 import com.example.smartcampus.service.AppointmentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @RestController
@@ -28,19 +31,20 @@ public class AppointmentController {
      */
     @PostMapping
     @PreAuthorize("hasRole('STUDENT')")
-    @Operation(summary = "创建预约", description = "学生创建新的服务预约")
-    public Appointment createAppointment(
-            @AuthenticationPrincipal CustomUserDetails userDetails,
-            @RequestParam String serviceType,
-            @RequestParam String appointmentTime
-    ) {
-        Long studentId = userDetails.getUserId();
-        return appointmentService.createAppointment(
-                studentId,
-                LocalDateTime.parse(appointmentTime),
-                serviceType
-        );
+    public ResponseEntity<?> createAppointment(@RequestParam String serviceType,
+                                               @RequestParam String appointmentTime,
+                                               @AuthenticationPrincipal CustomUserDetails user) {
+        try {
+            LocalDateTime time = LocalDateTime.parse(appointmentTime); // 格式错误会抛 DateTimeParseException
+            Appointment appt = appointmentService.createAppointment(user.getUserId(), time, serviceType);
+            return ResponseEntity.ok(appt);
+        } catch (DateTimeParseException e) {
+            return ResponseEntity.badRequest().body("时间格式错误，格式应为: yyyy-MM-ddTHH:mm");
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("创建预约失败：" + e.getMessage());
+        }
     }
+
 
     /**
      * 学生查询自己的预约

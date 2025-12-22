@@ -27,7 +27,6 @@ public class CourseServiceImpl implements CourseService {
         this.courseRepository = courseRepository;
         this.classroomRepository = classroomRepository;
         this.userRepository = userRepository;
-
     }
 
     @Override
@@ -111,5 +110,8 @@ public class CourseServiceImpl implements CourseService {
         courseRepository.deleteById(id);
     }
 
-    @Override public List<Course> findAll() { return courseRepository.findAll(); }
+    @Override
+    public List<Course> findAll() {
+        return courseRepository.findAll();
+    }
 }
