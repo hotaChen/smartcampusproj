@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>教学大纲</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { margin-bottom: 20px; }
+        select, textarea { width: 100%; padding: 5px; margin: 5px 0; }
+        button { padding: 5px 10px; margin: 5px 2px; }
+        #syllabusContent { height: 300px; }
+    </style>
+</head>
+<body>
+<h1>教学大纲</h1>
+<button onclick="goBack()">返回首页</button>
+
+<div>
+    <label for="courseSelect">选择课程:</label>
+    <select id="courseSelect" onchange="loadSyllabus()">
+        <option value="">--请选择课程--</option>
+    </select>
+</div>
+
+<div>
+    <label for="syllabusContent">教学大纲内容:</label>
+    <textarea id="syllabusContent" placeholder="请先选择课程..." readonly></textarea>
+</div>
+
+<div id="teacherActions" style="display:none;">
+    <button onclick="saveSyllabus()">保存</button>
+    <button onclick="deleteSyllabus()">删除</button>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+    const token = localStorage.getItem('token');
+    let currentUser = null;
+
+    if (!token) {
+        alert('未检测到登录信息，请重新登录');
+        window.location.href = 'login.html';
+    } else {
+        apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
+            .then(resp => resp.json())
+            .then(user => {
+                currentUser = user;
+                if (user.userType === 'TEACHER' || user.userType === 'ADMIN') {
+                    document.getElementById('teacherActions').style.display = 'block';
+                    loadAllCourses();
+                } else if (user.userType === 'STUDENT') {
+                    loadAllCourses();
+                } else {
+                    alert('无权限访问教学大纲');
+                    window.location.href = 'index.html';
+                }
+            });
+    }
+
+    function goBack() { window.location.href = 'index.html'; }
+
+    function loadAllCourses() {
+        apiRequest(API_ENDPOINTS.COURSES)
+            .then(resp => resp.json())
+            .then(courses => {
+                const select = document.getElementById('courseSelect');
+                courses.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.id;
+                    opt.textContent = c.name;
+
+                    // 只有管理员显示所有课程，教师只显示自己教授的
+                    if (currentUser.userType === 'TEACHER' && c.teacherId !== currentUser.id) {
+                        opt.disabled = true; // 不可选
+                    }
+                    select.appendChild(opt);
+                });
+            });
+    }
+
+    function loadSyllabus() {
+        const courseId = document.getElementById('courseSelect').value;
+        const textarea = document.getElementById('syllabusContent');
+
+        if (!courseId) { textarea.value = ''; return; }
+
+        apiRequest(API_ENDPOINTS.SYLLABUS(courseId))
+            .then(resp => resp.ok ? resp.json() : null)
+            .then(data => {
+                if (!data) {
+                    textarea.value = '';
+                    if (currentUser.userType === 'TEACHER' || currentUser.userType === 'ADMIN') {
+                        textarea.value = '暂无大纲，请编辑添加内容';
+                    }
+                } else {
+                    textarea.value = data.content;
+                }
+
+                // 教师仅能编辑自己课程
+                const selectedCourse = document.getElementById('courseSelect').selectedOptions[0];
+                const canEdit = currentUser.userType === 'ADMIN' ||
+                    (currentUser.userType === 'TEACHER' && !selectedCourse.disabled);
+                textarea.readOnly = !canEdit;
+                document.getElementById('teacherActions').style.display = canEdit ? 'block' : 'none';
+            });
+    }
+
+    function deleteSyllabus() {
+        const courseId = document.getElementById('courseSelect').value;
+        if (!courseId) { alert('请先选择课程'); return; }
+        if (!confirm('确定删除该教学大纲吗？')) return;
+
+        apiRequest(API_ENDPOINTS.SYLLABUS(courseId), {
+            method: 'DELETE'
+        })
+            .then(resp => {
+                if (!resp.ok) throw new Error('删除失败');
+                document.getElementById('syllabusContent').value = '';
+                alert('删除成功');
+            })
+            .catch(err => alert(err.message));
+    }
+</script>
+</body>
+</html>

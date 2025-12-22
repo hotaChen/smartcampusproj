@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Campus 错误日志管理</title>
+    <style>
+        /* 简单样式，保持与登录页风格统一 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .tab-area {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            border: none;
+            background-color: #e9e9e9;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .tab-btn.active {
+            background-color: #409eff;
+            color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group label {
+            width: 120px;
+            text-align: right;
+            padding-right: 10px;
+            color: #666;
+        }
+
+        .form-group input,
+        .form-group select {
+            flex: 1;
+            max-width: 300px;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            border-color: #409eff;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #fff;
+            background-color: #409eff;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-danger {
+            background-color: #f56c6c;
+        }
+
+        .btn-default {
+            background-color: #e9e9e9;
+            color: #333;
+        }
+
+        .table-area {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            border: 1px solid #eee;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8f8f8;
+            color: #333;
+        }
+
+        .pagination {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stats-area {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .stats-card {
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background-color: #f8f8f8;
+        }
+
+        .stats-card h4 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .stats-item {
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+        }
+
+        .detail-area {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background-color: #f8f8f8;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Smart Campus 错误日志管理（管理员专属）</h2>
+
+    <!-- 标签切换 -->
+    <div class="tab-area">
+        <button class="tab-btn active" onclick="switchTab('query-tab')">日志查询</button>
+        <button class="tab-btn" onclick="switchTab('detail-tab')">日志详情</button>
+        <button class="tab-btn" onclick="switchTab('stats-tab')">错误统计</button>
+        <button class="tab-btn" onclick="switchTab('operate-tab')">日志操作</button>
+    </div>
+
+    <!-- 1. 日志查询标签页 -->
+    <div id="query-tab" class="tab-content">
+        <h3>错误日志分页查询</h3>
+        <div class="form-group">
+            <label for="query-module">模块名称</label>
+            <input type="text" id="query-module" placeholder="请输入模块名称（可选）">
+        </div>
+        <div class="form-group">
+            <label for="query-level">错误级别</label>
+            <select id="query-level">
+                <option value="">全部级别</option>
+                <option value="INFO">INFO</option>
+                <option value="WARN">WARN</option>
+                <option value="ERROR">ERROR</option>
+                <option value="FATAL">FATAL</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="query-page">页码</label>
+            <input type="number" id="query-page" value="0" min="0" placeholder="页码（从0开始）">
+        </div>
+        <div class="form-group">
+            <label for="query-size">每页条数</label>
+            <input type="number" id="query-size" value="20" min="1" placeholder="每页显示条数">
+        </div>
+        <button class="btn" onclick="queryErrorLogs()">通用条件查询</button>
+        <button class="btn" onclick="queryByModule()">按模块查询</button>
+        <button class="btn" onclick="queryByLevel()">按错误级别查询</button>
+        <button class="btn" onclick="queryByTimeRange()">按时间范围查询</button>
+        <button class="btn" onclick="getErrorLogList()">获取默认列表</button>
+
+        <!-- 日志列表表格 -->
+        <div class="table-area">
+            <table id="error-log-table">
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>模块</th>
+                    <th>错误级别</th>
+                    <th>错误信息</th>
+                    <th>创建时间</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody id="error-log-tbody">
+                <!-- 数据将通过JS动态填充 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分页控件 -->
+        <div class="pagination">
+            <button class="btn btn-default" onclick="changePage(-1)">上一页</button>
+            <span id="page-info">当前页码：0，总页数：0</span>
+            <button class="btn btn-default" onclick="changePage(1)">下一页</button>
+        </div>
+    </div>
+
+    <!-- 2. 日志详情标签页 -->
+    <div id="detail-tab" class="tab-content hidden">
+        <h3>错误日志详情查询</h3>
+        <div class="form-group">
+            <label for="detail-id">日志ID</label>
+            <input type="number" id="detail-id" placeholder="请输入日志ID" min="1">
+        </div>
+        <button class="btn" onclick="getErrorLogDetail()">查询详情</button>
+
+        <!-- 详情展示区域 -->
+        <div class="detail-area" id="log-detail-content" style="display: none;">
+            <div class="stats-item">
+                <span>日志ID：</span>
+                <span id="detail-log-id"></span>
+            </div>
+            <div class="stats-item">
+                <span>模块名称：</span>
+                <span id="detail-module"></span>
+            </div>
+            <div class="stats-item">
+                <span>错误级别：</span>
+                <span id="detail-level"></span>
+            </div>
+            <div class="stats-item">
+                <span>错误信息：</span>
+                <span id="detail-message"></span>
+            </div>
+            <div class="stats-item">
+                <span>错误堆栈：</span>
+                <pre id="detail-stack" style="margin-top: 10px; white-space: pre-wrap; word-break: break-all;"></pre>
+            </div>
+            <div class="stats-item">
+                <span>创建时间：</span>
+                <span id="detail-create-time"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. 错误统计标签页 -->
+    <div id="stats-tab" class="tab-content hidden">
+        <h3>错误统计信息</h3>
+        <button class="btn" onclick="getErrorStatistics()">获取总统计</button>
+        <button class="btn" onclick="getModuleErrorStats()">获取模块统计</button>
+        <button class="btn" onclick="getLevelErrorStats()">获取级别统计</button>
+        <button class="btn" onclick="getErrorTrend()">获取错误趋势（7天）</button>
+        <div class="form-group">
+            <label for="trend-days">趋势天数</label>
+            <input type="number" id="trend-days" value="7" min="1" placeholder="查询N天内的错误趋势">
+        </div>
+
+        <!-- 统计卡片区域 -->
+        <div class="stats-area" id="stats-container">
+            <!-- 统计数据将动态填充 -->
+        </div>
+    </div>
+
+    <!-- 4. 日志操作标签页 -->
+    <div id="operate-tab" class="tab-content hidden">
+        <h3>错误日志操作</h3>
+        <div class="form-group">
+            <label for="delete-id">单条删除ID</label>
+            <input type="number" id="delete-id" placeholder="请输入要删除的日志ID" min="1">
+        </div>
+        <button class="btn btn-danger" onclick="deleteErrorLog()">单条删除</button>
+
+        <div class="form-group" style="margin-top: 20px;">
+            <label for="batch-ids">批量删除ID</label>
+            <input type="text" id="batch-ids" placeholder="请输入多个ID，用英文逗号分隔（如1,2,3）">
+        </div>
+        <button class="btn btn-danger" onclick="batchDeleteErrorLogs()">批量删除</button>
+
+        <div class="form-group" style="margin-top: 20px;">
+            <label for="cleanup-time">清理过期日志（时间）</label>
+            <input type="datetime-local" id="cleanup-time" placeholder="选择过期时间点">
+        </div>
+        <button class="btn btn-danger" onclick="cleanupExpiredErrorLogs()">按时间清理过期日志</button>
+
+        <div class="form-group" style="margin-top: 20px;">
+            <label for="cleanup-days">按天数清理</label>
+            <input type="number" id="cleanup-days" value="30" min="1" placeholder="清理N天前的日志">
+        </div>
+        <button class="btn btn-danger" onclick="cleanupByDays()">按天数清理日志</button>
+        <button class="btn btn-danger" onclick="triggerMonthlyCleanup()">触发每月清理任务</button>
+    </div>
+</div>
+
+<script>
+    // 全局变量：存储当前页码、总页数、当前查询条件
+    let currentPage = 0;
+    let totalPages = 0;
+    const API_BASE_URL = "/api/error-logs"; // 接口基础路径，与后端保持一致
+
+    // 1. 标签切换功能
+    function switchTab(tabId) {
+        // 隐藏所有标签内容
+        document.querySelectorAll('.tab-content').forEach(item => {
+            item.classList.add('hidden');
+        });
+        // 移除所有标签激活状态
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        // 显示目标标签，激活目标按钮
+        document.getElementById(tabId).classList.remove('hidden');
+        event.target.classList.add('active');
+    }
+
+    // 2. 获取请求头（携带token，与登录页保持一致）
+    function getRequestHeaders() {
+        const token = localStorage.getItem("token");
+        return {
+            "Content-Type": "application/json",
+            "Authorization": token ? `Bearer ${token}` : "" // 适配JWT认证
+        };
+    }
+
+    // 3. 日志查询相关方法
+    // 通用条件查询
+    function queryErrorLogs() {
+        const module = document.getElementById("query-module").value.trim();
+        const level = document.getElementById("query-level").value;
+        const page = parseInt(document.getElementById("query-page").value);
+        const size = parseInt(document.getElementById("query-size").value);
+        currentPage = page;
+
+        // 构造查询DTO
+        const queryDTO = {
+            module: module || undefined,
+            level: level || undefined,
+            page: page,
+            size: size
+        };
+
+        fetch(`${API_BASE_URL}/query`, {
+            method: "POST",
+            headers: getRequestHeaders(),
+            body: JSON.stringify(queryDTO)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("查询失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderErrorLogTable(data);
+                updatePageInfo(data);
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 按模块查询
+    function queryByModule() {
+        const module = document.getElementById("query-module").value.trim();
+        if (!module) {
+            alert("请输入模块名称！");
+            return;
+        }
+        const page = parseInt(document.getElementById("query-page").value);
+        const size = parseInt(document.getElementById("query-size").value);
+        currentPage = page;
+
+        fetch(`${API_BASE_URL}/module/${module}?page=${page}&size=${size}`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("按模块查询失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderErrorLogTable(data);
+                updatePageInfo(data);
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 按错误级别查询
+    function queryByLevel() {
+        const level = document.getElementById("query-level").value;
+        if (!level) {
+            alert("请选择错误级别！");
+            return;
+        }
+        const page = parseInt(document.getElementById("query-page").value);
+        const size = parseInt(document.getElementById("query-size").value);
+        currentPage = page;
+
+        fetch(`${API_BASE_URL}/level/${level}?page=${page}&size=${size}`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("按级别查询失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderErrorLogTable(data);
+                updatePageInfo(data);
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 按时间范围查询
+    function queryByTimeRange() {
+        const startTime = prompt("请输入开始时间（格式：yyyy-MM-dd'T'HH:mm:ss，如2025-12-01T00:00:00）");
+        const endTime = prompt("请输入结束时间（格式：yyyy-MM-dd'T'HH:mm:ss，如2025-12-22T23:59:59）");
+        if (!startTime || !endTime) {
+            alert("开始时间和结束时间不能为空！");
+            return;
+        }
+        const page = parseInt(document.getElementById("query-page").value);
+        const size = parseInt(document.getElementById("query-size").value);
+        currentPage = page;
+
+        fetch(`${API_BASE_URL}/time-range?startTime=${startTime}&endTime=${endTime}&page=${page}&size=${size}`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("按时间范围查询失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderErrorLogTable(data);
+                updatePageInfo(data);
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 获取默认日志列表
+    function getErrorLogList() {
+        const page = parseInt(document.getElementById("query-page").value);
+        const size = parseInt(document.getElementById("query-size").value);
+        currentPage = page;
+
+        fetch(`${API_BASE_URL}/list?page=${page}&size=${size}`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("获取日志列表失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderErrorLogTable(data);
+                updatePageInfo(data);
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 渲染日志表格
+    function renderErrorLogTable(pageData) {
+        const tbody = document.getElementById("error-log-tbody");
+        tbody.innerHTML = ""; // 清空原有数据
+
+        if (!pageData.content || pageData.content.length === 0) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td colspan="6" style="text-align: center; color: #999;">暂无错误日志数据</td>`;
+            tbody.appendChild(tr);
+            return;
+        }
+
+        // 遍历数据渲染行
+        pageData.content.forEach(log => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                    <td>${log.id || ""}</td>
+                    <td>${log.module || ""}</td>
+                    <td>${log.level || ""}</td>
+                    <td title="${log.message || ""}">${(log.message || "").length > 50 ? (log.message.substring(0, 50) + "...") : log.message}</td>
+                    <td>${log.createTime || ""}</td>
+                    <td>
+                        <button class="btn btn-default" style="padding: 4px 8px;" onclick="fillDetailId(${log.id})">查看详情</button>
+                        <button class="btn btn-danger" style="padding: 4px 8px;" onclick="toDeleteSingle(${log.id})">删除</button>
+                    </td>
+                `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 更新分页信息
+    function updatePageInfo(pageData) {
+        totalPages = pageData.totalPages || 0;
+        document.getElementById("page-info").innerText = `当前页码：${currentPage}，总页数：${totalPages}，总条数：${pageData.totalElements || 0}`;
+    }
+
+    // 切换页码
+    function changePage(type) {
+        const newPage = currentPage + type;
+        if (newPage < 0 || newPage >= totalPages) {
+            alert(type === -1 ? "已经是第一页" : "已经是最后一页");
+            return;
+        }
+        document.getElementById("query-page").value = newPage;
+        queryErrorLogs(); // 重新查询
+    }
+
+    // 4. 日志详情相关方法
+    // 填充详情ID并切换标签
+    function fillDetailId(logId) {
+        document.getElementById("detail-id").value = logId;
+        switchTab("detail-tab");
+        getErrorLogDetail(); // 自动查询详情
+    }
+
+    // 查询日志详情
+    function getErrorLogDetail() {
+        const logId = document.getElementById("detail-id").value;
+        if (!logId) {
+            alert("请输入日志ID！");
+            return;
+        }
+
+        fetch(`${API_BASE_URL}/${logId}`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("获取日志详情失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const detailContent = document.getElementById("log-detail-content");
+                detailContent.style.display = "block";
+                // 填充详情数据
+                document.getElementById("detail-log-id").innerText = data.id || "";
+                document.getElementById("detail-module").innerText = data.module || "";
+                document.getElementById("detail-level").innerText = data.level || "";
+                document.getElementById("detail-message").innerText = data.message || "";
+                document.getElementById("detail-stack").innerText = data.stackTrace || "无错误堆栈信息";
+                document.getElementById("detail-create-time").innerText = data.createTime || "";
+            })
+            .catch(err => {
+                alert(err.message);
+                document.getElementById("log-detail-content").style.display = "none";
+            });
+    }
+
+    // 5. 错误统计相关方法
+    // 获取总统计
+    function getErrorStatistics() {
+        fetch(`${API_BASE_URL}/statistics`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("获取总统计失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderStatsCard("总错误统计", data);
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 获取模块统计
+    function getModuleErrorStats() {
+        fetch(`${API_BASE_URL}/statistics/module`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("获取模块统计失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderStatsCard("模块错误统计", data);
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 获取级别统计
+    function getLevelErrorStats() {
+        fetch(`${API_BASE_URL}/statistics/level`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("获取级别统计失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderStatsCard("错误级别统计", data);
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 获取错误趋势
+    function getErrorTrend() {
+        const days = parseInt(document.getElementById("trend-days").value);
+        fetch(`${API_BASE_URL}/statistics/trend?days=${days}`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("获取错误趋势失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderStatsCard(`${days}天错误趋势统计`, data);
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 渲染统计卡片
+    function renderStatsCard(title, statsData) {
+        const statsContainer = document.getElementById("stats-container");
+        // 创建新的统计卡片
+        const card = document.createElement("div");
+        card.className = "stats-card";
+        let cardHtml = `<h4>${title}</h4>`;
+
+        // 遍历统计数据
+        for (const [key, value] of Object.entries(statsData)) {
+            cardHtml += `<div class="stats-item">
+                    <span>${key}：</span>
+                    <span>${value}</span>
+                </div>`;
+        }
+        card.innerHTML = cardHtml;
+
+        // 先清空原有卡片（可注释此行保留多份统计）
+        statsContainer.innerHTML = "";
+        statsContainer.appendChild(card);
+    }
+
+    // 6. 日志操作相关方法
+    // 填充要删除的ID
+    function toDeleteSingle(logId) {
+        if (confirm(`确定要删除ID为${logId}的错误日志吗？`)) {
+            document.getElementById("delete-id").value = logId;
+            switchTab("operate-tab");
+            deleteErrorLog();
+        }
+    }
+
+    // 单条删除
+    function deleteErrorLog() {
+        const logId = document.getElementById("delete-id").value;
+        if (!logId) {
+            alert("请输入要删除的日志ID！");
+            return;
+        }
+
+        if (!confirm("确定要删除该错误日志吗？此操作不可恢复！")) {
+            return;
+        }
+
+        fetch(`${API_BASE_URL}/${logId}`, {
+            method: "DELETE",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("单条删除失败：" + response.statusText);
+                }
+                alert("删除成功！");
+                document.getElementById("delete-id").value = "";
+                getErrorLogList(); // 刷新列表
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 批量删除
+    function batchDeleteErrorLogs() {
+        const idsStr = document.getElementById("batch-ids").value.trim();
+        if (!idsStr) {
+            alert("请输入要批量删除的日志ID！");
+            return;
+        }
+
+        // 转换为ID数组
+        const ids = idsStr.split(",").map(id => parseInt(id.trim())).filter(id => !isNaN(id));
+        if (ids.length === 0) {
+            alert("请输入有效的ID（英文逗号分隔）！");
+            return;
+        }
+
+        if (!confirm(`确定要批量删除${ids.length}条错误日志吗？此操作不可恢复！`)) {
+            return;
+        }
+
+        fetch(`${API_BASE_URL}/batch`, {
+            method: "DELETE",
+            headers: getRequestHeaders(),
+            body: JSON.stringify(ids)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("批量删除失败：" + response.statusText);
+                }
+                alert("批量删除成功！");
+                document.getElementById("batch-ids").value = "";
+                getErrorLogList(); // 刷新列表
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 按时间清理过期日志
+    function cleanupExpiredErrorLogs() {
+        const beforeTime = document.getElementById("cleanup-time").value;
+        if (!beforeTime) {
+            alert("请选择过期时间点！");
+            return;
+        }
+
+        if (!confirm("确定要清理该时间点之前的所有错误日志吗？此操作不可恢复！")) {
+            return;
+        }
+
+        // 转换为后端需要的ISO格式（补充秒数）
+        const isoTime = beforeTime + ":00";
+        fetch(`${API_BASE_URL}/cleanup?beforeTime=${isoTime}`, {
+            method: "DELETE",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("按时间清理失败：" + response.statusText);
+                }
+                alert("清理过期日志成功！");
+                document.getElementById("cleanup-time").value = "";
+                getErrorLogList(); // 刷新列表
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 按天数清理日志
+    function cleanupByDays() {
+        const days = parseInt(document.getElementById("cleanup-days").value);
+        if (!days || days < 1) {
+            alert("请输入有效的天数（大于0）！");
+            return;
+        }
+
+        if (!confirm(`确定要清理${days}天前的所有错误日志吗？此操作不可恢复！`)) {
+            return;
+        }
+
+        fetch(`${API_BASE_URL}/cleanup/days/${days}`, {
+            method: "POST",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("按天数清理失败：" + response.statusText);
+                }
+                return response.text();
+            })
+            .then(msg => {
+                alert(msg);
+                getErrorLogList(); // 刷新列表
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 触发每月清理任务
+    function triggerMonthlyCleanup() {
+        if (!confirm("确定要触发每月清理任务吗？")) {
+            return;
+        }
+
+        fetch(`${API_BASE_URL}/cleanup/monthly`, {
+            method: "POST",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("触发每月清理任务失败：" + response.statusText);
+                }
+                return response.text();
+            })
+            .then(msg => {
+                alert(msg);
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 页面加载完成后，默认查询一次日志列表
+    window.onload = function() {
+        getErrorLogList();
+    };
+</script>
+</body>
+</html>

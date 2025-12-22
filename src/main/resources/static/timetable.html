@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>课程排课管理</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { margin-bottom: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background-color: #f4f4f4; }
+        button { padding: 5px 10px; margin-right: 5px; }
+        input { margin: 3px 0; padding: 5px; width: 150px; }
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background: #fff; padding: 20px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+<h1>课程排课管理</h1>
+
+<div>
+    <button onclick="goBack()">返回首页</button>
+    <input type="number" id="courseIdInput" placeholder="输入课程ID查询">
+    <button onclick="loadTimetable()">查询课表</button>
+    <button id="addBtn" style="display:none;" onclick="openAddModal()">新增排课</button>
+</div>
+
+<table id="timetableTable">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>课程ID</th>
+        <th>课程名称</th>
+        <th>教室</th>
+        <th>星期</th>
+        <th>开始时间</th>
+        <th>结束时间</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr><td colspan="9">请输入课程ID并点击查询</td></tr>
+    </tbody>
+</table>
+
+<!-- 新增排课弹窗 -->
+<div class="modal" id="timetableModal">
+    <div class="modal-content">
+        <h3 id="modalTitle">新增排课</h3>
+        <input type="hidden" id="timetableId">
+        <input type="number" id="modalCourseId" placeholder="课程ID"><br>
+        <input type="number" id="modalClassroomId" placeholder="教室ID"><br>
+        <select id="modalDayOfWeek">
+            <option value="MONDAY">星期一</option>
+            <option value="TUESDAY">星期二</option>
+            <option value="WEDNESDAY">星期三</option>
+            <option value="THURSDAY">星期四</option>
+            <option value="FRIDAY">星期五</option>
+            <option value="SATURDAY">星期六</option>
+            <option value="SUNDAY">星期日</option>
+        </select><br>
+        <input type="time" id="modalStartTime" placeholder="开始时间"><br>
+        <input type="time" id="modalEndTime" placeholder="结束时间"><br>
+        <button onclick="submitTimetable()">提交</button>
+        <button onclick="closeModal()">取消</button>
+        <p id="modalMsg" style="color:red;"></p>
+    </div>
+</div>
+
+<script src="/js/api.js"></script>
+<script>
+    const token = localStorage.getItem('token');
+    let currentUser = null;
+    let timetables = [];
+
+    // 获取用户信息
+    apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
+        .then(resp => resp.json())
+        .then(user => {
+            currentUser = user;
+            if (user.userType === 'ADMIN') {
+                document.getElementById('addBtn').style.display = 'inline-block';
+            }
+        })
+        .catch(err => console.error(err));
+
+    function goBack() { window.location.href = 'index.html'; }
+
+    function loadTimetable() {
+        const courseId = document.getElementById('courseIdInput').value;
+        if (!courseId) return alert('请输入课程ID');
+        apiRequest(API_ENDPOINTS.TIMETABLES_BY_COURSE(courseId))
+            .then(resp => resp.json())
+            .then(data => {
+                timetables = Array.isArray(data) ? data : [];
+                renderTable();
+            })
+            .catch(err => {
+                console.error(err);
+                document.querySelector('#timetableTable tbody').innerHTML =
+                    '<tr><td colspan="9">加载失败，请检查接口或权限</td></tr>';
+            });
+    }
+
+    function renderTable() {
+        const tbody = document.querySelector('#timetableTable tbody');
+        if (!timetables || timetables.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="9">暂无排课信息</td></tr>';
+            return;
+        }
+        tbody.innerHTML = '';
+        timetables.forEach(t => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${t.id}</td>
+                <td>${t.courseId}</td>
+                <td>${t.courseName || '-'}</td>
+                <td>${t.classroom || '-'}</td>
+                <td>${t.dayOfWeek}</td>
+                <td>${t.startTime}</td>
+                <td>${t.endTime}</td>
+                <td>${currentUser.userType === 'ADMIN'
+                ? `<button onclick="deleteTimetable(${t.id})">删除</button>` : ''}</td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function openAddModal() {
+        document.getElementById('modalTitle').innerText = '新增排课';
+        document.getElementById('timetableId').value = '';
+        document.getElementById('modalCourseId').value = '';
+        document.getElementById('modalClassroomId').value = '';
+        document.getElementById('modalDayOfWeek').value = 'MONDAY';
+        document.getElementById('modalStartTime').value = '';
+        document.getElementById('modalEndTime').value = '';
+        document.getElementById('modalMsg').innerText = '';
+        document.getElementById('timetableModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('timetableModal').style.display = 'none';
+    }
+
+    function submitTimetable() {
+        const courseId = document.getElementById('modalCourseId').value;
+        const classroomId = document.getElementById('modalClassroomId').value;
+        const dayOfWeek = document.getElementById('modalDayOfWeek').value;
+        const startTime = document.getElementById('modalStartTime').value;
+        const endTime = document.getElementById('modalEndTime').value;
+
+        if (!courseId || !classroomId || !dayOfWeek || !startTime || !endTime) {
+            document.getElementById('modalMsg').innerText = '请填写完整信息';
+            return;
+        }
+
+        const params = new URLSearchParams({
+            courseId, classroomId, dayOfWeek, startTime, endTime
+        });
+
+        apiRequest(`${API_ENDPOINTS.TIMETABLES}?${params.toString()}`, {
+            method: 'POST'
+        })
+            .then(resp => {
+                if (!resp.ok) throw new Error('新增失败');
+                closeModal();
+                loadTimetable();
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('modalMsg').innerText = '操作失败';
+            });
+    }
+
+    function deleteTimetable(id) {
+        if (!confirm('确定删除该排课吗？')) return;
+        apiRequest(API_ENDPOINTS.TIMETABLE(id), { method: 'DELETE' })
+            .then(resp => {
+                if (!resp.ok) throw new Error('删除失败');
+                loadTimetable();
+            })
+            .catch(err => alert('删除失败'));
+    }
+</script>
+</body>
+</html>

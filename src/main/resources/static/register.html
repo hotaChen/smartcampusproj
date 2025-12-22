@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>注册新用户 - Smart Campus</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        input, select, button { display: block; margin: 8px 0; padding: 6px; width: 300px; }
+        .role-fields { display: none; margin-left: 10px; }
+        h1 { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+<h1>注册新用户</h1>
+
+<!-- 公共字段 -->
+<div>
+    <input type="text" id="reg-username" placeholder="用户名">
+    <input type="text" id="reg-realname" placeholder="真实姓名">
+    <input type="password" id="reg-password" placeholder="密码">
+    <input type="text" id="reg-email" placeholder="邮箱（可选）">
+    <input type="text" id="reg-phone" placeholder="电话（可选）">
+    <label for="reg-usertype">用户类型:</label>
+    <select id="reg-usertype" onchange="showRoleFields()">
+        <option value="">请选择角色</option>
+        <option value="STUDENT">学生</option>
+        <option value="TEACHER">教师</option>
+        <option value="ADMIN">管理员</option>
+    </select>
+</div>
+
+<!-- 学生特有字段 -->
+<div id="student-fields" class="role-fields">
+    <input type="text" id="studentId" placeholder="学号">
+    <input type="text" id="department-s" placeholder="院系">
+    <input type="text" id="major" placeholder="专业">
+    <input type="number" id="grade" placeholder="年级">
+    <input type="text" id="className" placeholder="班级">
+</div>
+
+<!-- 教师特有字段 -->
+<div id="teacher-fields" class="role-fields">
+    <input type="text" id="teacherId" placeholder="工号">
+    <input type="text" id="title" placeholder="职称">
+    <input type="text" id="department-t" placeholder="院系">
+</div>
+
+<button onclick="registerUser()">注册用户</button>
+<p id="msg" style="color:red;"></p>
+
+<script src="/js/api.js"></script>
+<script>
+    const token = localStorage.getItem('token');
+
+    // 检查权限，非管理员禁止访问
+    if(!token){
+        document.body.innerHTML = '<p style="color:red;">请先登录</p>';
+    } else {
+        apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
+            .then(resp => resp.json())
+            .then(user => {
+                if(user.userType !== 'ADMIN'){
+                    document.body.innerHTML = '<p style="color:red;">您没有权限访问此页面</p>';
+                }
+            })
+            .catch(err => {
+                document.body.innerHTML = '<p style="color:red;">获取用户信息失败，请重新登录</p>';
+            });
+    }
+
+    // 显示角色对应字段
+    function showRoleFields(){
+        const role = document.getElementById('reg-usertype').value;
+        document.getElementById('student-fields').style.display = role === 'STUDENT' ? 'block' : 'none';
+        document.getElementById('teacher-fields').style.display = role === 'TEACHER' ? 'block' : 'none';
+    }
+
+    // 提交注册
+    function registerUser() {
+        const userType = document.getElementById('reg-usertype').value;
+        if(!userType){
+            document.getElementById('msg').innerText = '请选择用户类型';
+            return;
+        }
+
+        // 公共字段
+        const data = {
+            username: document.getElementById('reg-username').value,
+            realName: document.getElementById('reg-realname').value,
+            password: document.getElementById('reg-password').value,
+            email: document.getElementById('reg-email').value,
+            phone: document.getElementById('reg-phone').value,
+            userType: userType
+        };
+
+        // 学生特有字段
+        if(userType === 'STUDENT'){
+            data.studentId = document.getElementById('studentId').value;
+            data.department = document.getElementById('department-s').value;
+            data.major = document.getElementById('major').value;
+            data.grade = document.getElementById('grade').value;
+            data.className = document.getElementById('className').value;
+        }
+
+        // 教师特有字段
+        if(userType === 'TEACHER'){
+            data.teacherId = document.getElementById('teacherId').value;
+            data.title = document.getElementById('title').value;
+            data.department = document.getElementById('department-t').value;
+        }
+
+        apiRequest(API_ENDPOINTS.REGISTER, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(resp => resp.text())
+            .then(msg => document.getElementById('msg').innerText = msg)
+            .catch(err => document.getElementById('msg').innerText = '注册失败: ' + err);
+    }
+</script>
+</body>
+</html>

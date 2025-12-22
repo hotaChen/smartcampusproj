@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Smart Campus 系统报表管理</title>
+    <style>
+        /* 保持项目UI风格统一，与现有页面样式一致 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .tab-area {
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            padding: 8px 16px;
+            border: none;
+            background-color: #e9e9e9;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        .tab-btn.active {
+            background-color: #409eff;
+            color: #fff;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .form-group label {
+            width: 120px;
+            text-align: right;
+            padding-right: 10px;
+            color: #666;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            flex: 1;
+            max-width: 300px;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .form-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            border-color: #409eff;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            color: #fff;
+            background-color: #409eff;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-danger {
+            background-color: #f56c6c;
+        }
+
+        .btn-default {
+            background-color: #e9e9e9;
+            color: #333;
+        }
+
+        .table-area {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            border: 1px solid #eee;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8f8f8;
+            color: #333;
+        }
+
+        .pagination {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stats-area {
+            margin-top: 20px;
+            padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 8px;
+            background-color: #f8f8f8;
+        }
+
+        .stats-item {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            color: #666;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>Smart Campus 系统报表管理</h2>
+
+    <!-- 标签切换区域 -->
+    <div class="tab-area">
+        <button class="tab-btn active" onclick="switchTab('query-tab')">报表查询</button>
+        <button class="tab-btn" onclick="switchTab('generate-tab')">生成报表</button>
+        <button class="tab-btn" onclick="switchTab('update-tab')">更新报表状态</button>
+        <button class="tab-btn" onclick="switchTab('operate-tab')">报表操作</button>
+        <button class="tab-btn" onclick="switchTab('stats-tab')">报表统计</button>
+    </div>
+
+    <!-- 1. 报表查询标签页 -->
+    <div id="query-tab" class="tab-content">
+        <h3>系统报表分页与条件查询</h3>
+        <div class="form-group">
+            <label for="query-page">页码</label>
+            <input type="number" id="query-page" value="0" min="0" placeholder="页码（从0开始）">
+        </div>
+        <div class="form-group">
+            <label for="query-size">每页条数</label>
+            <input type="number" id="query-size" value="10" min="1" placeholder="每页显示条数">
+        </div>
+        <div class="form-group">
+            <label for="query-report-type">报表类型</label>
+            <input type="text" id="query-report-type" placeholder="如STUDENT_STAT/TEACHER_STAT">
+        </div>
+        <div class="form-group">
+            <label for="query-generator-id">生成者ID</label>
+            <input type="number" id="query-generator-id" placeholder="请输入生成者ID" min="1">
+        </div>
+        <div class="form-group">
+            <label for="query-status">报表状态</label>
+            <input type="text" id="query-status" placeholder="如COMPLETED/PENDING/FAILED">
+        </div>
+        <button class="btn" onclick="getAllReports()">获取所有报表（分页）</button>
+        <button class="btn" onclick="getReportsByType()">按报表类型查询</button>
+        <button class="btn" onclick="getReportsByGenerator()">按生成者查询</button>
+        <button class="btn" onclick="getReportsByStatus()">按状态查询</button>
+        <button class="btn" onclick="getReportsByTimeRange()">按时间范围查询</button>
+        <button class="btn" onclick="getReportsByDateRangeAndType()">按时间+类型查询</button>
+
+        <!-- 报表列表表格 -->
+        <div class="table-area">
+            <table id="report-table">
+                <thead>
+                <tr>
+                    <th>报表ID</th>
+                    <th>报表类型</th>
+                    <th>报表名称</th>
+                    <th>生成者ID</th>
+                    <th>状态</th>
+                    <th>生成时间</th>
+                    <th>文件路径</th>
+                    <th>操作</th>
+                </tr>
+                </thead>
+                <tbody id="report-tbody">
+                <!-- 数据将通过JS动态填充 -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 分页控件 -->
+        <div class="pagination">
+            <button class="btn btn-default" onclick="changePage(-1)">上一页</button>
+            <span id="page-info">当前页码：0，总页数：0</span>
+            <button class="btn btn-default" onclick="changePage(1)">下一页</button>
+        </div>
+    </div>
+
+    <!-- 2. 生成报表标签页 -->
+    <div id="generate-tab" class="tab-content hidden">
+        <h3>生成新系统报表</h3>
+        <div class="form-group">
+            <label for="generate-name">报表名称</label>
+            <input type="text" id="generate-name" placeholder="请输入报表名称" required>
+        </div>
+        <div class="form-group">
+            <label for="generate-type">报表类型</label>
+            <input type="text" id="generate-type" placeholder="如STUDENT_STAT/TEACHER_STAT" required>
+        </div>
+        <div class="form-group">
+            <label for="generate-generator-id">生成者ID</label>
+            <input type="number" id="generate-generator-id" placeholder="请输入生成者ID" min="1" required>
+        </div>
+        <div class="form-group">
+            <label for="generate-status">初始状态</label>
+            <select id="generate-status" required>
+                <option value="PENDING">待生成</option>
+                <option value="COMPLETED">已完成</option>
+                <option value="FAILED">生成失败</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="generate-desc">报表描述</label>
+            <textarea id="generate-desc" placeholder="请输入报表详细描述"></textarea>
+        </div>
+        <button class="btn" onclick="generateReport()">生成报表</button>
+    </div>
+
+    <!-- 3. 更新报表状态标签页 -->
+    <div id="update-tab" class="tab-content hidden">
+        <h3>更新报表状态</h3>
+        <div class="form-group">
+            <label for="update-report-id">报表ID</label>
+            <input type="number" id="update-report-id" placeholder="请输入要更新的报表ID" min="1" required>
+        </div>
+        <div class="form-group">
+            <label for="update-report-status">新状态</label>
+            <select id="update-report-status" required>
+                <option value="PENDING">待生成</option>
+                <option value="COMPLETED">已完成</option>
+                <option value="FAILED">生成失败</option>
+            </select>
+        </div>
+        <button class="btn" onclick="updateReportStatus()">更新报表状态</button>
+    </div>
+
+    <!-- 4. 报表操作标签页 -->
+    <div id="operate-tab" class="tab-content hidden">
+        <h3>报表下载与删除</h3>
+        <div class="form-group">
+            <label for="download-report-id">下载报表ID</label>
+            <input type="number" id="download-report-id" placeholder="请输入要下载的报表ID" min="1">
+        </div>
+        <button class="btn" onclick="downloadReport()">下载报表</button>
+
+        <div class="form-group" style="margin-top: 20px;">
+            <label for="delete-report-id">删除报表ID</label>
+            <input type="number" id="delete-report-id" placeholder="请输入要删除的报表ID" min="1">
+        </div>
+        <button class="btn btn-danger" onclick="deleteReport()">删除报表</button>
+    </div>
+
+    <!-- 5. 报表统计标签页 -->
+    <div id="stats-tab" class="tab-content hidden">
+        <h3>系统报表统计信息</h3>
+        <button class="btn" onclick="getReportStatistics()">获取报表总统计</button>
+        <button class="btn" onclick="getCompletedReportsCount()">获取已完成报表数量</button>
+        <button class="btn" onclick="getCountByReportType()">按类型统计报表数量</button>
+
+        <!-- 统计信息展示区域 -->
+        <div class="stats-area" id="report-stats-container">
+            <p>点击上方按钮获取报表统计信息...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 全局变量：当前页码、总页数
+    let currentPage = 0;
+    let totalPages = 0;
+    const API_BASE_URL = "/api/system-reports"; // 接口基础路径，与后端一致
+
+    // 1. 标签切换功能（与现有页面逻辑一致）
+    function switchTab(tabId) {
+        // 隐藏所有标签内容
+        document.querySelectorAll('.tab-content').forEach(item => {
+            item.classList.add('hidden');
+        });
+        // 移除所有标签激活状态
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        // 显示目标标签，激活目标按钮
+        document.getElementById(tabId).classList.remove('hidden');
+        event.target.classList.add('active');
+    }
+
+    // 2. 获取请求头（携带登录token，适配后端权限校验）
+    function getRequestHeaders() {
+        const token = localStorage.getItem("token");
+        return {
+            "Content-Type": "application/json",
+            "Authorization": token ? `Bearer ${token}` : ""
+        };
+    }
+
+    // 3. 报表查询相关方法（全覆盖后端查询接口）
+    // 获取所有报表（分页，按生成时间降序）
+    function getAllReports() {
+        const page = parseInt(document.getElementById("query-page").value);
+        const size = parseInt(document.getElementById("query-size").value);
+        currentPage = page;
+
+        fetch(`${API_BASE_URL}?page=${page}&size=${size}`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("获取所有报表失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderReportTable(data);
+                updatePageInfo(data);
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 按报表类型查询
+    function getReportsByType() {
+        const reportType = document.getElementById("query-report-type").value.trim();
+        if (!reportType) {
+            alert("请输入报表类型！");
+            return;
+        }
+
+        fetch(`${API_BASE_URL}/type/${reportType}`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("按报表类型查询失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderSimpleReportList(data);
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 按生成者ID查询
+    function getReportsByGenerator() {
+        const generatorId = document.getElementById("query-generator-id").value;
+        if (!generatorId) {
+            alert("请输入生成者ID！");
+            return;
+        }
+
+        fetch(`${API_BASE_URL}/generated-by/${generatorId}`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("按生成者查询失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderSimpleReportList(data);
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 按状态查询
+    function getReportsByStatus() {
+        const status = document.getElementById("query-status").value.trim();
+        if (!status) {
+            alert("请输入报表状态！");
+            return;
+        }
+
+        fetch(`${API_BASE_URL}/status/${status}`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("按状态查询失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderSimpleReportList(data);
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 按时间范围查询
+    function getReportsByTimeRange() {
+        const start = prompt("请输入开始时间（格式：yyyy-MM-dd'T'HH:mm:ss，如2025-12-01T00:00:00）");
+        const end = prompt("请输入结束时间（格式：yyyy-MM-dd'T'HH:mm:ss，如2025-12-22T23:59:59）");
+        if (!start || !end) {
+            alert("开始时间和结束时间不能为空！");
+            return;
+        }
+
+        fetch(`${API_BASE_URL}/time-range?start=${start}&end=${end}`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("按时间范围查询失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderSimpleReportList(data);
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 按时间范围+类型查询
+    function getReportsByDateRangeAndType() {
+        const reportType = document.getElementById("query-report-type").value.trim();
+        if (!reportType) {
+            alert("请先输入报表类型！");
+            return;
+        }
+        const start = prompt("请输入开始时间（格式：yyyy-MM-dd'T'HH:mm:ss，如2025-12-01T00:00:00）");
+        const end = prompt("请输入结束时间（格式：yyyy-MM-dd'T'HH:mm:ss，如2025-12-22T23:59:59）");
+        if (!start || !end) {
+            alert("开始时间和结束时间不能为空！");
+            return;
+        }
+
+        fetch(`${API_BASE_URL}/time-range-type?start=${start}&end=${end}&reportType=${reportType}`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("按时间+类型查询失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderSimpleReportList(data);
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 渲染分页报表表格
+    function renderReportTable(pageData) {
+        const tbody = document.getElementById("report-tbody");
+        tbody.innerHTML = ""; // 清空原有数据
+
+        if (!pageData.content || pageData.content.length === 0) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td colspan="8" style="text-align: center; color: #999;">暂无系统报表数据</td>`;
+            tbody.appendChild(tr);
+            return;
+        }
+
+        // 遍历数据渲染行
+        pageData.content.forEach(report => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                    <td>${report.id || ""}</td>
+                    <td>${report.reportType || ""}</td>
+                    <td>${report.reportName || ""}</td>
+                    <td>${report.generatedById || ""}</td>
+                    <td>${report.status || ""}</td>
+                    <td>${report.generateTime || ""}</td>
+                    <td title="${report.filePath || ""}">${(report.filePath || "").length > 40 ? (report.filePath.substring(0, 40) + "...") : report.filePath}</td>
+                    <td>
+                        <button class="btn btn-default" style="padding: 4px 8px;" onclick="fillDownloadId(${report.id})">下载</button>
+                        <button class="btn btn-danger" style="padding: 4px 8px;" onclick="fillDeleteId(${report.id})">删除</button>
+                    </td>
+                `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // 渲染非分页报表列表
+    function renderSimpleReportList(reportList) {
+        const tbody = document.getElementById("report-tbody");
+        tbody.innerHTML = ""; // 清空原有数据
+
+        if (!reportList || reportList.length === 0) {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `<td colspan="8" style="text-align: center; color: #999;">暂无系统报表数据</td>`;
+            tbody.appendChild(tr);
+            return;
+        }
+
+        // 遍历数据渲染行
+        reportList.forEach(report => {
+            const tr = document.createElement("tr");
+            tr.innerHTML = `
+                    <td>${report.id || ""}</td>
+                    <td>${report.reportType || ""}</td>
+                    <td>${report.reportName || ""}</td>
+                    <td>${report.generatedById || ""}</td>
+                    <td>${report.status || ""}</td>
+                    <td>${report.generateTime || ""}</td>
+                    <td title="${report.filePath || ""}">${(report.filePath || "").length > 40 ? (report.filePath.substring(0, 40) + "...") : report.filePath}</td>
+                    <td>
+                        <button class="btn btn-default" style="padding: 4px 8px;" onclick="fillDownloadId(${report.id})">下载</button>
+                        <button class="btn btn-danger" style="padding: 4px 8px;" onclick="fillDeleteId(${report.id})">删除</button>
+                    </td>
+                `;
+            tbody.appendChild(tr);
+        });
+
+        // 重置分页信息
+        document.getElementById("page-info").innerText = "当前为非分页查询，无分页信息";
+    }
+
+    // 更新分页信息
+    function updatePageInfo(pageData) {
+        totalPages = pageData.totalPages || 0;
+        document.getElementById("page-info").innerText = `当前页码：${currentPage}，总页数：${totalPages}，总条数：${pageData.totalElements || 0}`;
+    }
+
+    // 切换页码
+    function changePage(type) {
+        const newPage = currentPage + type;
+        if (newPage < 0 || newPage >= totalPages) {
+            alert(type === -1 ? "已经是第一页" : "已经是最后一页");
+            return;
+        }
+        document.getElementById("query-page").value = newPage;
+        getAllReports(); // 重新查询
+    }
+
+    // 填充下载ID并切换标签
+    function fillDownloadId(reportId) {
+        document.getElementById("download-report-id").value = reportId;
+        switchTab("operate-tab");
+    }
+
+    // 填充删除ID并切换标签
+    function fillDeleteId(reportId) {
+        if (confirm(`确定要删除ID为${reportId}的报表吗？此操作不可恢复！`)) {
+            document.getElementById("delete-report-id").value = reportId;
+            switchTab("operate-tab");
+            deleteReport();
+        }
+    }
+
+    // 4. 生成报表方法
+    function generateReport() {
+        const reportName = document.getElementById("generate-name").value.trim();
+        const reportType = document.getElementById("generate-type").value.trim();
+        const generatedById = document.getElementById("generate-generator-id").value;
+        const status = document.getElementById("generate-status").value;
+        const reportDesc = document.getElementById("generate-desc").value.trim();
+
+        // 校验必填项
+        if (!reportName || !reportType || !generatedById) {
+            alert("报表名称、报表类型、生成者ID为必填项！");
+            return;
+        }
+
+        // 构造报表对象
+        const systemReport = {
+            reportName,
+            reportType,
+            generatedById: parseInt(generatedById),
+            status,
+            description: reportDesc
+        };
+
+        fetch(`${API_BASE_URL}/generate`, {
+            method: "POST",
+            headers: getRequestHeaders(),
+            body: JSON.stringify(systemReport)
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("生成报表失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert("报表生成成功！报表ID：" + data.id);
+                // 清空表单
+                document.getElementById("generate-name").value = "";
+                document.getElementById("generate-type").value = "";
+                document.getElementById("generate-generator-id").value = "";
+                document.getElementById("generate-desc").value = "";
+                getAllReports(); // 刷新报表列表
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 5. 更新报表状态方法
+    function updateReportStatus() {
+        const reportId = document.getElementById("update-report-id").value;
+        const newStatus = document.getElementById("update-report-status").value;
+
+        if (!reportId) {
+            alert("请输入要更新的报表ID！");
+            return;
+        }
+
+        fetch(`${API_BASE_URL}/${reportId}/status?status=${newStatus}`, {
+            method: "PUT",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("更新报表状态失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                alert("报表状态更新成功！当前状态：" + data.status);
+                // 清空表单
+                document.getElementById("update-report-id").value = "";
+                getAllReports(); // 刷新报表列表
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 6. 报表操作方法（下载+删除）
+    // 下载报表
+    function downloadReport() {
+        const reportId = document.getElementById("download-report-id").value;
+        if (!reportId) {
+            alert("请输入要下载的报表ID！");
+            return;
+        }
+
+        // 构造下载请求（后端暂未实现具体下载逻辑，此处弹出提示）
+        fetch(`${API_BASE_URL}/${reportId}/download`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (response.status === 404) {
+                    alert("报表下载接口暂未实现（后端返回404），请先完善后端文件下载逻辑！");
+                    return;
+                }
+                if (!response.ok) {
+                    throw new Error("下载报表失败：" + response.statusText);
+                }
+                // 若后端实现下载逻辑，此处可处理文件流
+                return response.blob();
+            })
+            .then(blob => {
+                // 生成下载链接（示例代码）
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `report_${reportId}.xlsx`;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                alert("报表下载成功！");
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 删除报表
+    function deleteReport() {
+        const reportId = document.getElementById("delete-report-id").value;
+        if (!reportId) {
+            alert("请输入要删除的报表ID！");
+            return;
+        }
+
+        if (!confirm("确定要删除该系统报表吗？此操作不可恢复！")) {
+            return;
+        }
+
+        fetch(`${API_BASE_URL}/${reportId}`, {
+            method: "DELETE",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("删除报表失败：" + response.statusText);
+                }
+                alert("报表删除成功！");
+                document.getElementById("delete-report-id").value = "";
+                getAllReports(); // 刷新报表列表
+            })
+            .catch(err => {
+                alert(err.message);
+            });
+    }
+
+    // 7. 报表统计相关方法
+    // 获取报表总统计
+    function getReportStatistics() {
+        fetch(`${API_BASE_URL}/statistics`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("获取报表总统计失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                renderReportStats("报表总统计信息", data);
+            })
+            .catch(err => {
+                alert(err.message);
+                document.getElementById("report-stats-container").innerHTML = `<p style="color: red;">获取失败：${err.message}</p>`;
+            });
+    }
+
+    // 获取已完成报表数量
+    function getCompletedReportsCount() {
+        fetch(`${API_BASE_URL}/count/completed`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("获取已完成报表数量失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(count => {
+                renderReportStats("已完成报表数量", { "已完成报表总数": count });
+            })
+            .catch(err => {
+                alert(err.message);
+                document.getElementById("report-stats-container").innerHTML = `<p style="color: red;">获取失败：${err.message}</p>`;
+            });
+    }
+
+    // 按类型统计报表数量
+    function getCountByReportType() {
+        fetch(`${API_BASE_URL}/count/by-type`, {
+            method: "GET",
+            headers: getRequestHeaders()
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("按类型统计报表数量失败：" + response.statusText);
+                }
+                return response.json();
+            })
+            .then(data => {
+                const statsObj = {};
+                data.forEach(item => {
+                    // item[0] 为报表类型，item[1] 为对应数量
+                    statsObj[item[0] || "未知类型"] = item[1] || 0;
+                });
+                renderReportStats("按报表类型统计数量", statsObj);
+            })
+            .catch(err => {
+                alert(err.message);
+                document.getElementById("report-stats-container").innerHTML = `<p style="color: red;">获取失败：${err.message}</p>`;
+            });
+    }
+
+    // 渲染报表统计信息
+    function renderReportStats(title, statsData) {
+        const statsContainer = document.getElementById("report-stats-container");
+        let statsHtml = `<h4 style="margin-bottom: 15px; color: #333;">${title}</h4>`;
+
+        for (const [key, value] of Object.entries(statsData)) {
+            statsHtml += `<div class="stats-item">
+                    <span>${key}：</span>
+                    <span>${value}</span>
+                </div>`;
+        }
+
+        statsContainer.innerHTML = statsHtml;
+    }
+
+    // 页面加载完成后，默认查询一次所有报表
+    window.onload = function() {
+        getAllReports();
+    };
+</script>
+</body>
+</html>
