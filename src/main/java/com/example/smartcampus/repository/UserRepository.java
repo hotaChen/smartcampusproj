@@ -54,6 +54,15 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT COUNT(u) FROM User u WHERE u.userType = :userType")
     Long countByUserType(@Param("userType") String userType);
+    // 添加以下方法：
+    @Query("SELECT COUNT(u) FROM User u WHERE u.status = 1")
+    Long countActiveUsers();
+
+    @Query("SELECT u.userType, COUNT(u) FROM User u GROUP BY u.userType")
+    List<Object[]> countUsersByType();
+
+    @Query("SELECT u.department, COUNT(u) FROM User u WHERE u.department IS NOT NULL GROUP BY u.department")
+    List<Object[]> countUsersByDepartment();
 
     @Query("SELECT u FROM User u WHERE u.createTime >= :startDate AND u.createTime <= :endDate")
     List<User> findByCreateTimeBetween(@Param("startDate") java.time.LocalDateTime startDate,
