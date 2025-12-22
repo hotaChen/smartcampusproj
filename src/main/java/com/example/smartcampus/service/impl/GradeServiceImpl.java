@@ -110,6 +110,11 @@ public class GradeServiceImpl implements GradeService {
     }
 
     @Override
+    public List<Grade> getGradesByStudentStudentId(String studentId) {
+        return gradeRepository.findByStudentStudentId(studentId);
+    }
+
+    @Override
     public List<Grade> getGradesByTeacherId(Long teacherId) {
         return gradeRepository.findByTeacherId(teacherId);
     }
@@ -117,6 +122,11 @@ public class GradeServiceImpl implements GradeService {
     @Override
     public List<Grade> getStudentGradesBySemester(Long studentId, String semester) {
         return gradeRepository.findStudentGradesBySemester(studentId, semester);
+    }
+
+    @Override
+    public List<Grade> getStudentGradesByStudentIdAndSemester(String studentId, String semester) {
+        return gradeRepository.findByStudentStudentIdAndSemester(studentId, semester);
     }
 
     @Override
@@ -166,6 +176,12 @@ public class GradeServiceImpl implements GradeService {
     @Override
     public Float calculateAverageScoreByStudentAndSemester(Long studentId, String semester) {
         Float avgScore = gradeRepository.calculateAverageScoreByStudentAndSemester(studentId, semester);
+        return avgScore != null ? avgScore : 0.0f;
+    }
+
+    @Override
+    public Float calculateAverageScoreByStudentNumberAndSemester(String studentNumber, String semester) {
+        Float avgScore = gradeRepository.calculateAverageScoreByStudentNumberAndSemester(studentNumber, semester);
         return avgScore != null ? avgScore : 0.0f;
     }
 

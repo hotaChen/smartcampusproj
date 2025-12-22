@@ -12,6 +12,13 @@ public interface AppointmentService {
                                   String serviceType);
 
     List<Appointment> getAppointmentsByStudent(Long studentId);
+    
+    /**
+     * 根据学号获取学生的所有预约记录
+     * @param studentId 学号
+     * @return 预约记录列表
+     */
+    List<Appointment> getAppointmentsByStudentStudentId(String studentId);
 
     List<Appointment> getAllAppointments();
 

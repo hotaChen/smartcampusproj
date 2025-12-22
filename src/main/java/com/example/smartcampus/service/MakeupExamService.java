@@ -13,10 +13,10 @@ public interface MakeupExamService {
     /**
      * 学生申请补考
      * @param makeupExamRequest 补考申请请求
-     * @param studentId 学生ID
+     * @param studentId 学号
      * @return 创建的补考记录
      */
-    MakeupExam applyForMakeupExam(MakeupExamRequest makeupExamRequest, Long studentId);
+    MakeupExam applyForMakeupExam(MakeupExamRequest makeupExamRequest, String studentId);
 
     /**
      * 教师审批补考申请
@@ -51,6 +51,13 @@ public interface MakeupExamService {
     List<MakeupExam> getMakeupExamsByStudentId(Long studentId);
 
     /**
+     * 根据学号获取学生的所有补考记录
+     * @param studentId 学号
+     * @return 补考记录列表
+     */
+    List<MakeupExam> getMakeupExamsByStudentStudentId(String studentId);
+
+    /**
      * 获取教师审批的所有补考记录
      * @param teacherId 教师ID
      * @return 补考记录列表
@@ -64,6 +71,28 @@ public interface MakeupExamService {
      * @return 补考记录列表
      */
     List<MakeupExam> getStudentMakeupExamsBySemester(Long studentId, String semester);
+
+    /**
+     * 根据学号获取学生在某学期的补考记录
+     * @param studentId 学号
+     * @param semester 学期
+     * @return 补考记录列表
+     */
+    List<MakeupExam> getStudentMakeupExamsByStudentIdAndSemester(String studentId, String semester);
+
+    /**
+     * 根据课程代码和学期获取补考记录
+     * @param courseCode 课程代码
+     * @param semester 学期
+     * @return 补考记录列表
+     */
+    List<MakeupExam> getMakeupExamsByCourseCodeAndSemester(String courseCode, String semester);
+
+    /**
+     * 获取所有补考记录
+     * @return 所有补考记录列表
+     */
+    List<MakeupExam> getAllMakeupExams();
 
     /**
      * 获取教师教授的某门课程在某学期的所有补考记录

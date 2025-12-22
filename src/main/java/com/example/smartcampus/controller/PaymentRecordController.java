@@ -209,6 +209,28 @@ public class PaymentRecordController {
         }
     }
 
+    @GetMapping("/student/number/{studentNumber}")
+    @Operation(summary = "根据学号获取缴费记录", description = "根据学号获取缴费记录列表")
+    public ResponseEntity<List<PaymentRecordResponse>> getPaymentRecordsByStudentNumber(@PathVariable String studentNumber) {
+        logger.info("=== PaymentRecordController.getPaymentRecordsByStudentNumber() 被调用 ===");
+        logger.info("查询学生缴费记录: 学号={}", studentNumber);
+
+        try {
+            List<PaymentRecord> paymentRecords = paymentRecordService.getPaymentRecordsByStudentStudentId(studentNumber);
+            
+            List<PaymentRecordResponse> responses = paymentRecords.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+            
+            logger.info("✅ 成功获取学号 {} 的 {} 条缴费记录", studentNumber, responses.size());
+            return ResponseEntity.ok(responses);
+            
+        } catch (Exception e) {
+            logger.error("获取学生缴费记录失败: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @GetMapping("/semester/{semester}")
     @Operation(summary = "根据学期获取缴费记录", description = "根据学期获取缴费记录列表")
     public ResponseEntity<List<PaymentRecordResponse>> getPaymentRecordsBySemester(@PathVariable String semester) {
@@ -290,6 +312,29 @@ public class PaymentRecordController {
                     .collect(Collectors.toList());
             
             logger.info("✅ 成功获取学生 {} 学期 {} 的 {} 条缴费记录", studentId, semester, responses.size());
+            return ResponseEntity.ok(responses);
+            
+        } catch (Exception e) {
+            logger.error("获取学生学期缴费记录失败: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/student/number/{studentNumber}/semester/{semester}")
+    @Operation(summary = "根据学号和学期获取缴费记录", description = "根据学号和学期获取缴费记录列表")
+    public ResponseEntity<List<PaymentRecordResponse>> getPaymentRecordsByStudentNumberAndSemester(
+            @PathVariable String studentNumber, @PathVariable String semester) {
+        logger.info("=== PaymentRecordController.getPaymentRecordsByStudentNumberAndSemester() 被调用 ===");
+        logger.info("查询学生学期缴费记录: 学号={}, 学期={}", studentNumber, semester);
+
+        try {
+            List<PaymentRecord> paymentRecords = paymentRecordService.getPaymentRecordsByStudentStudentIdAndSemester(studentNumber, semester);
+            
+            List<PaymentRecordResponse> responses = paymentRecords.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+            
+            logger.info("✅ 成功获取学号 {} 学期 {} 的 {} 条缴费记录", studentNumber, semester, responses.size());
             return ResponseEntity.ok(responses);
             
         } catch (Exception e) {

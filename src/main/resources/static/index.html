@@ -88,7 +88,8 @@
                          <button onclick="goToCourse()">课程管理</button>
                          <button onclick="openChangePassword()">修改密码</button>
                          <button onclick="goTotimetable()">排课系统</button>
-                         <button onclick="goToSyllabus()">课程大纲</button>`;
+                         <button onclick="goToSyllabus()">课程大纲</button>
+                         <button onclick="goToGrade()">成绩管理</button>`;
 
                 // 管理员专用按钮
                 if (user.userType === 'ADMIN') {
@@ -122,6 +123,7 @@
     function goToTtimetable() {window.location.href = 'teachertimetable.html';}
     function goToStimetable() {window.location.href = 'studenttimetable.html';}
     function goToSyllabus() {window.location.href = 'syllabus.html';}
+    function goToGrade() {window.location.href = 'grade/grade-index.html';}
 
     // ================= 修改密码 =================
     function openChangePassword() { document.getElementById('changePasswordModal').style.display = 'flex'; }

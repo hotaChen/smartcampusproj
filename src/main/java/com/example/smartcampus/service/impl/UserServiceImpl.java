@@ -97,6 +97,25 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
+    public Optional<User> getUserByStudentId(String studentId) {
+        logger.info("=== UserServiceImpl.getUserByStudentId() 开始 ===");
+        logger.info("查询学号: {}", studentId);
+
+        Optional<User> userOpt = userRepository.findByStudentId(studentId);
+
+        if (userOpt.isPresent()) {
+            User user = userOpt.get();
+            logger.info("✅ 找到用户: 学号={}, 真实姓名={}, 类型={}",
+                    user.getStudentId(), user.getRealName(), user.getUserType());
+        } else {
+            logger.warn("❌ 未找到用户: 学号={}", studentId);
+        }
+
+        return userOpt;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<User> getUsersByType(String userType) {
         logger.info("=== UserServiceImpl.getUsersByType() 开始 ===");
         logger.info("查询用户类型: {}", userType);

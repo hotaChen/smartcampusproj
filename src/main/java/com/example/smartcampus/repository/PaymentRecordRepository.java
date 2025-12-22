@@ -15,6 +15,12 @@ public interface PaymentRecordRepository extends JpaRepository<PaymentRecord, Lo
     
     List<PaymentRecord> findByStudentId(Long studentId);
     
+    /**
+     * 根据学号查找缴费记录
+     */
+    @Query("SELECT p FROM PaymentRecord p WHERE p.student.studentId = :studentId")
+    List<PaymentRecord> findByStudentStudentId(@Param("studentId") String studentId);
+    
     List<PaymentRecord> findBySemester(String semester);
     
     List<PaymentRecord> findByStatus(Integer status);
@@ -24,6 +30,12 @@ public interface PaymentRecordRepository extends JpaRepository<PaymentRecord, Lo
     List<PaymentRecord> findByPaymentMethod(String paymentMethod);
     
     List<PaymentRecord> findByStudentIdAndSemester(Long studentId, String semester);
+    
+    /**
+     * 根据学号和学期查找缴费记录
+     */
+    @Query("SELECT p FROM PaymentRecord p WHERE p.student.studentId = :studentId AND p.semester = :semester")
+    List<PaymentRecord> findByStudentStudentIdAndSemester(@Param("studentId") String studentId, @Param("semester") String semester);
     
     List<PaymentRecord> findByPaymentDateBetween(LocalDateTime startDate, LocalDateTime endDate);
     

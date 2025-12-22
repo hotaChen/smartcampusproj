@@ -20,6 +20,13 @@ public interface PaymentRecordService {
     
     List<PaymentRecord> getPaymentRecordsByStudent(Long studentId);
     
+    /**
+     * 根据学号获取学生的所有缴费记录
+     * @param studentId 学号
+     * @return 缴费记录列表
+     */
+    List<PaymentRecord> getPaymentRecordsByStudentStudentId(String studentId);
+    
     List<PaymentRecord> getPaymentRecordsBySemester(String semester);
     
     List<PaymentRecord> getPaymentRecordsByStatus(Integer status);
@@ -29,6 +36,14 @@ public interface PaymentRecordService {
     List<PaymentRecord> getPaymentRecordsByPaymentMethod(String paymentMethod);
     
     List<PaymentRecord> getPaymentRecordsByStudentAndSemester(Long studentId, String semester);
+    
+    /**
+     * 根据学号和学期获取学生的缴费记录
+     * @param studentId 学号
+     * @param semester 学期
+     * @return 缴费记录列表
+     */
+    List<PaymentRecord> getPaymentRecordsByStudentStudentIdAndSemester(String studentId, String semester);
     
     List<PaymentRecord> getPaymentRecordsByDateRange(LocalDateTime startDate, LocalDateTime endDate);
     

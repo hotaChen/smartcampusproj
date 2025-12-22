@@ -41,6 +41,13 @@ public interface GradeService {
     List<Grade> getGradesByStudentId(Long studentId);
 
     /**
+     * 根据学号获取成绩列表
+     * @param studentId 学号
+     * @return 成绩列表
+     */
+    List<Grade> getGradesByStudentStudentId(String studentId);
+
+    /**
      * 获取教师录入的所有成绩
      * @param teacherId 教师ID
      * @return 成绩列表
@@ -54,6 +61,14 @@ public interface GradeService {
      * @return 成绩列表
      */
     List<Grade> getStudentGradesBySemester(Long studentId, String semester);
+
+    /**
+     * 根据学号获取学生在某学期的成绩
+     * @param studentId 学号
+     * @param semester 学期
+     * @return 成绩列表
+     */
+    List<Grade> getStudentGradesByStudentIdAndSemester(String studentId, String semester);
 
     /**
      * 获取教师教授的某门课程在某学期的所有成绩
@@ -87,6 +102,14 @@ public interface GradeService {
      * @return 平均分
      */
     Float calculateAverageScoreByStudentAndSemester(Long studentId, String semester);
+
+    /**
+     * 根据学号计算学生的平均分
+     * @param studentNumber 学号
+     * @param semester 学期
+     * @return 平均分
+     */
+    Float calculateAverageScoreByStudentNumberAndSemester(String studentNumber, String semester);
 
     /**
      * 计算课程的平均分

@@ -251,6 +251,53 @@ public class TuitionController {
         }
     }
 
+    @GetMapping("/student/number/{studentNumber}")
+    @Operation(summary = "根据学号获取学费记录", description = "根据学号获取学费记录列表")
+    public ResponseEntity<List<TuitionResponse>> getTuitionsByStudentNumber(@PathVariable String studentNumber) {
+        logger.info("=== TuitionController.getTuitionsByStudentNumber() 被调用 ===");
+        logger.info("查询学生学费记录: 学号={}", studentNumber);
+
+        try {
+            List<Tuition> tuitions = tuitionService.getTuitionsByStudentStudentId(studentNumber);
+            
+            List<TuitionResponse> responses = tuitions.stream()
+                    .map(this::convertToResponse)
+                    .collect(Collectors.toList());
+            
+            logger.info("✅ 成功获取学号 {} 的 {} 条学费记录", studentNumber, responses.size());
+            return ResponseEntity.ok(responses);
+            
+        } catch (Exception e) {
+            logger.error("获取学生学费记录失败: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/student/number/{studentNumber}/semester/{semester}")
+    @Operation(summary = "根据学号和学期获取学费记录", description = "根据学号和学期获取学费记录")
+    public ResponseEntity<TuitionResponse> getTuitionByStudentNumberAndSemester(
+            @PathVariable String studentNumber, @PathVariable String semester) {
+        logger.info("=== TuitionController.getTuitionByStudentNumberAndSemester() 被调用 ===");
+        logger.info("查询学生学期学费记录: 学号={}, 学期={}", studentNumber, semester);
+
+        try {
+            Optional<Tuition> tuitionOpt = tuitionService.getTuitionByStudentStudentIdAndSemester(studentNumber, semester);
+            
+            if (tuitionOpt.isPresent()) {
+                TuitionResponse response = convertToResponse(tuitionOpt.get());
+                logger.info("✅ 成功获取学号 {} 学期 {} 的学费记录", studentNumber, semester);
+                return ResponseEntity.ok(response);
+            } else {
+                logger.warn("未找到学号 {} 学期 {} 的学费记录", studentNumber, semester);
+                return ResponseEntity.notFound().build();
+            }
+            
+        } catch (Exception e) {
+            logger.error("获取学生学期学费记录失败: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
     @GetMapping("/semester/{semester}")
     @Operation(summary = "根据学期获取学费记录", description = "根据学期获取学费记录列表")
     public ResponseEntity<List<TuitionResponse>> getTuitionsBySemester(@PathVariable String semester) {

@@ -15,6 +15,12 @@ public interface ScholarshipRepository extends JpaRepository<Scholarship, Long> 
     
     List<Scholarship> findByStudentId(Long studentId);
     
+    /**
+     * 根据学号查找奖学金记录
+     */
+    @Query("SELECT s FROM Scholarship s WHERE s.student.studentId = :studentId")
+    List<Scholarship> findByStudentStudentId(@Param("studentId") String studentId);
+    
     List<Scholarship> findBySemester(String semester);
     
     List<Scholarship> findByStatus(Integer status);
@@ -23,7 +29,19 @@ public interface ScholarshipRepository extends JpaRepository<Scholarship, Long> 
     
     List<Scholarship> findByStudentIdAndSemester(Long studentId, String semester);
     
+    /**
+     * 根据学号和学期查找奖学金记录
+     */
+    @Query("SELECT s FROM Scholarship s WHERE s.student.studentId = :studentId AND s.semester = :semester")
+    List<Scholarship> findByStudentStudentIdAndSemester(@Param("studentId") String studentId, @Param("semester") String semester);
+    
     List<Scholarship> findByStudentIdAndStatus(Long studentId, Integer status);
+    
+    /**
+     * 根据学号和状态查找奖学金记录
+     */
+    @Query("SELECT s FROM Scholarship s WHERE s.student.studentId = :studentId AND s.status = :status")
+    List<Scholarship> findByStudentStudentIdAndStatus(@Param("studentId") String studentId, @Param("status") Integer status);
     
     @Query("SELECT s FROM Scholarship s WHERE s.student.department = :department AND s.semester = :semester")
     List<Scholarship> findByDepartmentAndSemester(@Param("department") String department, @Param("semester") String semester);

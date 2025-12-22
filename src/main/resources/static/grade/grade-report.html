@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>成绩单生成</title>
+</head>
+<body>
+    <h1>成绩单生成</h1>
+    <div>
+        <a href="grade-index.html">返回成绩管理</a> |
+        <a href="grade-entry.html">成绩录入</a> |
+        <a href="grade-query.html">成绩查询</a> |
+        <a href="grade-stats.html">成绩统计</a> |
+        <a href="makeup-exam.html">补考管理</a> |
+        <a href="../index.html">返回首页</a>
+    </div>
+    
+    <div id="message" class="message" style="display: none;"></div>
+    
+    <h2>成绩单生成</h2>
+    
+    <div class="form-row">
+        <div class="form-group">
+            <label for="reportStudentId">学号:</label>
+            <input type="text" id="reportStudentId">
+        </div>
+        <div class="form-group">
+            <label for="reportSemester">学期:</label>
+            <input type="text" id="reportSemester" value="2023-2024-1">
+            <small>留空则查询所有学期</small>
+        </div>
+    </div>
+    
+    <button onclick="generateGradeReport()">生成成绩单</button>
+    <button onclick="generateMyGradeReport()">生成我的成绩单</button>
+    
+    <div id="gradeReportContent" style="display: none;">
+        <!-- 成绩单内容将通过JavaScript动态填充 -->
+    </div>
+
+<script src="../js/api.js"></script>
+<script>
+// 页面加载时获取用户信息
+document.addEventListener('DOMContentLoaded', function() {
+    getUserInfo();
+});
+
+// 获取用户信息
+function getUserInfo() {
+    apiRequest(API_ENDPOINTS.USER_INFO)
+    .then(resp => resp.json())
+    .then(data => {
+        if (data.userType === 'STUDENT') {
+            // 如果是学生，隐藏学生ID输入框并自动填充
+            document.getElementById('reportStudentId').value = data.studentId;
+            document.getElementById('reportStudentId').readOnly = true;
+            // 隐藏"生成成绩单"按钮，因为这是用来查询其他学生成绩单的
+            document.querySelector('button[onclick="generateGradeReport()"]').style.display = 'none';
+            // 自动生成该学生的成绩单
+            generateMyGradeReport();
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('获取用户信息失败，请刷新页面重试', true);
+    });
+}
+
+// 显示消息
+function showMessage(message, isError = false) {
+    const messageDiv = document.getElementById('message');
+    messageDiv.textContent = message;
+    messageDiv.className = isError ? 'message error' : 'message success';
+    messageDiv.style.display = 'block';
+    
+    setTimeout(() => {
+        messageDiv.style.display = 'none';
+    }, 3000);
+}
+
+// 生成成绩单
+function generateGradeReport() {
+    const studentNumber = document.getElementById('reportStudentId').value;
+    const semester = document.getElementById('reportSemester').value;
+    
+    if (!studentNumber) {
+        showMessage('请输入学号', true);
+        return;
+    }
+    
+    let url;
+    if (semester) {
+        url = API_ENDPOINTS.GRADES_STUDENT_NUMBER_SEMESTER(studentNumber, semester);
+    } else {
+        url = API_ENDPOINTS.GRADES_BY_STUDENT_NUMBER(studentNumber);
+    }
+    
+    apiRequest(url)
+    .then(resp => resp.json())
+    .then(data => {
+        displayGradeReport(data);
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('生成成绩单失败', true);
+    });
+}
+
+// 生成我的成绩单
+function generateMyGradeReport() {
+    const semester = document.getElementById('reportSemester').value;
+    
+    let url = API_ENDPOINTS.GRADES_MY_REPORT;
+    if (semester) {
+        url += `?semester=${semester}`;
+    }
+    
+    apiRequest(url)
+    .then(resp => resp.json())
+    .then(data => {
+        displayGradeReport(data);
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('生成我的成绩单失败', true);
+    });
+}
+
+// 显示成绩单
+function displayGradeReport(report) {
+    const reportContent = document.getElementById('gradeReportContent');
+    reportContent.style.display = 'block';
+    
+    let gradesHtml = '';
+    if (report.grades && report.grades.length > 0) {
+        gradesHtml = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>课程代码</th>
+                        <th>课程名称</th>
+                        <th>考试类型</th>
+                        <th>分数</th>
+                        <th>成绩等级</th>
+                        <th>学分</th>
+                        <th>学期</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${report.grades.map(grade => `
+                        <tr>
+                            <td>${grade.courseCode}</td>
+                            <td>${grade.courseName}</td>
+                            <td>${grade.examType}</td>
+                            <td>${grade.score}</td>
+                            <td>${grade.gradeLevel}</td>
+                            <td>${grade.credit}</td>
+                            <td>${grade.semester}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+    } else {
+        gradesHtml = '<p>暂无成绩记录</p>';
+    }
+    
+    reportContent.innerHTML = `
+        <h3>学生成绩单</h3>
+        <div class="stats-container">
+            <div class="stats-card">
+                <h3>学生信息</h3>
+                <p><strong>学号:</strong> ${report.student ? report.student.studentId : '-'}</p>
+                <p><strong>学生姓名:</strong> ${report.studentName || '-'}</p>
+                <p><strong>学期:</strong> ${report.semester || '全部'}</p>
+            </div>
+            <div class="stats-card">
+                <h3>成绩统计</h3>
+                <p><strong>总课程数:</strong> ${report.totalCourses || 0}</p>
+                <p><strong>平均分:</strong> ${report.averageScore || 0}</p>
+                <p><strong>总学分:</strong> ${report.totalCredits || 0}</p>
+                <p><strong>GPA:</strong> ${report.gpa || 0}</p>
+                <p><strong>已获得学分:</strong> ${report.earnedCredits || 0}</p>
+                <p><strong>最高分:</strong> ${report.highestScore || 0}</p>
+                <p><strong>最低分:</strong> ${report.lowestScore || 0}</p>
+            </div>
+        </div>
+        <h4>成绩详情</h4>
+        ${gradesHtml}
+        <button onclick="window.print()">打印成绩单</button>
+        <button onclick="exportGradeReport()">导出成绩单</button>
+    `;
+}
+
+// 导出成绩单
+function exportGradeReport() {
+    // 获取成绩单内容
+    const reportContent = document.getElementById('gradeReportContent');
+    
+    // 创建一个新的窗口用于打印
+    const printWindow = window.open('', '_blank');
+    
+    // 构建HTML内容
+    const htmlContent = `
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>成绩单</title>
+            <style>
+                body { font-family: Arial, sans-serif; margin: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+                .stats-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
+                .stats-container { display: flex; gap: 20px; margin-bottom: 20px; }
+                @media print {
+                    button { display: none; }
+                }
+            </style>
+        </head>
+        <body>
+            ${reportContent.innerHTML}
+        </body>
+        </html>
+    `;
+    
+    // 写入内容并打印
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.focus();
+    
+    // 等待内容加载完成后打印
+    setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+    }, 500);
+}
+</script>
+</body>
+</html>

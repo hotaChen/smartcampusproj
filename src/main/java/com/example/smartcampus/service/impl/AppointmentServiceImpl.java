@@ -52,6 +52,14 @@ public class AppointmentServiceImpl implements AppointmentService {
     }
 
     /**
+     * 根据学号查询学生的预约
+     */
+    @Override
+    public List<Appointment> getAppointmentsByStudentStudentId(String studentId) {
+        return appointmentRepository.findByStudentStudentId(studentId);
+    }
+
+    /**
      * 管理员查询所有预约
      */
     @Override

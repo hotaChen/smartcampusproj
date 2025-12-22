@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>成绩录入</title>
+</head>
+<body>
+    <h1>成绩录入</h1>
+    <div>
+        <a href="grade-index.html">返回成绩管理</a> |
+        <a href="grade-query.html">成绩查询</a> |
+        <a href="grade-stats.html">成绩统计</a> |
+        <a href="grade-report.html">成绩单生成</a> |
+        <a href="makeup-exam.html">补考管理</a> |
+        <a href="../index.html">返回首页</a>
+    </div>
+    
+    <div id="message" class="message" style="display: none;"></div>
+    
+    <h2>成绩录入</h2>
+    
+    <div class="form-row">
+        <div class="form-group">
+            <label for="studentId">学号:</label>
+            <input type="text" id="studentId" required>
+        </div>
+        <div class="form-group">
+            <label for="courseCode">课程代码:</label>
+            <input type="text" id="courseCode" required>
+        </div>
+        <div class="form-group">
+            <label for="courseName">课程名称:</label>
+            <input type="text" id="courseName" required>
+        </div>
+    </div>
+    
+    <div class="form-row">
+        <div class="form-group">
+            <label for="examType">考试类型:</label>
+            <select id="examType">
+                <option value="期中考试">期中考试</option>
+                <option value="期末考试">期末考试</option>
+                <option value="平时成绩">平时成绩</option>
+                <option value="实验成绩">实验成绩</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="score">分数:</label>
+            <input type="number" id="score" min="0" max="100" step="0.1" required>
+        </div>
+        <div class="form-group">
+            <label for="semester">学期:</label>
+            <input type="text" id="semester" value="2023-2024-1" required>
+        </div>
+    </div>
+    
+    <div class="form-row">
+        <div class="form-group">
+            <label for="credit">学分:</label>
+            <input type="number" id="credit" min="0" max="10" step="0.5" required>
+        </div>
+        <div class="form-group">
+            <label for="gradeLevel">成绩等级:</label>
+            <select id="gradeLevel">
+                <option value="优秀">优秀</option>
+                <option value="良好">良好</option>
+                <option value="中等">中等</option>
+                <option value="及格">及格</option>
+                <option value="不及格">不及格</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="form-group">
+        <label for="comment">评语:</label>
+        <input type="text" id="comment" style="width: 100%;">
+    </div>
+    
+    <button onclick="enterGrade()">录入成绩</button>
+    <button onclick="batchEnterGrades()">批量录入</button>
+    
+    <h3>最近录入的成绩</h3>
+    <table id="recentGradesTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>学号</th>
+                <th>课程代码</th>
+                <th>课程名称</th>
+                <th>考试类型</th>
+                <th>分数</th>
+                <th>学期</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- 成绩数据将通过JavaScript动态填充 -->
+        </tbody>
+    </table>
+
+<!-- 编辑成绩模态框 -->
+<div id="editGradeModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeEditGradeModal()">&times;</span>
+        <h2>编辑成绩</h2>
+        
+        <input type="hidden" id="editGradeId">
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="editStudentId">学号:</label>
+                <input type="text" id="editStudentId" required>
+            </div>
+            <div class="form-group">
+                <label for="editCourseCode">课程代码:</label>
+                <input type="text" id="editCourseCode" required>
+            </div>
+            <div class="form-group">
+                <label for="editCourseName">课程名称:</label>
+                <input type="text" id="editCourseName" required>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="editExamType">考试类型:</label>
+                <select id="editExamType">
+                    <option value="期中考试">期中考试</option>
+                    <option value="期末考试">期末考试</option>
+                    <option value="平时成绩">平时成绩</option>
+                    <option value="实验成绩">实验成绩</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="editScore">分数:</label>
+                <input type="number" id="editScore" min="0" max="100" step="0.1" required>
+            </div>
+            <div class="form-group">
+                <label for="editSemester">学期:</label>
+                <input type="text" id="editSemester" required>
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div class="form-group">
+                <label for="editCredit">学分:</label>
+                <input type="number" id="editCredit" min="0" max="10" step="0.5" required>
+            </div>
+            <div class="form-group">
+                <label for="editGradeLevel">成绩等级:</label>
+                <select id="editGradeLevel">
+                    <option value="优秀">优秀</option>
+                    <option value="良好">良好</option>
+                    <option value="中等">中等</option>
+                    <option value="及格">及格</option>
+                    <option value="不及格">不及格</option>
+                </select>
+            </div>
+        </div>
+        
+        <div class="form-group">
+            <label for="editComment">评语:</label>
+            <input type="text" id="editComment" style="width: 100%;">
+        </div>
+        
+        <button onclick="updateGrade()">更新成绩</button>
+        <button onclick="closeEditGradeModal()" class="btn-danger">取消</button>
+    </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+// 页面加载时获取最近录入的成绩
+document.addEventListener('DOMContentLoaded', function() {
+    // 检查用户权限
+    checkUserPermission();
+});
+
+// 检查用户权限
+function checkUserPermission() {
+    apiRequest(API_ENDPOINTS.USER_INFO)
+    .then(resp => resp.json())
+    .then(data => {
+        if (data.userType === 'STUDENT') {
+            // 如果是学生，隐藏整个页面内容并显示权限不足消息
+            document.body.innerHTML = `
+                <div style="text-align: center; margin-top: 100px;">
+                    <h1>权限不足</h1>
+                    <p>您没有权限访问此页面</p>
+                    <button onclick="window.location.href='../index.html'" style="padding: 10px 20px; margin-top: 20px;">返回首页</button>
+                </div>
+            `;
+            return; // 停止执行后续代码
+        }
+        
+        // 如果不是学生，正常加载页面内容
+        loadRecentGrades();
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        document.body.innerHTML = `
+            <div style="text-align: center; margin-top: 100px;">
+                <h1>获取用户信息失败</h1>
+                <p>请刷新页面重试</p>
+                <button onclick="window.location.reload()" style="padding: 10px 20px; margin-top: 20px;">刷新页面</button>
+            </div>
+        `;
+    });
+}
+
+// 显示消息
+function showMessage(message, isError = false) {
+    const messageDiv = document.getElementById('message');
+    messageDiv.textContent = message;
+    messageDiv.className = isError ? 'message error' : 'message success';
+    messageDiv.style.display = 'block';
+    
+    setTimeout(() => {
+        messageDiv.style.display = 'none';
+    }, 3000);
+}
+
+// 录入成绩
+function enterGrade() {
+    const gradeData = {
+        studentNumber: document.getElementById('studentId').value,
+        courseCode: document.getElementById('courseCode').value,
+        courseName: document.getElementById('courseName').value,
+        examType: document.getElementById('examType').value,
+        score: parseFloat(document.getElementById('score').value),
+        semester: document.getElementById('semester').value,
+        credit: parseFloat(document.getElementById('credit').value),
+        gradeLevel: document.getElementById('gradeLevel').value,
+        comment: document.getElementById('comment').value
+    };
+    
+    apiRequest(API_ENDPOINTS.GRADES_ENTER_BY_STUDENT_NUMBER, {
+        method: 'POST',
+        body: JSON.stringify(gradeData)
+    })
+    .then(resp => {
+        if (resp.ok) {
+            showMessage('成绩录入成功');
+            // 清空表单
+            document.getElementById('studentId').value = '';
+            document.getElementById('courseCode').value = '';
+            document.getElementById('courseName').value = '';
+            document.getElementById('score').value = '';
+            document.getElementById('credit').value = '';
+            document.getElementById('comment').value = '';
+            // 刷新成绩列表
+            loadRecentGrades();
+        } else {
+            showMessage('成绩录入失败', true);
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('成绩录入失败', true);
+    });
+}
+
+// 批量录入成绩
+function batchEnterGrades() {
+    // 这里可以实现批量录入的逻辑，比如弹出一个文本框让用户粘贴JSON数据
+    const batchData = prompt('请输入批量成绩数据(JSON格式):', '[{"studentNumber":"2023001","courseCode":"CS101","courseName":"计算机基础","examType":"期末考试","score":85,"semester":"2023-2024-1","credit":3,"gradeLevel":"良好","comment":"表现良好"}]');
+    
+    if (batchData) {
+        try {
+            const grades = JSON.parse(batchData);
+            
+            apiRequest(API_ENDPOINTS.GRADES_BATCH_BY_STUDENT_NUMBER, {
+                method: 'POST',
+                body: JSON.stringify(grades)
+            })
+            .then(resp => {
+                if (resp.ok) {
+                    showMessage('批量成绩录入成功');
+                    // 刷新成绩列表
+                    loadRecentGrades();
+                } else {
+                    showMessage('批量成绩录入失败', true);
+                }
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                showMessage('批量成绩录入失败', true);
+            });
+        } catch (e) {
+            showMessage('JSON格式错误', true);
+        }
+    }
+}
+
+// 加载最近录入的成绩
+function loadRecentGrades() {
+    apiRequest(API_ENDPOINTS.GRADES_BY_TEACHER)
+    .then(resp => resp.json())
+    .then(data => {
+        const tableBody = document.querySelector('#recentGradesTable tbody');
+        tableBody.innerHTML = '';
+        
+        // 只显示最近10条记录
+        const recentGrades = data.slice(0, 10);
+        
+        recentGrades.forEach(grade => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${grade.id}</td>
+                <td>${grade.studentId}</td>
+                <td>${grade.courseCode}</td>
+                <td>${grade.courseName}</td>
+                <td>${grade.examType}</td>
+                <td>${grade.score}</td>
+                <td>${grade.semester}</td>
+                <td>
+                    <button onclick="editGrade(${grade.id})">编辑</button>
+                    <button onclick="deleteGrade(${grade.id})" class="btn-danger">删除</button>
+                </td>
+            `;
+            tableBody.appendChild(row);
+        });
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('加载成绩数据失败', true);
+    });
+}
+
+// 编辑成绩
+function editGrade(id) {
+    apiRequest(API_ENDPOINTS.GRADES_BY_ID(id))
+    .then(resp => resp.json())
+    .then(grade => {
+        // 填充表单
+        document.getElementById('editGradeId').value = grade.id;
+        document.getElementById('editStudentId').value = grade.studentId;
+        document.getElementById('editCourseCode').value = grade.courseCode;
+        document.getElementById('editCourseName').value = grade.courseName;
+        document.getElementById('editExamType').value = grade.examType;
+        document.getElementById('editScore').value = grade.score;
+        document.getElementById('editSemester').value = grade.semester;
+        document.getElementById('editCredit').value = grade.credit;
+        document.getElementById('editGradeLevel').value = grade.gradeLevel;
+        document.getElementById('editComment').value = grade.comment || '';
+        
+        // 显示模态框
+        document.getElementById('editGradeModal').style.display = 'flex';
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('获取成绩数据失败', true);
+    });
+}
+
+// 更新成绩
+function updateGrade() {
+    const id = document.getElementById('editGradeId').value;
+    const gradeData = {
+        studentNumber: document.getElementById('editStudentId').value,
+        courseCode: document.getElementById('editCourseCode').value,
+        courseName: document.getElementById('editCourseName').value,
+        examType: document.getElementById('editExamType').value,
+        score: parseFloat(document.getElementById('editScore').value),
+        semester: document.getElementById('editSemester').value,
+        credit: parseFloat(document.getElementById('editCredit').value),
+        gradeLevel: document.getElementById('editGradeLevel').value,
+        comment: document.getElementById('editComment').value
+    };
+    
+    apiRequest(API_ENDPOINTS.GRADES_UPDATE_BY_STUDENT_NUMBER(id), {
+        method: 'PUT',
+        body: JSON.stringify(gradeData)
+    })
+    .then(resp => {
+        if (resp.ok) {
+            showMessage('成绩更新成功');
+            closeEditGradeModal();
+            loadRecentGrades();
+        } else {
+            showMessage('成绩更新失败', true);
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('成绩更新失败', true);
+    });
+}
+
+// 删除成绩
+function deleteGrade(id) {
+    if (confirm('确定要删除这条成绩记录吗？')) {
+        apiRequest(API_ENDPOINTS.GRADES_DELETE(id), {
+            method: 'DELETE'
+        })
+        .then(resp => {
+            if (resp.ok) {
+                showMessage('成绩删除成功');
+                loadRecentGrades();
+            } else {
+                showMessage('成绩删除失败', true);
+            }
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            showMessage('成绩删除失败', true);
+        });
+    }
+}
+
+// 关闭编辑成绩模态框
+function closeEditGradeModal() {
+    document.getElementById('editGradeModal').style.display = 'none';
+}
+</script>
+</body>
+</html>

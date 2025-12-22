@@ -115,6 +115,13 @@ public class PaymentRecordServiceImpl implements PaymentRecordService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<PaymentRecord> getPaymentRecordsByStudentStudentId(String studentId) {
+        logger.debug("查询学生缴费记录: 学号={}", studentId);
+        return paymentRecordRepository.findByStudentStudentId(studentId);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<PaymentRecord> getPaymentRecordsBySemester(String semester) {
         logger.debug("查询学期缴费记录: 学期={}", semester);
         return paymentRecordRepository.findBySemester(semester);
@@ -146,6 +153,13 @@ public class PaymentRecordServiceImpl implements PaymentRecordService {
     public List<PaymentRecord> getPaymentRecordsByStudentAndSemester(Long studentId, String semester) {
         logger.debug("查询学生学期缴费记录: 学生ID={}, 学期={}", studentId, semester);
         return paymentRecordRepository.findByStudentIdAndSemester(studentId, semester);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<PaymentRecord> getPaymentRecordsByStudentStudentIdAndSemester(String studentId, String semester) {
+        logger.debug("查询学生学期缴费记录: 学号={}, 学期={}", studentId, semester);
+        return paymentRecordRepository.findByStudentStudentIdAndSemester(studentId, semester);
     }
 
     @Override
