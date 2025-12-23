@@ -1,0 +1,247 @@
+/* ===== 侧边栏样式 ===== */
+
+/* 侧边栏容器 */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: 280px;
+    background: var(--card);
+    backdrop-filter: blur(18px);
+    border-radius: 0 22px 22px 0;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+    transform: translateX(0);
+    transition: all 0.3s ease;
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 侧边栏收缩状态 - 变为圆形按钮 */
+.sidebar.collapsed {
+    width: 60px;
+    height: 60px;
+    top: 50%;
+    left: 20px;
+    transform: translateY(-50%);
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+/* 侧边栏切换按钮 */
+.sidebar-toggle {
+    position: absolute;
+    right: -20px;
+    top: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.2);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: var(--text);
+    transition: all 0.3s ease;
+    z-index: 1001;
+}
+
+.sidebar.collapsed .sidebar-toggle {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    right: auto;
+    width: 30px;
+    height: 30px;
+    font-size: 16px;
+}
+
+/* 侧边栏收起状态下的图标 */
+.sidebar-collapsed-icon {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 24px;
+    color: var(--text);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar.collapsed .sidebar-collapsed-icon {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.sidebar.collapsed .sidebar-toggle {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sidebar-toggle:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+/* 侧边栏头部 */
+.sidebar-header {
+    padding: 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    transition: opacity 0.3s ease;
+}
+
+.sidebar.collapsed .sidebar-header {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sidebar-logo {
+    width: 40px;
+    height: 50px;
+}
+
+.sidebar-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: var(--primary);
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar.collapsed .sidebar-title {
+    opacity: 0;
+}
+
+/* 侧边栏内容 */
+.sidebar-content {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar.collapsed .sidebar-content {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* 侧边栏菜单项 */
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-menu-item {
+    margin-bottom: 8px;
+}
+
+.sidebar-menu-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    color: var(--text);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.sidebar-menu-link:hover {
+    background: rgba(255,255,255,0.1);
+}
+
+.sidebar-menu-link.active {
+    background: rgba(245,158,11,0.2);
+}
+
+.sidebar-menu-icon {
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+.sidebar-menu-text {
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity 0.3s ease;
+}
+
+.sidebar.collapsed .sidebar-menu-text {
+    opacity: 0;
+}
+
+/* 侧边栏分组 */
+.sidebar-group {
+    margin-bottom: 24px;
+}
+
+.sidebar-group-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    opacity: 0.7;
+    margin-bottom: 8px;
+    cursor: pointer;
+}
+
+.sidebar-group-title .disclosure {
+    transition: transform 0.3s ease;
+}
+
+.sidebar-group.collapsed .disclosure {
+    transform: rotate(-90deg);
+}
+
+.sidebar-group-items {
+    transition: max-height 0.3s ease;
+    overflow: hidden;
+}
+
+.sidebar-group.collapsed .sidebar-group-items {
+    max-height: 0;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 260px;
+    }
+    
+    .sidebar.collapsed {
+        transform: translateX(-200px);
+    }
+}
+
+/* 适配主题 */
+.light .sidebar {
+    background: rgba(255,255,255,0.8);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.light .sidebar-toggle {
+    background: rgba(0,0,0,0.1);
+}
+
+.light .sidebar-menu-link:hover {
+    background: rgba(0,0,0,0.05);
+}
+
+.light .sidebar-menu-link.active {
+    background: rgba(245,158,11,0.1);
+}
