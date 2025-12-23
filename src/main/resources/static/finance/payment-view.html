@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>缴费记录查询</title>
+</head>
+<body>
+    <h1>缴费记录查询</h1>
+    <div id="user-info"></div>
+    
+    <div>
+        <h2>我的缴费记录</h2>
+        <div id="payment-list">
+            <p>正在加载缴费记录...</p>
+        </div>
+    </div>
+    
+    <div>
+        <br>
+        <button onclick="goBack()">返回财务管理</button>
+    </div>
+    
+    <script src="/js/api.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        let currentUser = null;
+
+        if (!token) {
+            document.getElementById('user-info').innerHTML = '<p style="color:red;">未检测到登录信息，请重新登录</p>';
+        } else {
+            apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
+                .then(resp => resp.json())
+                .then(user => {
+                    currentUser = user;
+                    document.getElementById('user-info').innerHTML = `<p>当前用户: ${user.realName} (${user.userType})</p>`;
+                    
+                    // 加载缴费记录
+                    loadPaymentRecords();
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('user-info').innerHTML = `<p style="color:red;">获取用户信息失败</p>`;
+                });
+        }
+
+        function loadPaymentRecords() {
+            // 根据用户类型加载不同的缴费记录
+            let url;
+            if (currentUser.userType === 'STUDENT') {
+                // 学生只能查看自己的缴费记录
+                url = `/api/payment-records/student/${currentUser.id}`;
+            } else if (currentUser.userType === 'TEACHER' || currentUser.userType === 'ADMIN') {
+                // 教师和管理员可以查看所有缴费记录
+                url = '/api/payment-records';
+            }
+            
+            // 检查是否有从学费页面传递过来的学费ID
+            const tuitionId = localStorage.getItem('tuitionId');
+            if (tuitionId) {
+                url += `?tuitionId=${tuitionId}`;
+                localStorage.removeItem('tuitionId'); // 使用后清除
+            }
+            
+            apiRequest(url)
+                .then(resp => resp.json())
+                .then(data => {
+                    let html = '<table border="1" cellpadding="5" cellspacing="0">';
+                    html += '<tr><th>学生姓名</th><th>学号</th><th>缴费金额</th><th>缴费日期</th><th>缴费方式</th><th>交易号</th><th>缴费状态</th>';
+                    
+                    if (currentUser.userType === 'ADMIN' || currentUser.userType === 'TEACHER') {
+                        html += '<th>操作</th>';
+                    }
+                    
+                    html += '</tr>';
+                    
+                    if (data && data.length > 0) {
+                        data.forEach(payment => {
+                            html += `<tr>
+                                <td>${payment.studentName || '-'}</td>
+                                <td>${payment.studentNumber || '-'}</td>
+                                <td>${payment.amount || '-'}</td>
+                                <td>${payment.paymentDate || '-'}</td>
+                                <td>${payment.paymentMethod || '-'}</td>
+                                <td>${payment.transactionId || '-'}</td>
+                                <td>${payment.status || '-'}</td>`;
+                            
+                            if (currentUser.userType === 'ADMIN' || currentUser.userType === 'TEACHER') {
+                                html += `<td>
+                                    <button onclick="editPayment(${payment.id})">编辑</button>
+                                    <button onclick="deletePayment(${payment.id})">删除</button>
+                                </td>`;
+                            }
+                            
+                            html += '</tr>';
+                        });
+                    } else {
+                        const colspan = currentUser.userType === 'ADMIN' || currentUser.userType === 'TEACHER' ? 8 : 7;
+                        html += `<tr><td colspan="${colspan}">暂无缴费记录</td></tr>`;
+                    }
+                    
+                    html += '</table>';
+                    document.getElementById('payment-list').innerHTML = html;
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('payment-list').innerHTML = '<p style="color:red;">加载缴费记录失败</p>';
+                });
+        }
+
+        function editPayment(id) {
+            // 这里可以实现编辑功能，为了简化，我们只显示一个提示
+            alert('编辑功能待实现');
+        }
+
+        function deletePayment(id) {
+            if (confirm('确定要删除这条缴费记录吗？')) {
+                apiRequest(`/api/payment-records/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(resp => resp.text())
+                .then(msg => {
+                    alert('缴费记录删除成功');
+                    // 重新加载数据
+                    loadPaymentRecords();
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('删除缴费记录失败');
+                });
+            }
+        }
+
+        function goBack() {
+            window.location.href = 'finance-index.html';
+        }
+    </script>
+</body>
+</html>

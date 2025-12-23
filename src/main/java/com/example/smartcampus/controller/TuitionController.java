@@ -14,6 +14,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -40,6 +43,7 @@ public class TuitionController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "创建学费记录", description = "为学生创建学费记录")
     public ResponseEntity<TuitionResponse> createTuition(@RequestBody TuitionRequest request) {
         logger.info("=== TuitionController.createTuition() 被调用 ===");
@@ -73,6 +77,7 @@ public class TuitionController {
     }
 
     @PostMapping("/batch")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "批量创建学费记录", description = "为多个学生批量创建学费记录")
     public ResponseEntity<List<TuitionResponse>> createBatchTuitions(@RequestBody BatchTuitionRequest request) {
         logger.info("=== TuitionController.createBatchTuitions() 被调用 ===");
@@ -124,6 +129,7 @@ public class TuitionController {
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "更新学费记录", description = "更新学费记录信息")
     public ResponseEntity<TuitionResponse> updateTuition(@PathVariable Long id, @RequestBody TuitionRequest request) {
         logger.info("=== TuitionController.updateTuition() 被调用 ===");
@@ -168,6 +174,7 @@ public class TuitionController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "删除学费记录", description = "删除学费记录")
     public ResponseEntity<Void> deleteTuition(@PathVariable Long id) {
         logger.info("=== TuitionController.deleteTuition() 被调用 ===");
@@ -185,6 +192,7 @@ public class TuitionController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @Operation(summary = "根据ID获取学费记录", description = "根据ID获取学费记录详情")
     public ResponseEntity<TuitionResponse> getTuitionById(@PathVariable Long id) {
         logger.info("=== TuitionController.getTuitionById() 被调用 ===");
@@ -209,6 +217,7 @@ public class TuitionController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "获取所有学费记录", description = "获取系统中所有学费记录")
     public ResponseEntity<List<TuitionResponse>> getAllTuitions() {
         logger.info("=== TuitionController.getAllTuitions() 被调用 ===");
@@ -230,6 +239,7 @@ public class TuitionController {
     }
 
     @GetMapping("/student/{studentId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @Operation(summary = "根据学生ID获取学费记录", description = "根据学生ID获取学费记录列表")
     public ResponseEntity<List<TuitionResponse>> getTuitionsByStudent(@PathVariable Long studentId) {
         logger.info("=== TuitionController.getTuitionsByStudent() 被调用 ===");
@@ -252,6 +262,7 @@ public class TuitionController {
     }
 
     @GetMapping("/student/number/{studentNumber}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @Operation(summary = "根据学号获取学费记录", description = "根据学号获取学费记录列表")
     public ResponseEntity<List<TuitionResponse>> getTuitionsByStudentNumber(@PathVariable String studentNumber) {
         logger.info("=== TuitionController.getTuitionsByStudentNumber() 被调用 ===");
@@ -274,6 +285,7 @@ public class TuitionController {
     }
 
     @GetMapping("/student/number/{studentNumber}/semester/{semester}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER', 'STUDENT')")
     @Operation(summary = "根据学号和学期获取学费记录", description = "根据学号和学期获取学费记录")
     public ResponseEntity<TuitionResponse> getTuitionByStudentNumberAndSemester(
             @PathVariable String studentNumber, @PathVariable String semester) {
@@ -299,6 +311,7 @@ public class TuitionController {
     }
 
     @GetMapping("/semester/{semester}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "根据学期获取学费记录", description = "根据学期获取学费记录列表")
     public ResponseEntity<List<TuitionResponse>> getTuitionsBySemester(@PathVariable String semester) {
         logger.info("=== TuitionController.getTuitionsBySemester() 被调用 ===");
@@ -321,6 +334,7 @@ public class TuitionController {
     }
 
     @GetMapping("/status/{status}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "根据状态获取学费记录", description = "根据状态获取学费记录列表")
     public ResponseEntity<List<TuitionResponse>> getTuitionsByStatus(@PathVariable Integer status) {
         logger.info("=== TuitionController.getTuitionsByStatus() 被调用 ===");
@@ -343,6 +357,7 @@ public class TuitionController {
     }
 
     @GetMapping("/overdue")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "获取逾期未缴学费记录", description = "获取逾期未缴的学费记录列表")
     public ResponseEntity<List<TuitionResponse>> getOverdueTuitions() {
         logger.info("=== TuitionController.getOverdueTuitions() 被调用 ===");
@@ -364,6 +379,7 @@ public class TuitionController {
     }
 
     @PostMapping("/payment")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STUDENT')")
     @Operation(summary = "学费缴费", description = "为学生缴纳学费")
     public ResponseEntity<TuitionResponse> makePayment(@RequestBody TuitionPaymentRequest request) {
         logger.info("=== TuitionController.makePayment() 被调用 ===");
@@ -385,6 +401,7 @@ public class TuitionController {
     }
 
     @GetMapping("/statistics/{semester}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "获取学费统计信息", description = "获取指定学期的学费统计信息")
     public ResponseEntity<TuitionService.TuitionStatistics> getTuitionStatistics(@PathVariable String semester) {
         logger.info("=== TuitionController.getTuitionStatistics() 被调用 ===");
@@ -403,6 +420,7 @@ public class TuitionController {
     }
 
     @GetMapping("/statistics/department/{department}/{semester}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'TEACHER')")
     @Operation(summary = "获取院系学费统计信息", description = "获取指定院系和学期的学费统计信息")
     public ResponseEntity<TuitionService.DepartmentTuitionStatistics> getDepartmentTuitionStatistics(
             @PathVariable String department, @PathVariable String semester) {

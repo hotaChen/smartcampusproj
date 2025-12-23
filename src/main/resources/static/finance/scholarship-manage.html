@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>奖学金管理</title>
+</head>
+<body>
+    <h1>奖学金管理</h1>
+    <div id="user-info"></div>
+    
+    <div>
+        <h2>添加奖学金记录</h2>
+        <div>
+            <label>学生ID:</label>
+            <input type="number" id="studentId" placeholder="请输入学生ID">
+            <br>
+            <label>奖学金名称:</label>
+            <input type="text" id="name" placeholder="请输入奖学金名称">
+            <br>
+            <label>奖学金金额:</label>
+            <input type="number" id="amount" placeholder="请输入奖学金金额" step="0.01">
+            <br>
+            <label>申请原因:</label>
+            <textarea id="reason" placeholder="请输入申请原因"></textarea>
+            <br>
+            <label>申请状态:</label>
+            <select id="status">
+                <option value="待审批">待审批</option>
+                <option value="已批准">已批准</option>
+                <option value="已拒绝">已拒绝</option>
+            </select>
+            <br>
+            <button onclick="addScholarship()">添加奖学金记录</button>
+        </div>
+    </div>
+    
+    <div>
+        <h2>奖学金记录列表</h2>
+        <div id="scholarship-list">
+            <p>正在加载奖学金信息...</p>
+        </div>
+    </div>
+    
+    <div>
+        <br>
+        <button onclick="goBack()">返回财务管理</button>
+    </div>
+    
+    <script src="/js/api.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        let currentUser = null;
+
+        if (!token) {
+            document.getElementById('user-info').innerHTML = '<p style="color:red;">未检测到登录信息，请重新登录</p>';
+        } else {
+            apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
+                .then(resp => resp.json())
+                .then(user => {
+                    currentUser = user;
+                    document.getElementById('user-info').innerHTML = `<p>当前用户: ${user.realName} (${user.userType})</p>`;
+                    
+                    // 检查权限
+                    if (currentUser.userType !== 'ADMIN') {
+                        document.getElementById('user-info').innerHTML += '<p style="color:red;">您没有权限访问此页面</p>';
+                        return;
+                    }
+                    
+                    // 加载奖学金信息
+                    loadScholarshipInfo();
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('user-info').innerHTML = `<p style="color:red;">获取用户信息失败</p>`;
+                });
+        }
+
+        function loadScholarshipInfo() {
+            apiRequest('/api/scholarships')
+                .then(resp => resp.json())
+                .then(data => {
+                    let html = '<table border="1" cellpadding="5" cellspacing="0">';
+                    html += '<tr><th>奖学金名称</th><th>学生姓名</th><th>学号</th><th>金额</th><th>申请状态</th><th>申请日期</th><th>审批日期</th><th>操作</th></tr>';
+                    
+                    if (data && data.length > 0) {
+                        data.forEach(scholarship => {
+                            html += `<tr>
+                                <td>${scholarship.name || '-'}</td>
+                                <td>${scholarship.studentName || '-'}</td>
+                                <td>${scholarship.studentNumber || '-'}</td>
+                                <td>${scholarship.amount || '-'}</td>
+                                <td>${scholarship.status || '-'}</td>
+                                <td>${scholarship.applicationDate || '-'}</td>
+                                <td>${scholarship.approvalDate || '-'}</td>
+                                <td>
+                                    <button onclick="editScholarship(${scholarship.id})">编辑</button>
+                                    <button onclick="deleteScholarship(${scholarship.id})">删除</button>
+                                </td>
+                            </tr>`;
+                        });
+                    } else {
+                        html += '<tr><td colspan="8">暂无奖学金记录</td></tr>';
+                    }
+                    
+                    html += '</table>';
+                    document.getElementById('scholarship-list').innerHTML = html;
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('scholarship-list').innerHTML = '<p style="color:red;">加载奖学金信息失败</p>';
+                });
+        }
+
+        function addScholarship() {
+            const studentId = document.getElementById('studentId').value;
+            const name = document.getElementById('name').value;
+            const amount = document.getElementById('amount').value;
+            const reason = document.getElementById('reason').value;
+            const status = document.getElementById('status').value;
+            
+            if (!studentId || !name || !amount || !reason) {
+                alert('请填写完整信息');
+                return;
+            }
+            
+            const scholarshipData = {
+                studentId: parseInt(studentId),
+                name: name,
+                amount: parseFloat(amount),
+                reason: reason,
+                status: status
+            };
+            
+            apiRequest('/api/scholarships', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(scholarshipData)
+            })
+            .then(resp => resp.json())
+            .then(data => {
+                alert('奖学金记录添加成功');
+                // 清空表单
+                document.getElementById('studentId').value = '';
+                document.getElementById('name').value = '';
+                document.getElementById('amount').value = '';
+                document.getElementById('reason').value = '';
+                document.getElementById('status').value = '待审批';
+                // 重新加载数据
+                loadScholarshipInfo();
+            })
+            .catch(err => {
+                console.error(err);
+                alert('添加奖学金记录失败');
+            });
+        }
+
+        function editScholarship(id) {
+            // 这里可以实现编辑功能，为了简化，我们只显示一个提示
+            alert('编辑功能待实现');
+        }
+
+        function deleteScholarship(id) {
+            if (confirm('确定要删除这条奖学金记录吗？')) {
+                apiRequest(`/api/scholarships/${id}`, {
+                    method: 'DELETE'
+                })
+                .then(resp => resp.text())
+                .then(msg => {
+                    alert('奖学金记录删除成功');
+                    // 重新加载数据
+                    loadScholarshipInfo();
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('删除奖学金记录失败');
+                });
+            }
+        }
+
+        function goBack() {
+            window.location.href = 'finance-index.html';
+        }
+    </script>
+</body>
+</html>

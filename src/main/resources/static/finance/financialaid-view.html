@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>助学金查询</title>
+</head>
+<body>
+    <h1>助学金查询</h1>
+    <div id="user-info"></div>
+    
+    <div>
+        <h2>我的助学金信息</h2>
+        <div id="financialaid-list">
+            <p>正在加载助学金信息...</p>
+        </div>
+    </div>
+    
+    <div>
+        <br>
+        <button onclick="goBack()">返回财务管理</button>
+    </div>
+    
+    <script src="/js/api.js"></script>
+    <script>
+        const token = localStorage.getItem('token');
+        let currentUser = null;
+
+        if (!token) {
+            document.getElementById('user-info').innerHTML = '<p style="color:red;">未检测到登录信息，请重新登录</p>';
+        } else {
+            apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
+                .then(resp => resp.json())
+                .then(user => {
+                    currentUser = user;
+                    document.getElementById('user-info').innerHTML = `<p>当前用户: ${user.realName} (${user.userType})</p>`;
+                    
+                    // 加载助学金信息
+                    loadFinancialAidInfo();
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('user-info').innerHTML = `<p style="color:red;">获取用户信息失败</p>`;
+                });
+        }
+
+        function loadFinancialAidInfo() {
+            // 根据用户类型加载不同的助学金信息
+            let url;
+            if (currentUser.userType === 'STUDENT') {
+                // 学生只能查看自己的助学金
+                url = `/api/financial-aid/student/${currentUser.id}`;
+            } else if (currentUser.userType === 'TEACHER' || currentUser.userType === 'ADMIN') {
+                // 教师和管理员可以查看所有助学金
+                url = '/api/financial-aid';
+            }
+            
+            apiRequest(url)
+                .then(resp => resp.json())
+                .then(data => {
+                    let html = '<table border="1" cellpadding="5" cellspacing="0">';
+                    html += '<tr><th>助学金类型</th><th>学生姓名</th><th>学号</th><th>金额</th><th>申请状态</th><th>申请日期</th><th>审批日期</th>';
+                    
+                    if (currentUser.userType === 'ADMIN' || currentUser.userType === 'TEACHER') {
+                        html += '<th>操作</th>';
+                    }
+                    
+                    html += '</tr>';
+                    
+                    if (data && data.length > 0) {
+                        data.forEach(financialAid => {
+                            html += `<tr>
+                                <td>${financialAid.type || '-'}</td>
+                                <td>${financialAid.studentName || '-'}</td>
+                                <td>${financialAid.studentNumber || '-'}</td>
+                                <td>${financialAid.amount || '-'}</td>
+                                <td>${financialAid.status || '-'}</td>
+                                <td>${financialAid.applicationDate || '-'}</td>
+                                <td>${financialAid.approvalDate || '-'}</td>`;
+                            
+                            if (currentUser.userType === 'ADMIN' || currentUser.userType === 'TEACHER') {
+                                if (financialAid.status === '待审批') {
+                                    html += `<td>
+                                        <button onclick="approveFinancialAid(${financialAid.id})">审批</button>
+                                        <button onclick="rejectFinancialAid(${financialAid.id})">拒绝</button>
+                                    </td>`;
+                                } else {
+                                    html += '<td>-</td>';
+                                }
+                            }
+                            
+                            html += '</tr>';
+                        });
+                    } else {
+                        const colspan = currentUser.userType === 'ADMIN' || currentUser.userType === 'TEACHER' ? 8 : 7;
+                        html += `<tr><td colspan="${colspan}">暂无助学金记录</td></tr>`;
+                    }
+                    
+                    html += '</table>';
+                    document.getElementById('financialaid-list').innerHTML = html;
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById('financialaid-list').innerHTML = '<p style="color:red;">加载助学金信息失败</p>';
+                });
+        }
+
+        function approveFinancialAid(id) {
+            const reason = prompt('请输入审批意见（可选）:');
+            const approvalData = {
+                status: '已批准',
+                approvalRemark: reason || '审批通过'
+            };
+            
+            apiRequest(`/api/financial-aid/${id}/approve`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(approvalData)
+            })
+            .then(resp => resp.json())
+            .then(data => {
+                alert('助学金审批成功');
+                // 重新加载数据
+                loadFinancialAidInfo();
+            })
+            .catch(err => {
+                console.error(err);
+                alert('助学金审批失败');
+            });
+        }
+
+        function rejectFinancialAid(id) {
+            const reason = prompt('请输入拒绝理由:');
+            if (!reason) {
+                alert('拒绝理由不能为空');
+                return;
+            }
+            
+            const approvalData = {
+                status: '已拒绝',
+                approvalRemark: reason
+            };
+            
+            apiRequest(`/api/financial-aid/${id}/approve`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(approvalData)
+            })
+            .then(resp => resp.json())
+            .then(data => {
+                alert('助学金已拒绝');
+                // 重新加载数据
+                loadFinancialAidInfo();
+            })
+            .catch(err => {
+                console.error(err);
+                alert('操作失败');
+            });
+        }
+
+        function goBack() {
+            window.location.href = 'finance-index.html';
+        }
+    </script>
+</body>
+</html>

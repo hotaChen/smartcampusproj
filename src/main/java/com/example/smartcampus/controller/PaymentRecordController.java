@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,6 +34,7 @@ public class PaymentRecordController {
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "创建缴费记录", description = "为学生创建缴费记录")
     public ResponseEntity<PaymentRecordResponse> createPaymentRecord(@RequestBody PaymentRecordRequest request) {
         logger.info("=== PaymentRecordController.createPaymentRecord() 被调用 ===");
