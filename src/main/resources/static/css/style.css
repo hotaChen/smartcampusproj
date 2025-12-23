@@ -1,0 +1,123 @@
+/* ===== 全局重置 ===== */
+* {
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Inter", sans-serif;
+}
+
+/* ===== 主题变量 ===== */
+:root {
+    --bg: radial-gradient(circle at top, #2a1c0f, #0f0a05);
+    --card: rgba(255,255,255,0.06);
+    --text: #fff7ed;
+    --primary: #f59e0b;
+}
+
+.light {
+    --bg: #fff8ee;
+    --card: #fffdf8;
+    --text: #3a2a14;
+}
+
+/* ===== 页面基础样式 ===== */
+body {
+    margin: 0;
+    height: 100vh;
+    background: var(--bg);
+    color: var(--text);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+/* 光晕 */
+body::before {
+    content: "";
+    position: fixed;
+    inset: -40%;
+    background: radial-gradient(
+            circle at center,
+            rgba(245,158,11,0.2),
+            transparent 60%
+    );
+    z-index: -2;
+}
+
+/* 粒子背景 */
+#bg {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+}
+
+/* 主题切换按钮 */
+.theme-toggle {
+    position: fixed;
+    top: 24px;
+    right: 24px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.2);
+    cursor: pointer;
+}
+
+/* ===== 通用组件 ===== */
+
+/* 卡片 */
+.card {
+    background: var(--card);
+    backdrop-filter: blur(18px);
+    border-radius: 22px;
+    box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+}
+
+.btn {
+    width: 100%;
+    height: 48px;
+    border-radius: 14px;
+    border: none;
+    cursor: pointer;
+    background: linear-gradient(135deg, #fde68a, #f59e0b);
+    font-weight: 700;       /* 加粗更醒目 */
+    letter-spacing: 2px;
+    font-size: 18px;        /* 文字更大 */
+    box-shadow: 0 14px 32px rgba(245,158,11,0.45);
+}
+
+/* 输入框 */
+.input {
+    width: 100%;
+    height: 46px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: none;
+    background: rgba(255,255,255,0.15);
+    color: inherit;
+}
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 40px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: rgba(40,30,15,0.95);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 10px;
+    opacity: 0;
+    transition: 0.3s;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* 动画 */
+@keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
