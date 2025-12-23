@@ -18,24 +18,9 @@
 <script src="/js/particles.js?v=egg-final"></script>
 <script src="/js/sidebar.js"></script>
 <script src="/js/egg.js"></script>
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        SidebarManager.init({ currentPage: 'home' });
-    });
-</script>
+<script src="/js/header.js"></script>
 
-<!-- 主题切换 -->
-<button class="theme-toggle" onclick="toggleTheme()">🌓</button>
-
-<!-- 顶部Logo栏 -->
-<div class="header-logo">
-    <canvas id="egg" width="80" height="100" style="width:80px;height:100px;"></canvas>
-    <canvas id="school-title" width="150" height="50" style="width:150px;height:50px;"></canvas>
-    <div class="school-info">
-        <span class="school-en">EGG UNIVERSITY</span>
-        <span class="school-sub">Since 2025</span>
-    </div>
-</div>
+<div id="header-container"></div>
 
 <div class="login-box card">
     <div class="user-info" id="user-info" style="width: 100%;">
@@ -227,6 +212,11 @@
     if (localStorage.getItem("theme") === "light") {
         document.body.classList.add("light");
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        SidebarManager.init({ currentPage: 'home' });
+        HeaderComponent.init();
+    });
 </script>
 
 </body>

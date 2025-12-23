@@ -38,7 +38,6 @@
     <table id="gradeQueryTable">
         <thead>
             <tr>
-                <th>ID</th>
                 <th>学号</th>
                 <th>课程代码</th>
                 <th>课程名称</th>
@@ -48,7 +47,6 @@
                 <th>学期</th>
                 <th>学分</th>
                 <th>评语</th>
-                <th>操作</th>
             </tr>
         </thead>
         <tbody>
@@ -96,18 +94,26 @@ function queryGrades() {
     const studentId = document.getElementById('queryStudentId').value;
     const semester = document.getElementById('querySemester').value;
     
-    apiRequest(`${API_ENDPOINTS.GRADES}?studentId=${studentId}&semester=${semester}`)
+    let url;
+    if (studentId && semester) {
+        url = API_ENDPOINTS.GRADES_STUDENT_NUMBER_SEMESTER(studentId, semester);
+    } else if (studentId) {
+        url = API_ENDPOINTS.GRADES_BY_STUDENT_NUMBER(studentId);
+    } else {
+        url = API_ENDPOINTS.GRADES_BY_TEACHER;
+    }
+    
+    apiRequest(url)
     .then(resp => resp.json())
     .then(data => {
         const tbody = document.querySelector('#gradeQueryTable tbody');
         tbody.innerHTML = '';
         
-        if (data.code === 200 && data.data) {
-            data.data.forEach(grade => {
+        if (data && data.length > 0) {
+            data.forEach(grade => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${grade.id}</td>
-                    <td>${grade.studentId}</td>
+                    <td>${grade.studentId || (grade.student ? grade.student.studentId : '')}</td>
                     <td>${grade.courseCode}</td>
                     <td>${grade.courseName}</td>
                     <td>${grade.examType}</td>
@@ -116,10 +122,6 @@ function queryGrades() {
                     <td>${grade.semester}</td>
                     <td>${grade.credit}</td>
                     <td>${grade.comment || ''}</td>
-                    <td>
-                        <button onclick="editGrade(${grade.id})">编辑</button>
-                        <button onclick="deleteGrade(${grade.id})">删除</button>
-                    </td>
                 `;
                 tbody.appendChild(row);
             });
@@ -135,27 +137,28 @@ function queryGrades() {
 
 // 查询我的成绩
 function queryMyGrades() {
-    apiRequest(API_ENDPOINTS.MY_GRADES)
+    const semester = document.getElementById('querySemester').value;
+    const url = semester ? `${API_ENDPOINTS.MY_GRADES}?semester=${encodeURIComponent(semester)}` : API_ENDPOINTS.MY_GRADES;
+    
+    apiRequest(url)
     .then(resp => resp.json())
     .then(data => {
         const tbody = document.querySelector('#gradeQueryTable tbody');
         tbody.innerHTML = '';
         
-        if (data.code === 200 && data.data) {
-            data.data.forEach(grade => {
+        if (data && data.courseGrades && data.courseGrades.length > 0) {
+            data.courseGrades.forEach(grade => {
                 const row = document.createElement('tr');
                 row.innerHTML = `
-                    <td>${grade.id}</td>
-                    <td>${grade.studentId}</td>
+                    <td>${data.studentIdNumber || ''}</td>
                     <td>${grade.courseCode}</td>
                     <td>${grade.courseName}</td>
                     <td>${grade.examType}</td>
                     <td>${grade.score}</td>
                     <td>${grade.gradeLevel}</td>
-                    <td>${grade.semester}</td>
+                    <td>${data.semester || semester || ''}</td>
                     <td>${grade.credit}</td>
-                    <td>${grade.comment || ''}</td>
-                    <td>-</td>
+                    <td>${grade.remark || ''}</td>
                 `;
                 tbody.appendChild(row);
             });
@@ -191,121 +194,6 @@ function deleteGrade(id) {
     .catch(err => {
         console.error('Error:', err);
         showMessage('删除失败: ' + err.message, true);
-    });
-}
-</script>
-</body>
-</html>
-    
-    let url;
-    
-    if (studentId && semester) {
-        url = API_ENDPOINTS.GRADES_STUDENT_NUMBER_SEMESTER(studentId, semester);
-    } else if (studentId) {
-        url = API_ENDPOINTS.GRADES_BY_STUDENT_NUMBER(studentId);
-    } else {
-        url = API_ENDPOINTS.GRADES_BY_TEACHER;
-    }
-    
-    apiRequest(url)
-    .then(resp => resp.json())
-    .then(data => {
-        displayGrades(data);
-    })
-    .catch(err => {
-        console.error('Error:', err);
-        showMessage('查询成绩失败', true);
-    });
-}
-
-// 查询我的成绩
-function queryMyGrades() {
-    apiRequest(API_ENDPOINTS.USER_INFO)
-    .then(resp => resp.json())
-    .then(userInfo => {
-        const studentId = userInfo.studentId; // 使用学号而不是ID
-        const semester = document.getElementById('querySemester').value;
-        
-        let url;
-        if (semester) {
-            url = API_ENDPOINTS.GRADES_STUDENT_NUMBER_SEMESTER(studentId, semester);
-        } else {
-            url = API_ENDPOINTS.GRADES_BY_STUDENT_NUMBER(studentId);
-        }
-        
-        apiRequest(url)
-        .then(resp => resp.json())
-        .then(data => {
-            displayGrades(data);
-        })
-        .catch(err => {
-            console.error('Error:', err);
-            showMessage('查询成绩失败', true);
-        });
-    })
-    .catch(err => {
-        console.error('Error:', err);
-        showMessage('获取用户信息失败', true);
-    });
-}
-
-// 显示成绩数据
-function displayGrades(grades) {
-    const tableBody = document.querySelector('#gradeQueryTable tbody');
-    tableBody.innerHTML = '';
-    
-    if (!grades || grades.length === 0) {
-        const row = document.createElement('tr');
-        row.innerHTML = '<td colspan="11">没有找到成绩记录</td>';
-        tableBody.appendChild(row);
-        return;
-    }
-    
-    grades.forEach(grade => {
-        const row = document.createElement('tr');
-        row.innerHTML = `
-            <td>${grade.id}</td>
-            <td>${grade.student ? grade.student.studentId : ''}</td>
-            <td>${grade.courseCode}</td>
-            <td>${grade.courseName}</td>
-            <td>${grade.examType}</td>
-            <td>${grade.score}</td>
-            <td>${grade.gradeLevel}</td>
-            <td>${grade.semester}</td>
-            <td>${grade.credit}</td>
-            <td>${grade.comment || ''}</td>
-            <td>
-                <button onclick="viewGradeDetails(${grade.id})">查看详情</button>
-            </td>
-        `;
-        tableBody.appendChild(row);
-    });
-}
-
-// 查看成绩详情
-function viewGradeDetails(id) {
-    apiRequest(API_ENDPOINTS.GRADES_BY_ID(id))
-    .then(resp => resp.json())
-    .then(grade => {
-        const details = `
-            成绩ID: ${grade.id}
-            学号: ${grade.student ? grade.student.studentId : ''}
-            课程代码: ${grade.courseCode}
-            课程名称: ${grade.courseName}
-            考试类型: ${grade.examType}
-            分数: ${grade.score}
-            成绩等级: ${grade.gradeLevel}
-            学期: ${grade.semester}
-            学分: ${grade.credit}
-            评语: ${grade.comment || '无'}
-            创建时间: ${grade.createTime || '未知'}
-            更新时间: ${grade.updateTime || '未知'}
-        `;
-        alert(details);
-    })
-    .catch(err => {
-        console.error('Error:', err);
-        showMessage('获取成绩详情失败', true);
     });
 }
 </script>

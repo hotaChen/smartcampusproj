@@ -43,7 +43,8 @@ const API_ENDPOINTS = {
   TEACHER_TIMETABLE: `${API_BASE_URL}/api/teacher/timetable/me`,
   
   // Grades
-  GRADES_ENTER: `${API_BASE_URL}/api/grades/enter`,
+  GRADES: `${API_BASE_URL}/api/grades`,
+  MY_GRADES: `${API_BASE_URL}/api/grades/report/my`,
   GRADES_ENTER_BY_STUDENT_NUMBER: `${API_BASE_URL}/api/grades/enter-by-student-number`,
   GRADES_BATCH: `${API_BASE_URL}/api/grades/batch`,
   GRADES_BATCH_BY_STUDENT_NUMBER: `${API_BASE_URL}/api/grades/batch-by-student-number`,
