@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,6 +35,7 @@ public class FinancialAidController {
 
     @PostMapping
     @Operation(summary = "创建助学金记录", description = "为学生创建助学金记录")
+    @PreAuthorize("hasAuthority('financial_aid:create')")
     public ResponseEntity<FinancialAidResponse> createFinancialAid(@RequestBody FinancialAidRequest request) {
         logger.info("=== FinancialAidController.createFinancialAid() 被调用 ===");
         logger.info("创建助学金记录: 学生ID={}, 助学金类型={}, 金额={}", 
@@ -211,6 +213,7 @@ public class FinancialAidController {
 
     @GetMapping("/semester/{semester}")
     @Operation(summary = "根据学期获取助学金记录", description = "根据学期获取助学金记录列表")
+    @PreAuthorize("hasAuthority('financial_aid:view')")
     public ResponseEntity<List<FinancialAidResponse>> getFinancialAidsBySemester(@PathVariable String semester) {
         logger.info("=== FinancialAidController.getFinancialAidsBySemester() 被调用 ===");
         logger.info("查询学期助学金记录: 学期={}", semester);
@@ -233,6 +236,7 @@ public class FinancialAidController {
 
     @GetMapping("/status/{status}")
     @Operation(summary = "根据状态获取助学金记录", description = "根据状态获取助学金记录列表")
+    @PreAuthorize("hasAuthority('financial_aid:view')")
     public ResponseEntity<List<FinancialAidResponse>> getFinancialAidsByStatus(@PathVariable Integer status) {
         logger.info("=== FinancialAidController.getFinancialAidsByStatus() 被调用 ===");
         logger.info("查询状态助学金记录: 状态={}", status);
@@ -277,6 +281,7 @@ public class FinancialAidController {
 
     @GetMapping("/student/{studentId}/semester/{semester}")
     @Operation(summary = "根据学生ID和学期获取助学金记录", description = "根据学生ID和学期获取助学金记录列表")
+    @PreAuthorize("hasAuthority('financial_aid:view')")
     public ResponseEntity<List<FinancialAidResponse>> getFinancialAidsByStudentAndSemester(
             @PathVariable Long studentId, @PathVariable String semester) {
         logger.info("=== FinancialAidController.getFinancialAidsByStudentAndSemester() 被调用 ===");
@@ -346,6 +351,7 @@ public class FinancialAidController {
 
     @GetMapping("/grade/{grade}/semester/{semester}")
     @Operation(summary = "根据年级和学期获取助学金记录", description = "根据年级和学期获取助学金记录列表")
+    @PreAuthorize("hasAuthority('financial_aid:view')")
     public ResponseEntity<List<FinancialAidResponse>> getFinancialAidsByGradeAndSemester(
             @PathVariable Integer grade, @PathVariable String semester) {
         logger.info("=== FinancialAidController.getFinancialAidsByGradeAndSemester() 被调用 ===");
@@ -387,6 +393,7 @@ public class FinancialAidController {
 
     @GetMapping("/statistics/department/{department}/{semester}")
     @Operation(summary = "获取院系助学金统计信息", description = "获取指定院系和学期的助学金统计信息")
+    @PreAuthorize("hasAuthority('financial_aid:view')")
     public ResponseEntity<FinancialAidService.DepartmentFinancialAidStatistics> getDepartmentFinancialAidStatistics(
             @PathVariable String department, @PathVariable String semester) {
         logger.info("=== FinancialAidController.getDepartmentFinancialAidStatistics() 被调用 ===");

@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,6 +35,7 @@ public class ScholarshipController {
 
     @PostMapping
     @Operation(summary = "创建奖学金记录", description = "为学生创建奖学金记录")
+    @PreAuthorize("hasAuthority('scholarship:create')")
     public ResponseEntity<ScholarshipResponse> createScholarship(@RequestBody ScholarshipRequest request) {
         logger.info("=== ScholarshipController.createScholarship() 被调用 ===");
         logger.info("创建奖学金记录: 学生ID={}, 奖学金类型={}, 金额={}", 
@@ -211,6 +213,7 @@ public class ScholarshipController {
 
     @GetMapping("/student/number/{studentNumber}")
     @Operation(summary = "根据学号获取奖学金记录", description = "根据学号获取奖学金记录列表")
+    @PreAuthorize("hasAuthority('scholarship:view')")
     public ResponseEntity<List<ScholarshipResponse>> getScholarshipsByStudentNumber(@PathVariable String studentNumber) {
         logger.info("=== ScholarshipController.getScholarshipsByStudentNumber() 被调用 ===");
         logger.info("查询学生奖学金记录: 学号={}", studentNumber);
@@ -277,6 +280,7 @@ public class ScholarshipController {
 
     @GetMapping("/type/{type}")
     @Operation(summary = "根据类型获取奖学金记录", description = "根据类型获取奖学金记录列表")
+    @PreAuthorize("hasAuthority('scholarship:view')")
     public ResponseEntity<List<ScholarshipResponse>> getScholarshipsByType(@PathVariable String type) {
         logger.info("=== ScholarshipController.getScholarshipsByType() 被调用 ===");
         logger.info("查询类型奖学金记录: 类型={}", type);
@@ -391,6 +395,7 @@ public class ScholarshipController {
 
     @GetMapping("/grade/{grade}/semester/{semester}")
     @Operation(summary = "根据年级和学期获取奖学金记录", description = "根据年级和学期获取奖学金记录列表")
+    @PreAuthorize("hasAuthority('scholarship:view')")
     public ResponseEntity<List<ScholarshipResponse>> getScholarshipsByGradeAndSemester(
             @PathVariable Integer grade, @PathVariable String semester) {
         logger.info("=== ScholarshipController.getScholarshipsByGradeAndSemester() 被调用 ===");
