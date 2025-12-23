@@ -18,24 +18,25 @@ body.with-sidebar::before {
     top: 0;
     left: 0;
     right: 0;
-    height: 80px;
+    height: 120px;
     z-index: 1001;
+    display: flex;
+    align-items: flex-end;
+    padding-left: 300px;
+    padding-bottom: 5px;
+    transition: padding-left 0.3s ease;
+}
+
+/* 侧边栏收起时头部位置调整 */
+.sidebar.collapsed ~ #header-container {
+    padding-left: 100px;
 }
 
 .header-logo {
-    position: fixed;
-    top: 20px;
-    left: 300px;
     display: flex;
-    align-items: center;
+    align-items: flex-end;
     gap: 10px;
     z-index: 1002;
-    transition: left 0.3s ease;
-}
-
-.sidebar.collapsed ~ #header-container .header-logo,
-.sidebar.collapsed ~ .header-logo {
-    left: 80px;
 }
 
 .school-info {
@@ -58,7 +59,7 @@ body.with-sidebar::before {
 }
 
 .theme-toggle {
-    position: fixed;
+    position: absolute;
     top: 24px;
     right: 24px;
     width: 40px;
@@ -68,11 +69,6 @@ body.with-sidebar::before {
     background: rgba(255,255,255,0.2);
     cursor: pointer;
     z-index: 1002;
-    transition: right 0.3s ease;
-}
-
-.sidebar.collapsed ~ .theme-toggle {
-    right: 24px;
 }
 
 /* ===== 通用页面样式 ===== */
@@ -80,7 +76,7 @@ body.with-sidebar::before {
 /* 页面容器 - 适应侧边栏展开/收起 */
 .page-container {
     position: fixed;
-    left: 280px;
+    left: 300px;
     top: 80px;
     right: 0;
     bottom: 0;
@@ -90,13 +86,13 @@ body.with-sidebar::before {
 }
 
 .sidebar.collapsed ~ .page-container {
-    left: 60px;
+    left: 100px;
 }
 
 /* 主内容区 */
 .page-content {
     position: fixed;
-    left: 280px;
+    left: 300px;
     top: 80px;
     right: 0;
     bottom: 0;
@@ -106,7 +102,7 @@ body.with-sidebar::before {
 }
 
 .sidebar.collapsed ~ .page-content {
-    left: 60px;
+    left: 100px;
 }
 
 /* 页面标题 */

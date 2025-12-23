@@ -3,9 +3,9 @@
 /* 侧边栏容器 */
 .sidebar {
     position: fixed;
-    top: 80px;
+    top: 140px;
     left: 20px;
-    height: calc(100vh - 100px);
+    height: calc(100vh - 180px);
     width: 260px;
     background: var(--card);
     backdrop-filter: blur(18px);
