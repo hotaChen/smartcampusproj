@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>成绩查询</title>
+    <script src="../js/api.js"></script>
+    <script src="/js/sidebar.js"></script>
 </head>
 <body>
     <h1>成绩查询</h1>
@@ -54,10 +56,9 @@
         </tbody>
     </table>
 
-<script src="../js/api.js"></script>
 <script>
-// 页面加载时获取用户信息
 document.addEventListener('DOMContentLoaded', function() {
+    SidebarManager.init({ currentPage: 'grade-query' });
     getUserInfo();
 });
 
@@ -67,11 +68,8 @@ function getUserInfo() {
     .then(resp => resp.json())
     .then(data => {
         if (data.userType === 'STUDENT') {
-            // 如果是学生，隐藏学生ID输入框
             document.getElementById('queryStudentId').parentElement.style.display = 'none';
-            // 隐藏"查询成绩"按钮，因为这是用来查询其他学生成绩的
             document.querySelector('button[onclick="queryGrades()"]').style.display = 'none';
-            // 自动查询该学生的成绩
             queryMyGrades();
         }
     })
@@ -97,6 +95,107 @@ function showMessage(message, isError = false) {
 function queryGrades() {
     const studentId = document.getElementById('queryStudentId').value;
     const semester = document.getElementById('querySemester').value;
+    
+    apiRequest(`${API_ENDPOINTS.GRADES}?studentId=${studentId}&semester=${semester}`)
+    .then(resp => resp.json())
+    .then(data => {
+        const tbody = document.querySelector('#gradeQueryTable tbody');
+        tbody.innerHTML = '';
+        
+        if (data.code === 200 && data.data) {
+            data.data.forEach(grade => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${grade.id}</td>
+                    <td>${grade.studentId}</td>
+                    <td>${grade.courseCode}</td>
+                    <td>${grade.courseName}</td>
+                    <td>${grade.examType}</td>
+                    <td>${grade.score}</td>
+                    <td>${grade.gradeLevel}</td>
+                    <td>${grade.semester}</td>
+                    <td>${grade.credit}</td>
+                    <td>${grade.comment || ''}</td>
+                    <td>
+                        <button onclick="editGrade(${grade.id})">编辑</button>
+                        <button onclick="deleteGrade(${grade.id})">删除</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        } else {
+            showMessage('未找到成绩记录', true);
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('查询失败: ' + err.message, true);
+    });
+}
+
+// 查询我的成绩
+function queryMyGrades() {
+    apiRequest(API_ENDPOINTS.MY_GRADES)
+    .then(resp => resp.json())
+    .then(data => {
+        const tbody = document.querySelector('#gradeQueryTable tbody');
+        tbody.innerHTML = '';
+        
+        if (data.code === 200 && data.data) {
+            data.data.forEach(grade => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${grade.id}</td>
+                    <td>${grade.studentId}</td>
+                    <td>${grade.courseCode}</td>
+                    <td>${grade.courseName}</td>
+                    <td>${grade.examType}</td>
+                    <td>${grade.score}</td>
+                    <td>${grade.gradeLevel}</td>
+                    <td>${grade.semester}</td>
+                    <td>${grade.credit}</td>
+                    <td>${grade.comment || ''}</td>
+                    <td>-</td>
+                `;
+                tbody.appendChild(row);
+            });
+        } else {
+            showMessage('未找到成绩记录', true);
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('查询失败: ' + err.message, true);
+    });
+}
+
+// 编辑成绩
+function editGrade(id) {
+    window.location.href = `grade-entry.html?id=${id}`;
+}
+
+// 删除成绩
+function deleteGrade(id) {
+    if (!confirm('确定要删除这条成绩记录吗？')) return;
+    
+    apiRequest(`${API_ENDPOINTS.GRADES}/${id}`, { method: 'DELETE' })
+    .then(resp => resp.json())
+    .then(data => {
+        if (data.code === 200) {
+            showMessage('删除成功');
+            queryGrades();
+        } else {
+            showMessage('删除失败: ' + data.message, true);
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('删除失败: ' + err.message, true);
+    });
+}
+</script>
+</body>
+</html>
     
     let url;
     

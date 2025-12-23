@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>奖学金管理</title>
+    <script src="/js/sidebar.js"></script>
 </head>
 <body>
     <h1>奖学金管理</h1>
-    <div id="user-info"></div>
     
     <div>
         <h2>添加奖学金记录</h2>
@@ -48,32 +48,19 @@
     
     <script src="/js/api.js"></script>
     <script>
-        const token = localStorage.getItem('token');
-        let currentUser = null;
-
-        if (!token) {
-            document.getElementById('user-info').innerHTML = '<p style="color:red;">未检测到登录信息，请重新登录</p>';
-        } else {
-            apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
-                .then(resp => resp.json())
-                .then(user => {
-                    currentUser = user;
-                    document.getElementById('user-info').innerHTML = `<p>当前用户: ${user.realName} (${user.userType})</p>`;
-                    
-                    // 检查权限
-                    if (currentUser.userType !== 'ADMIN') {
-                        document.getElementById('user-info').innerHTML += '<p style="color:red;">您没有权限访问此页面</p>';
+        document.addEventListener('DOMContentLoaded', function() {
+            SidebarManager.init({ 
+                currentPage: 'scholarship-manage',
+                onReady: function(user) {
+                    if (user.userType !== 'ADMIN') {
+                        document.querySelector('h1').innerHTML = '您没有权限访问此页面';
+                        document.querySelector('h1').style.color = 'red';
                         return;
                     }
-                    
-                    // 加载奖学金信息
                     loadScholarshipInfo();
-                })
-                .catch(err => {
-                    console.error(err);
-                    document.getElementById('user-info').innerHTML = `<p style="color:red;">获取用户信息失败</p>`;
-                });
-        }
+                }
+            });
+        });
 
         function loadScholarshipInfo() {
             apiRequest('/api/scholarships')
@@ -141,13 +128,11 @@
             .then(resp => resp.json())
             .then(data => {
                 alert('奖学金记录添加成功');
-                // 清空表单
                 document.getElementById('studentId').value = '';
                 document.getElementById('name').value = '';
                 document.getElementById('amount').value = '';
                 document.getElementById('reason').value = '';
                 document.getElementById('status').value = '待审批';
-                // 重新加载数据
                 loadScholarshipInfo();
             })
             .catch(err => {
@@ -157,7 +142,6 @@
         }
 
         function editScholarship(id) {
-            // 这里可以实现编辑功能，为了简化，我们只显示一个提示
             alert('编辑功能待实现');
         }
 
@@ -169,7 +153,6 @@
                 .then(resp => resp.text())
                 .then(msg => {
                     alert('奖学金记录删除成功');
-                    // 重新加载数据
                     loadScholarshipInfo();
                 })
                 .catch(err => {

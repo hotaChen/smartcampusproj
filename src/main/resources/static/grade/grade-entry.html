@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>成绩录入</title>
+    <script src="../js/api.js"></script>
+    <script src="/js/sidebar.js"></script>
 </head>
 <body>
     <h1>成绩录入</h1>
@@ -170,6 +172,10 @@
 
 <script src="../js/api.js"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function() {
+    SidebarManager.init({ currentPage: 'grade-entry' });
+});
+
 // 页面加载时获取最近录入的成绩
 document.addEventListener('DOMContentLoaded', function() {
     // 检查用户权限

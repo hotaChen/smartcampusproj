@@ -3,70 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <title>财务管理</title>
+    <script src="../js/api.js"></script>
+    <script src="/js/sidebar.js"></script>
 </head>
 <body>
     <h1>财务管理模块</h1>
-    <div id="user-info"></div>
-    
-    <div id="finance-menu">
-        <!-- 菜单将根据用户权限动态加载 -->
+    <div>
+        <a href="tuition-view.html">学费查询</a> |
+        <a href="tuition-manage.html">学费管理</a> |
+        <a href="payment-view.html">缴费记录</a> |
+        <a href="payment-manage.html">缴费记录管理</a> |
+        <a href="scholarship-view.html">奖学金查询</a> |
+        <a href="scholarship-manage.html">奖学金管理</a> |
+        <a href="financialaid-view.html">助学金查询</a> |
+        <a href="financialaid-manage.html">助学金管理</a> |
+        <a href="../index.html">返回首页</a>
     </div>
-    
-    <script src="/js/api.js"></script>
-    <script>
-        const token = localStorage.getItem('token');
-        let currentUser = null;
 
-        if (!token) {
-            document.getElementById('user-info').innerHTML = '<p style="color:red;">未检测到登录信息，请重新登录</p>';
-        } else {
-            apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
-                .then(resp => resp.json())
-                .then(user => {
-                    currentUser = user;
-                    document.getElementById('user-info').innerHTML = `<p>当前用户: ${user.realName} (${user.userType})</p>`;
-                    
-                    // 根据用户类型显示不同的菜单
-                    let menuHtml = '<h2>财务管理功能</h2>';
-                    
-                    // 所有用户都可以查看
-                    menuHtml += '<button onclick="goToTuition()">学费查询</button>';
-                    menuHtml += '<button onclick="goToPayment()">缴费记录</button>';
-                    menuHtml += '<button onclick="goToScholarship()">奖学金查询</button>';
-                    menuHtml += '<button onclick="goToFinancialAid()">助学金查询</button>';
-                    
-                    // 管理员和教师有更多权限
-                    if (user.userType === 'ADMIN' || user.userType === 'TEACHER') {
-                        menuHtml += '<h3>管理功能</h3>';
-                        menuHtml += '<button onclick="goToTuitionManage()">学费管理</button>';
-                        menuHtml += '<button onclick="goToPaymentManage()">缴费记录管理</button>';
-                        
-                        if (user.userType === 'ADMIN') {
-                            menuHtml += '<button onclick="goToScholarshipManage()">奖学金管理</button>';
-                            menuHtml += '<button onclick="goToFinancialAidManage()">助学金管理</button>';
-                        }
-                    }
-                    
-                    menuHtml += '<br><br><button onclick="goBack()">返回首页</button>';
-                    
-                    document.getElementById('finance-menu').innerHTML = menuHtml;
-                })
-                .catch(err => {
-                    console.error(err);
-                    document.getElementById('user-info').innerHTML = `<p style="color:red;">获取用户信息失败</p>`;
-                });
-        }
-
-        // 页面跳转函数
-        function goToTuition() { window.location.href = 'tuition-view.html'; }
-        function goToTuitionManage() { window.location.href = 'tuition-manage.html'; }
-        function goToPayment() { window.location.href = 'payment-view.html'; }
-        function goToPaymentManage() { window.location.href = 'payment-manage.html'; }
-        function goToScholarship() { window.location.href = 'scholarship-view.html'; }
-        function goToScholarshipManage() { window.location.href = 'scholarship-manage.html'; }
-        function goToFinancialAid() { window.location.href = 'financialaid-view.html'; }
-        function goToFinancialAidManage() { window.location.href = 'financialaid-manage.html'; }
-        function goBack() { window.location.href = '../index.html'; }
-    </script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    SidebarManager.init({ currentPage: 'finance-index' });
+});
+</script>
 </body>
 </html>

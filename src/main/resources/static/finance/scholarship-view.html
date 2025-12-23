@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>奖学金查询</title>
+    <script src="/js/sidebar.js"></script>
 </head>
 <body>
     <h1>奖学金查询</h1>
-    <div id="user-info"></div>
     
     <div>
         <h2>我的奖学金信息</h2>
@@ -22,35 +22,20 @@
     
     <script src="/js/api.js"></script>
     <script>
-        const token = localStorage.getItem('token');
-        let currentUser = null;
+        document.addEventListener('DOMContentLoaded', function() {
+            SidebarManager.init({ 
+                currentPage: 'scholarship-view',
+                onReady: function(user) {
+                    loadScholarshipInfo(user);
+                }
+            });
+        });
 
-        if (!token) {
-            document.getElementById('user-info').innerHTML = '<p style="color:red;">未检测到登录信息，请重新登录</p>';
-        } else {
-            apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
-                .then(resp => resp.json())
-                .then(user => {
-                    currentUser = user;
-                    document.getElementById('user-info').innerHTML = `<p>当前用户: ${user.realName} (${user.userType})</p>`;
-                    
-                    // 加载奖学金信息
-                    loadScholarshipInfo();
-                })
-                .catch(err => {
-                    console.error(err);
-                    document.getElementById('user-info').innerHTML = `<p style="color:red;">获取用户信息失败</p>`;
-                });
-        }
-
-        function loadScholarshipInfo() {
-            // 根据用户类型加载不同的奖学金信息
+        function loadScholarshipInfo(user) {
             let url;
-            if (currentUser.userType === 'STUDENT') {
-                // 学生只能查看自己的奖学金
-                url = `/api/scholarships/student/${currentUser.id}`;
-            } else if (currentUser.userType === 'TEACHER' || currentUser.userType === 'ADMIN') {
-                // 教师和管理员可以查看所有奖学金
+            if (user.userType === 'STUDENT') {
+                url = `/api/scholarships/student/${user.id}`;
+            } else if (user.userType === 'TEACHER' || user.userType === 'ADMIN') {
                 url = '/api/scholarships';
             }
             
@@ -60,7 +45,7 @@
                     let html = '<table border="1" cellpadding="5" cellspacing="0">';
                     html += '<tr><th>奖学金名称</th><th>学生姓名</th><th>学号</th><th>金额</th><th>申请状态</th><th>申请日期</th><th>审批日期</th>';
                     
-                    if (currentUser.userType === 'ADMIN' || currentUser.userType === 'TEACHER') {
+                    if (user.userType === 'ADMIN' || user.userType === 'TEACHER') {
                         html += '<th>操作</th>';
                     }
                     
@@ -77,7 +62,7 @@
                                 <td>${scholarship.applicationDate || '-'}</td>
                                 <td>${scholarship.approvalDate || '-'}</td>`;
                             
-                            if (currentUser.userType === 'ADMIN' || currentUser.userType === 'TEACHER') {
+                            if (user.userType === 'ADMIN' || user.userType === 'TEACHER') {
                                 if (scholarship.status === '待审批') {
                                     html += `<td>
                                         <button onclick="approveScholarship(${scholarship.id})">审批</button>
@@ -91,7 +76,7 @@
                             html += '</tr>';
                         });
                     } else {
-                        const colspan = currentUser.userType === 'ADMIN' || currentUser.userType === 'TEACHER' ? 8 : 7;
+                        const colspan = user.userType === 'ADMIN' || user.userType === 'TEACHER' ? 8 : 7;
                         html += `<tr><td colspan="${colspan}">暂无奖学金记录</td></tr>`;
                     }
                     
@@ -121,8 +106,7 @@
             .then(resp => resp.json())
             .then(data => {
                 alert('奖学金审批成功');
-                // 重新加载数据
-                loadScholarshipInfo();
+                SidebarManager.getUser().then(user => loadScholarshipInfo(user));
             })
             .catch(err => {
                 console.error(err);
@@ -152,8 +136,7 @@
             .then(resp => resp.json())
             .then(data => {
                 alert('奖学金已拒绝');
-                // 重新加载数据
-                loadScholarshipInfo();
+                SidebarManager.getUser().then(user => loadScholarshipInfo(user));
             })
             .catch(err => {
                 console.error(err);

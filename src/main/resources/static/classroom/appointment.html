@@ -19,7 +19,12 @@
 </div>
 
 <script src="../js/api.js"></script>
+<script src="/js/sidebar.js"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        SidebarManager.init({ currentPage: 'appointment' });
+    });
+    
     const token = localStorage.getItem('token');
 
     function goBack() {

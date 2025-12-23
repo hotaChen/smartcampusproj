@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>成绩管理系统</title>
+    <script src="../js/api.js"></script>
+    <script src="/js/sidebar.js"></script>
 </head>
 <body>
     <h1>成绩管理系统</h1>
@@ -14,5 +16,11 @@
         <a href="makeup-exam.html">补考管理</a> |
         <a href="../index.html">返回首页</a>
     </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    SidebarManager.init({ currentPage: 'grade-index' });
+});
+</script>
 </body>
 </html>

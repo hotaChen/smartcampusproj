@@ -33,7 +33,12 @@
 </div>
 
 <script src="../js/api.js"></script>
+<script src="/js/sidebar.js"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        SidebarManager.init({ currentPage: 'syllabus' });
+    });
+    
     const token = localStorage.getItem('token');
     let currentUser = null;
 

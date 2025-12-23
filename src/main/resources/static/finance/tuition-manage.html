@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <title>学费管理</title>
+    <script src="../js/api.js"></script>
+    <script src="/js/sidebar.js"></script>
 </head>
 <body>
     <h1>学费管理</h1>
-    <div id="user-info"></div>
     
     <div>
         <h2>添加学费记录</h2>
@@ -39,138 +40,120 @@
         <button onclick="goBack()">返回财务管理</button>
     </div>
     
-    <script src="/js/api.js"></script>
-    <script>
-        const token = localStorage.getItem('token');
-        let currentUser = null;
-
-        if (!token) {
-            document.getElementById('user-info').innerHTML = '<p style="color:red;">未检测到登录信息，请重新登录</p>';
-        } else {
-            apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
-                .then(resp => resp.json())
-                .then(user => {
-                    currentUser = user;
-                    document.getElementById('user-info').innerHTML = `<p>当前用户: ${user.realName} (${user.userType})</p>`;
-                    
-                    // 检查权限
-                    if (currentUser.userType !== 'ADMIN' && currentUser.userType !== 'TEACHER') {
-                        document.getElementById('user-info').innerHTML += '<p style="color:red;">您没有权限访问此页面</p>';
-                        return;
-                    }
-                    
-                    // 加载学费信息
-                    loadTuitionInfo();
-                })
-                .catch(err => {
-                    console.error(err);
-                    document.getElementById('user-info').innerHTML = `<p style="color:red;">获取用户信息失败</p>`;
-                });
-        }
-
-        function loadTuitionInfo() {
-            apiRequest('/api/tuition')
-                .then(resp => resp.json())
-                .then(data => {
-                    let html = '<table border="1" cellpadding="5" cellspacing="0">';
-                    html += '<tr><th>学生姓名</th><th>学号</th><th>学期</th><th>学费金额</th><th>缴费状态</th><th>缴费截止日期</th><th>操作</th></tr>';
-                    
-                    if (data && data.length > 0) {
-                        data.forEach(tuition => {
-                            html += `<tr>
-                                <td>${tuition.studentName || '-'}</td>
-                                <td>${tuition.studentNumber || '-'}</td>
-                                <td>${tuition.semester || '-'}</td>
-                                <td>${tuition.amount || '-'}</td>
-                                <td>${tuition.paymentStatus || '-'}</td>
-                                <td>${tuition.dueDate || '-'}</td>
-                                <td>
-                                    <button onclick="editTuition(${tuition.id})">编辑</button>
-                                    <button onclick="deleteTuition(${tuition.id})">删除</button>
-                                </td>
-                            </tr>`;
-                        });
-                    } else {
-                        html += '<tr><td colspan="7">暂无学费记录</td></tr>';
-                    }
-                    
-                    html += '</table>';
-                    document.getElementById('tuition-list').innerHTML = html;
-                })
-                .catch(err => {
-                    console.error(err);
-                    document.getElementById('tuition-list').innerHTML = '<p style="color:red;">加载学费信息失败</p>';
-                });
-        }
-
-        function addTuition() {
-            const studentId = document.getElementById('studentId').value;
-            const amount = document.getElementById('amount').value;
-            const semester = document.getElementById('semester').value;
-            const dueDate = document.getElementById('dueDate').value;
-            
-            if (!studentId || !amount || !semester || !dueDate) {
-                alert('请填写完整信息');
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    SidebarManager.init({ 
+        currentPage: 'tuition-manage',
+        onReady: function(user) {
+            if (user.userType !== 'ADMIN' && user.userType !== 'TEACHER') {
+                document.querySelector('h1').innerHTML = '您没有权限访问此页面';
+                document.querySelector('h1').style.color = 'red';
                 return;
             }
-            
-            const tuitionData = {
-                studentId: parseInt(studentId),
-                amount: parseFloat(amount),
-                semester: semester,
-                dueDate: dueDate
-            };
-            
-            apiRequest('/api/tuition', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(tuitionData)
-            })
-            .then(resp => resp.json())
-            .then(data => {
-                alert('学费记录添加成功');
-                // 清空表单
-                document.getElementById('studentId').value = '';
-                document.getElementById('amount').value = '';
-                document.getElementById('semester').value = '';
-                document.getElementById('dueDate').value = '';
-                // 重新加载数据
-                loadTuitionInfo();
-            })
-            .catch(err => {
-                console.error(err);
-                alert('添加学费记录失败');
-            });
+            loadTuitionInfo();
         }
+    });
+});
 
-        function editTuition(id) {
-            // 这里可以实现编辑功能，为了简化，我们只显示一个提示
-            alert('编辑功能待实现');
-        }
-
-        function deleteTuition(id) {
-            if (confirm('确定要删除这条学费记录吗？')) {
-                apiRequest(`/api/tuition/${id}`, {
-                    method: 'DELETE'
-                })
-                .then(resp => resp.text())
-                .then(msg => {
-                    alert('学费记录删除成功');
-                    // 重新加载数据
-                    loadTuitionInfo();
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert('删除学费记录失败');
+function loadTuitionInfo() {
+    apiRequest('/api/tuition')
+        .then(resp => resp.json())
+        .then(data => {
+            let html = '<table border="1" cellpadding="5" cellspacing="0">';
+            html += '<tr><th>学生姓名</th><th>学号</th><th>学期</th><th>学费金额</th><th>缴费状态</th><th>缴费截止日期</th><th>操作</th></tr>';
+            
+            if (data && data.length > 0) {
+                data.forEach(tuition => {
+                    html += `<tr>
+                        <td>${tuition.studentName || '-'}</td>
+                        <td>${tuition.studentNumber || '-'}</td>
+                        <td>${tuition.semester || '-'}</td>
+                        <td>${tuition.amount || '-'}</td>
+                        <td>${tuition.paymentStatus || '-'}</td>
+                        <td>${tuition.dueDate || '-'}</td>
+                        <td>
+                            <button onclick="editTuition(${tuition.id})">编辑</button>
+                            <button onclick="deleteTuition(${tuition.id})">删除</button>
+                        </td>
+                    </tr>`;
                 });
+            } else {
+                html += '<tr><td colspan="7">暂无学费记录</td></tr>';
             }
-        }
+            
+            html += '</table>';
+            document.getElementById('tuition-list').innerHTML = html;
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('tuition-list').innerHTML = '<p style="color:red;">加载学费信息失败</p>';
+        });
+}
 
-        function goBack() {
-            window.location.href = 'finance-index.html';
-        }
-    </script>
+function addTuition() {
+    const studentId = document.getElementById('studentId').value;
+    const amount = document.getElementById('amount').value;
+    const semester = document.getElementById('semester').value;
+    const dueDate = document.getElementById('dueDate').value;
+    
+    if (!studentId || !amount || !semester || !dueDate) {
+        alert('请填写完整信息');
+        return;
+    }
+    
+    const tuitionData = {
+        studentId: parseInt(studentId),
+        amount: parseFloat(amount),
+        semester: semester,
+        dueDate: dueDate
+    };
+    
+    apiRequest('/api/tuition', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(tuitionData)
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        alert('学费记录添加成功');
+        document.getElementById('studentId').value = '';
+        document.getElementById('amount').value = '';
+        document.getElementById('semester').value = '';
+        document.getElementById('dueDate').value = '';
+        loadTuitionInfo();
+    })
+    .catch(err => {
+        console.error(err);
+        alert('添加学费记录失败');
+    });
+}
+
+function editTuition(id) {
+    alert('编辑功能待实现');
+}
+
+function deleteTuition(id) {
+    if (confirm('确定要删除这条学费记录吗？')) {
+        apiRequest(`/api/tuition/${id}`, {
+            method: 'DELETE'
+        })
+        .then(resp => resp.text())
+        .then(msg => {
+            alert('学费记录删除成功');
+            loadTuitionInfo();
+        })
+        .catch(err => {
+            console.error(err);
+            alert('删除学费记录失败');
+        });
+    }
+}
+
+function goBack() {
+    window.location.href = 'finance-index.html';
+}
+</script>
 </body>
 </html>

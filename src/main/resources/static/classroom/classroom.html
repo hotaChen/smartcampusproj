@@ -147,7 +147,12 @@
 </div>
 
 <script src="../js/api.js"></script>
+<script src="/js/sidebar.js"></script>
 <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        SidebarManager.init({ currentPage: 'classroom' });
+    });
+    
     let classrooms = [];
     let currentUser = null;
     const token = localStorage.getItem('token');

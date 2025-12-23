@@ -14,136 +14,15 @@
 <!-- 粒子背景 -->
 <canvas id="bg"></canvas>
 
-<!-- 侧边栏 -->
-<div class="sidebar" id="sidebar">
-    <!-- 侧边栏切换按钮 -->
-    <button class="sidebar-toggle" id="sidebarToggle">☰</button>
-    
-    <!-- 侧边栏收起状态显示的图标 -->
-    <div class="sidebar-collapsed-icon" id="sidebarCollapsedIcon">☰</div>
-    
-    <!-- 侧边栏头部 -->
-    <div class="sidebar-header">
-        <canvas id="sidebar-egg" width="40" height="50" class="sidebar-logo"></canvas>
-    </div>
-    
-    <!-- 侧边栏内容 -->
-    <div class="sidebar-content">
-        <!-- 常用功能 -->
-        <div class="sidebar-group" id="favoritesGroup">
-            <div class="sidebar-group-title">
-                <span>常用功能</span>
-                <span class="disclosure">▼</span>
-            </div>
-            <div class="sidebar-group-items">
-                <ul class="sidebar-menu">
-                    <li class="sidebar-menu-item">
-                        <a href="#" class="sidebar-menu-link" onclick="goToAppointment()">
-                            <span class="sidebar-menu-icon"></span>
-                            <span class="sidebar-menu-text">预约模块</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item">
-                        <a href="#" class="sidebar-menu-link" onclick="goToClassroom()">
-                            <span class="sidebar-menu-icon"></span>
-                            <span class="sidebar-menu-text">教室系统</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item">
-                        <a href="#" class="sidebar-menu-link" onclick="goToCourse()">
-                            <span class="sidebar-menu-icon"></span>
-                            <span class="sidebar-menu-text">课程管理</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        
-        <!-- 系统管理 -->
-        <div class="sidebar-group" id="systemGroup">
-            <div class="sidebar-group-title">
-                <span>系统管理</span>
-                <span class="disclosure">▼</span>
-            </div>
-            <div class="sidebar-group-items">
-                <ul class="sidebar-menu">
-                    <li class="sidebar-menu-item">
-                        <a href="#" class="sidebar-menu-link" onclick="goTotimetable()">
-                            <span class="sidebar-menu-icon"></span>
-                            <span class="sidebar-menu-text">排课系统</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item">
-                        <a href="#" class="sidebar-menu-link" onclick="goToSyllabus()">
-                            <span class="sidebar-menu-icon"></span>
-                            <span class="sidebar-menu-text">课程大纲</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item">
-                        <a href="#" class="sidebar-menu-link" onclick="goToGrade()">
-                            <span class="sidebar-menu-icon"></span>
-                            <span class="sidebar-menu-text">成绩管理</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item">
-                        <a href="#" class="sidebar-menu-link" onclick="goToFinance()">
-                            <span class="sidebar-menu-icon"></span>
-                            <span class="sidebar-menu-text">财务管理</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-        
-        <!-- 用户功能 -->
-        <div class="sidebar-group" id="userGroup">
-            <div class="sidebar-group-title">
-                <span>用户功能</span>
-                <span class="disclosure">▼</span>
-            </div>
-            <div class="sidebar-group-items">
-                <ul class="sidebar-menu">
-                    <li class="sidebar-menu-item">
-                        <a href="#" class="sidebar-menu-link" onclick="openChangePassword()">
-                            <span class="sidebar-menu-icon"></span>
-                            <span class="sidebar-menu-text">修改密码</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item admin-only">
-                        <a href="#" class="sidebar-menu-link" onclick="goToRegister()">
-                            <span class="sidebar-menu-icon"></span>
-                            <span class="sidebar-menu-text">注册新用户</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item admin-only">
-                        <a href="#" class="sidebar-menu-link" onclick="openResetPassword()">
-                            <span class="sidebar-menu-icon"></span>
-                            <span class="sidebar-menu-text">重置用户密码</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item student-only">
-                        <a href="#" class="sidebar-menu-link" onclick="goToCourseSelection()">
-                            <span class="sidebar-menu-icon"></span>
-                            <span class="sidebar-menu-text">学生选课系统</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item student-only">
-                        <a href="#" class="sidebar-menu-link" onclick="goToStimetable()">
-                            <span class="sidebar-menu-icon"></span>
-                            <span class="sidebar-menu-text">学生课表</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item teacher-only">
-                        <a href="#" class="sidebar-menu-link" onclick="goToTtimetable()">
-                            <span class="sidebar-menu-icon"></span>
-                            <span class="sidebar-menu-text">教师课表</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </div>
-</div>
+<script src="/js/api.js"></script>
+<script src="/js/particles.js?v=egg-final"></script>
+<script src="/js/sidebar.js"></script>
+<script src="/js/egg.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        SidebarManager.init({ currentPage: 'home' });
+    });
+</script>
 
 <!-- 主题切换 -->
 <button class="theme-toggle" onclick="toggleTheme()">🌓</button>
@@ -190,10 +69,6 @@
     </div>
 </div>
 
-<script src="/js/api.js"></script>
-<script src="/js/particles.js?v=egg-final"></script>
-<script src="../js/egg.js"></script>
-
 <script>
     const font = new FontFace('Maobi', 'url(/fonts/Maobi.ttf)');
     font.load().then(function(loadedFont) {
@@ -209,91 +84,9 @@
             ctx.fillText('鸡蛋大学', 0, 25);
         }
     }).catch(e => console.error('字体加载失败', e));
-</script>
-
-<script>
+    
     const token = localStorage.getItem('token');
     let currentUser = null;
-
-    // 侧边栏功能
-    document.addEventListener('DOMContentLoaded', function() {
-        const sidebarToggle = document.getElementById('sidebarToggle');
-        const sidebar = document.getElementById('sidebar');
-        const sidebarCollapsedIcon = document.getElementById('sidebarCollapsedIcon');
-        
-        // 侧边栏收缩/展开
-        function toggleSidebar() {
-            sidebar.classList.toggle('collapsed');
-            const icon = sidebar.classList.contains('collapsed') ? '☰' : '✕';
-            sidebarToggle.textContent = icon;
-            sidebarCollapsedIcon.textContent = icon;
-            
-            // 保存侧边栏状态
-            localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
-        }
-        
-        sidebarToggle.addEventListener('click', toggleSidebar);
-        sidebarCollapsedIcon.addEventListener('click', toggleSidebar);
-        
-        // 恢复侧边栏状态
-        if (localStorage.getItem('sidebarCollapsed') === 'true') {
-            sidebar.classList.add('collapsed');
-            sidebarToggle.textContent = '☰';
-            sidebarCollapsedIcon.textContent = '☰';
-        }
-        
-        // 分组收缩/展开
-        document.querySelectorAll('.sidebar-group-title').forEach(title => {
-            title.addEventListener('click', function() {
-                const group = this.parentElement;
-                group.classList.toggle('collapsed');
-                
-                // 保存分组状态
-                const groupId = group.id;
-                localStorage.setItem(groupId + 'Collapsed', group.classList.contains('collapsed'));
-            });
-            
-            // 恢复分组状态
-            const group = title.parentElement;
-            const groupId = group.id;
-            if (localStorage.getItem(groupId + 'Collapsed') === 'true') {
-                group.classList.add('collapsed');
-            }
-        });
-        
-        // 绘制侧边栏中的鸡蛋logo
-        drawSidebarEgg();
-    });
-    
-    // 绘制侧边栏中的鸡蛋logo
-    function drawSidebarEgg() {
-        const canvas = document.getElementById('sidebar-egg');
-        if (canvas) {
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, 40, 50);
-            
-            // 绘制鸡蛋形状
-            ctx.beginPath();
-            ctx.moveTo(20, 5);
-            ctx.bezierCurveTo(35, 5, 40, 20, 40, 30);
-            ctx.bezierCurveTo(40, 40, 35, 45, 20, 45);
-            ctx.bezierCurveTo(5, 45, 0, 40, 0, 30);
-            ctx.bezierCurveTo(0, 20, 5, 5, 20, 5);
-            ctx.closePath();
-            
-            // 填充渐变色
-            const gradient = ctx.createLinearGradient(0, 0, 0, 50);
-            gradient.addColorStop(0, '#fde68a');
-            gradient.addColorStop(1, '#f59e0b');
-            ctx.fillStyle = gradient;
-            ctx.fill();
-            
-            // 添加边框
-            ctx.strokeStyle = '#d97706';
-            ctx.lineWidth = 1;
-            ctx.stroke();
-        }
-    }
 
     if (!token) {
         document.getElementById('user-info').innerHTML = '<p style="color: #ef4444;">未检测到登录信息，请重新登录</p>';
@@ -351,37 +144,11 @@
                 html += `</div>`;
 
                 div.innerHTML = html;
-                
-                // 根据用户类型显示/隐藏侧边栏菜单项
-                updateSidebarMenu(user.userType);
             })
             .catch(err => {
                 console.error(err);
                 document.getElementById('user-info').innerHTML = `<p style="color: #ef4444;">获取用户信息失败</p>`;
             });
-    }
-    
-    // 根据用户类型更新侧边栏菜单
-    function updateSidebarMenu(userType) {
-        // 隐藏所有特定角色的菜单项
-        document.querySelectorAll('.admin-only, .student-only, .teacher-only').forEach(item => {
-            item.style.display = 'none';
-        });
-        
-        // 根据用户类型显示相应的菜单项
-        if (userType === 'ADMIN') {
-            document.querySelectorAll('.admin-only').forEach(item => {
-                item.style.display = 'block';
-            });
-        } else if (userType === 'STUDENT') {
-            document.querySelectorAll('.student-only').forEach(item => {
-                item.style.display = 'block';
-            });
-        } else if (userType === 'TEACHER') {
-            document.querySelectorAll('.teacher-only').forEach(item => {
-                item.style.display = 'block';
-            });
-        }
     }
 
     function goToAppointment() { window.location.href = '../classroom/appointment.html'; }

@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <title>成绩统计</title>
+    <script src="../js/api.js"></script>
+    <script src="/js/sidebar.js"></script>
 </head>
 <body>
     <h1>成绩统计</h1>
@@ -41,10 +43,9 @@
         <!-- 统计结果将通过JavaScript动态填充 -->
     </div>
 
-<script src="../js/api.js"></script>
 <script>
-// 页面加载时获取用户信息
 document.addEventListener('DOMContentLoaded', function() {
+    SidebarManager.init({ currentPage: 'grade-stats' });
     getUserInfo();
 });
 
@@ -54,17 +55,10 @@ function getUserInfo() {
     .then(resp => resp.json())
     .then(data => {
         if (data.userType === 'STUDENT') {
-            // 如果是学生，隐藏学生ID输入框并自动填充
             document.getElementById('statsStudentId').value = data.studentId;
             document.getElementById('statsStudentId').readOnly = true;
-            
-            // 隐藏课程代码输入框，因为学生不应该查看课程统计
             document.getElementById('statsCourseCode').parentElement.style.display = 'none';
-            
-            // 隐藏"计算课程平均分"按钮，因为这是教师/管理员功能
             document.querySelector('button[onclick="calculateCourseAverage()"]').style.display = 'none';
-            
-            // 自动计算该学生的平均分
             calculateStudentAverage();
         }
     })
@@ -85,6 +79,81 @@ function showMessage(message, isError = false) {
         messageDiv.style.display = 'none';
     }, 3000);
 }
+
+// 计算学生平均分
+function calculateStudentAverage() {
+    const studentId = document.getElementById('statsStudentId').value;
+    const semester = document.getElementById('statsSemester').value;
+    
+    if (!studentId) {
+        showMessage('请输入学号', true);
+        return;
+    }
+    
+    apiRequest(`${API_ENDPOINTS.GRADES}/average?studentId=${studentId}&semester=${semester}`)
+    .then(resp => resp.json())
+    .then(data => {
+        const resultDiv = document.getElementById('statsResult');
+        resultDiv.style.display = 'block';
+        
+        if (data.code === 200 && data.data) {
+            resultDiv.innerHTML = `
+                <h3>学生成绩统计</h3>
+                <p>学号: ${studentId}</p>
+                <p>学期: ${semester}</p>
+                <p>平均分: ${data.data.averageScore.toFixed(2)}</p>
+                <p>最高分: ${data.data.maxScore}</p>
+                <p>最低分: ${data.data.minScore}</p>
+                <p>课程数: ${data.data.courseCount}</p>
+            `;
+        } else {
+            resultDiv.innerHTML = `<p>未找到该学生的成绩记录</p>`;
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('计算失败: ' + err.message, true);
+    });
+}
+
+// 计算课程平均分
+function calculateCourseAverage() {
+    const courseCode = document.getElementById('statsCourseCode').value;
+    const semester = document.getElementById('statsSemester').value;
+    
+    if (!courseCode) {
+        showMessage('请输入课程代码', true);
+        return;
+    }
+    
+    apiRequest(`${API_ENDPOINTS.GRADES}/courseAverage?courseCode=${courseCode}&semester=${semester}`)
+    .then(resp => resp.json())
+    .then(data => {
+        const resultDiv = document.getElementById('statsResult');
+        resultDiv.style.display = 'block';
+        
+        if (data.code === 200 && data.data) {
+            resultDiv.innerHTML = `
+                <h3>课程成绩统计</h3>
+                <p>课程代码: ${courseCode}</p>
+                <p>学期: ${semester}</p>
+                <p>平均分: ${data.data.averageScore.toFixed(2)}</p>
+                <p>最高分: ${data.data.maxScore}</p>
+                <p>最低分: ${data.data.minScore}</p>
+                <p>学生数: ${data.data.studentCount}</p>
+            `;
+        } else {
+            resultDiv.innerHTML = `<p>未找到该课程的成绩记录</p>`;
+        }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('计算失败: ' + err.message, true);
+    });
+}
+</script>
+</body>
+</html>
 
 // 计算学生平均分
 function calculateStudentAverage() {
