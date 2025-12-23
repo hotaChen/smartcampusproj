@@ -2,58 +2,89 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>首页</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        .user-info { margin-top: 20px; padding: 15px; border: 1px solid #ccc; min-width: 300px; }
-        h2 { margin-top: 0; }
-        p { margin: 5px 0; }
-        button { margin-top: 10px; padding: 5px 10px; margin-right: 5px; }
-        input { margin: 3px 0; padding: 5px; width: 200px; }
-        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { background: #fff; padding: 20px; border-radius: 5px; }
-    </style>
+    <title>首页 - Egg University</title>
+
+    <!-- 全局样式 -->
+    <link rel="stylesheet" href="/css/style.css?v=egg-final">
+    <link rel="stylesheet" href="/css/index.css?v=egg-final">
 </head>
 <body>
-<h1>登录成功</h1>
-<p>欢迎进入 Smart Campus</p>
 
-<div class="user-info" id="user-info">
-    <p>正在加载用户信息...</p>
+<!-- 粒子背景 -->
+<canvas id="bg"></canvas>
+
+<!-- 主题切换 -->
+<button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+
+<!-- 顶部Logo栏 -->
+<div class="header-logo">
+    <canvas id="egg" width="80" height="100" style="width:80px;height:100px;"></canvas>
+    <canvas id="school-title" width="150" height="50" style="width:150px;height:50px;"></canvas>
+    <div class="school-info">
+        <span class="school-en">EGG UNIVERSITY</span>
+        <span class="school-sub">Since 2025</span>
+    </div>
 </div>
+
+<div class="login-box card">
+    <div class="user-info" id="user-info" style="width: 100%;">
+        <p>正在加载用户信息...</p>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
 
 <!-- 修改密码弹窗 -->
 <div class="modal" id="changePasswordModal">
-    <div class="modal-content">
+    <div class="modal-content card">
         <h3>修改密码</h3>
-        <input type="password" id="oldPassword" placeholder="旧密码"><br>
-        <input type="password" id="newPassword" placeholder="新密码"><br>
-        <button onclick="submitChangePassword()">提交</button>
-        <button onclick="closeChangePassword()">取消</button>
+        <input type="password" id="oldPassword" placeholder="旧密码" class="input"><br>
+        <input type="password" id="newPassword" placeholder="新密码" class="input"><br>
+        <button class="btn" onclick="submitChangePassword()">提交</button>
+        <button class="btn" onclick="closeChangePassword()" style="margin-top: 10px; background: rgba(255,255,255,0.2);">取消</button>
         <p id="changePasswordMsg"></p>
     </div>
 </div>
 
 <!-- 管理员重置密码弹窗 -->
 <div class="modal" id="resetPasswordModal">
-    <div class="modal-content">
+    <div class="modal-content card">
         <h3>重置用户密码（管理员）</h3>
-        <input type="text" id="resetUsername" placeholder="用户名"><br>
-        <input type="password" id="resetNewPassword" placeholder="新密码"><br>
-        <button onclick="submitResetPassword()">提交</button>
-        <button onclick="closeResetPassword()">取消</button>
+        <input type="text" id="resetUsername" placeholder="用户名" class="input"><br>
+        <input type="password" id="resetNewPassword" placeholder="新密码" class="input"><br>
+        <button class="btn" onclick="submitResetPassword()">提交</button>
+        <button class="btn" onclick="closeResetPassword()" style="margin-top: 10px; background: rgba(255,255,255,0.2);">取消</button>
         <p id="resetPasswordMsg"></p>
     </div>
 </div>
 
-<script src="../js/api.js"></script>
+<script src="/js/api.js"></script>
+<script src="/js/particles.js?v=egg-final"></script>
+<script src="../js/egg.js"></script>
+
 <script>
-    const token = localStorage.getItem('token'); // 登录后存储 JWT
+    const font = new FontFace('Maobi', 'url(/fonts/Maobi.ttf)');
+    font.load().then(function(loadedFont) {
+        document.fonts.add(loadedFont);
+        const canvas = document.getElementById('school-title');
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 150, 50);
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            ctx.font = 'bold 32px Maobi';
+            ctx.fillStyle = '#F59E0B';
+            ctx.fillText('鸡蛋大学', 0, 25);
+        }
+    }).catch(e => console.error('字体加载失败', e));
+</script>
+
+<script>
+    const token = localStorage.getItem('token');
     let currentUser = null;
 
     if (!token) {
-        document.getElementById('user-info').innerHTML = '<p style="color:red;">未检测到登录信息，请重新登录</p>';
+        document.getElementById('user-info').innerHTML = '<p style="color: #ef4444;">未检测到登录信息，请重新登录</p>';
     } else {
         apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
             .then(resp => resp.json())
@@ -82,8 +113,8 @@
                     html += `<hr><p>管理员用户，无额外信息</p>`;
                 }
 
-                // 公共按钮
-                html += `<button onclick="goToAppointment()">进入预约模块</button>
+                html += `<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
+                         <button onclick="goToAppointment()">进入预约模块</button>
                          <button onclick="goToClassroom()">教室系统</button>
                          <button onclick="goToCourse()">课程管理</button>
                          <button onclick="openChangePassword()">修改密码</button>
@@ -92,7 +123,6 @@
                          <button onclick="goToGrade()">成绩管理</button>
                          <button onclick="goToFinance()">财务管理</button>`;
 
-                // 管理员专用按钮
                 if (user.userType === 'ADMIN') {
                     html += `<button onclick="goToRegister()">注册新用户</button>
                              <button onclick="openResetPassword()">重置用户密码</button>`;
@@ -106,15 +136,16 @@
                     html += `<button onclick="goToTtimetable()">教师课表</button>`;
                 }
 
+                html += `</div>`;
+
                 div.innerHTML = html;
             })
             .catch(err => {
                 console.error(err);
-                document.getElementById('user-info').innerHTML = `<p style="color:red;">获取用户信息失败</p>`;
+                document.getElementById('user-info').innerHTML = `<p style="color: #ef4444;">获取用户信息失败</p>`;
             });
     }
 
-    // 页面跳转
     function goToAppointment() { window.location.href = '../classroom/appointment.html'; }
     function goToRegister() { window.location.href = '../auth/register.html'; }
     function goToClassroom() { window.location.href = '../classroom/classroom.html'; }
@@ -127,7 +158,6 @@
     function goToGrade() {window.location.href = '../grade/grade-index.html';}
     function goToFinance() {window.location.href = '../finance/finance-index.html';}
 
-    // ================= 修改密码 =================
     function openChangePassword() { document.getElementById('changePasswordModal').style.display = 'flex'; }
     function closeChangePassword() {
         document.getElementById('changePasswordModal').style.display = 'none';
@@ -142,14 +172,15 @@
             .then(resp => resp.text())
             .then(msg => {
                 document.getElementById('changePasswordMsg').innerText = msg;
+                showToast(msg);
             })
             .catch(err => {
                 document.getElementById('changePasswordMsg').innerText = '修改失败';
+                showToast('修改失败');
                 console.error(err);
             });
     }
 
-    // ================= 管理员重置用户密码 =================
     function openResetPassword() { document.getElementById('resetPasswordModal').style.display = 'flex'; }
     function closeResetPassword() {
         document.getElementById('resetPasswordModal').style.display = 'none';
@@ -164,12 +195,34 @@
             .then(resp => resp.text())
             .then(msg => {
                 document.getElementById('resetPasswordMsg').innerText = msg;
+                showToast(msg);
             })
             .catch(err => {
                 document.getElementById('resetPasswordMsg').innerText = '重置失败';
+                showToast('重置失败');
                 console.error(err);
             });
     }
+
+    function showToast(msg) {
+        const toast = document.getElementById("toast");
+        toast.textContent = msg;
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 2500);
+    }
+
+    function toggleTheme() {
+        document.body.classList.toggle("light");
+        localStorage.setItem(
+            "theme",
+            document.body.classList.contains("light") ? "light" : "dark"
+        );
+    }
+
+    if (localStorage.getItem("theme") === "light") {
+        document.body.classList.add("light");
+    }
 </script>
+
 </body>
 </html>
