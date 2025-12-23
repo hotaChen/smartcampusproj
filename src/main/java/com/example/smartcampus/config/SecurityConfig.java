@@ -39,8 +39,9 @@ public class SecurityConfig {
     @Bean
     public WebSecurityCustomizer webSecurityCustomizer() {
         return web -> web.ignoring().requestMatchers(
-                "/login.html",
-                "/index.html",
+                "/auth/login.html",
+                "/auth/register.html",
+                "/register.html",
                 "/favicon.ico",
                 "/css/**",
                 "/js/**",
@@ -65,8 +66,11 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/",
                                 "/health",
-                                "/index.html",
-                                "/login.html",
+                                "/login",
+                                "/auth/login.html",
+                                "/auth/register.html",
+                                "/register.html",
+                                "/register",
                                 "/favicon.ico",
                                 "/**/*.html",
                                 "/**/*.css",

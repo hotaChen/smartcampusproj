@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>教室管理</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', Arial, sans-serif;
+            margin: 20px;
+            background: #f5f6fa;
+            color: #333;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            font-weight: 600;
+            font-size: 28px;
+            color: #1a73e8;
+        }
+
+        .button-container {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        button {
+            background: #1a73e8;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            padding: 8px 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        button:hover {
+            background: #1665c1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background: #e0f0ff;
+            font-weight: 600;
+            color: #1a73e8;
+        }
+
+        tbody tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+
+        tbody tr:hover {
+            background: #dbeafe;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top:0; left:0;
+            width:100%; height:100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: #fff;
+            padding: 25px 20px;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+            width: 320px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .modal-content input {
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        .modal-content input:focus {
+            outline: none;
+            border-color: #1a73e8;
+            box-shadow: 0 0 0 2px rgba(26, 115, 232, 0.2);
+        }
+
+        #modalMsg {
+            color: red;
+            font-size: 13px;
+            min-height: 18px;
+        }
+    </style>
+</head>
+<body>
+<h1>教室管理</h1>
+<div class="button-container">
+    <button onclick="goBack()">返回首页</button>
+    <button id="addBtn" style="display:none;" onclick="openAddModal()">新增教室</button>
+</div>
+
+<table id="classroomTable">
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>楼栋</th>
+        <th>房间号</th>
+        <th>容量</th>
+        <th>操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr><td colspan="5">正在加载教室信息...</td></tr>
+    </tbody>
+</table>
+
+<!-- 新增/修改教室弹窗 -->
+<div class="modal" id="classroomModal">
+    <div class="modal-content">
+        <h3 id="modalTitle">新增教室</h3>
+        <input type="hidden" id="classroomId">
+        <input type="text" id="building" placeholder="楼栋">
+        <input type="text" id="roomNumber" placeholder="房间号">
+        <input type="number" id="capacity" placeholder="容量">
+        <button onclick="submitClassroom()">提交</button>
+        <button onclick="closeModal()">取消</button>
+        <p id="modalMsg"></p>
+    </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+    let classrooms = [];
+    let currentUser = null;
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+        alert('未检测到登录信息，请重新登录');
+        window.location.href = '../auth/login.html';
+    } else {
+        apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
+            .then(resp => resp.json())
+            .then(user => {
+                currentUser = user;
+                if (user.userType === 'ADMIN') {
+                    document.getElementById('addBtn').style.display = 'inline-block';
+                }
+                loadClassrooms();
+            })
+            .catch(err => {
+                console.error(err);
+                alert('获取用户信息失败');
+            });
+    }
+
+    function goBack() { window.location.href = '../index.html'; }
+
+    function loadClassrooms() {
+        apiRequest(API_ENDPOINTS.CLASSROOMS)
+            .then(resp => resp.json())
+            .then(data => {
+                classrooms = Array.isArray(data) ? data : [];
+                renderTable();
+            })
+            .catch(err => {
+                console.error(err);
+                document.querySelector('#classroomTable tbody').innerHTML =
+                    '<tr><td colspan="5">加载失败，请检查接口或权限</td></tr>';
+            });
+    }
+
+    function renderTable() {
+        const tbody = document.querySelector('#classroomTable tbody');
+        if (!classrooms.length) {
+            tbody.innerHTML = '<tr><td colspan="5">暂无教室信息</td></tr>';
+            return;
+        }
+        tbody.innerHTML = '';
+        classrooms.forEach(c => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `<td>${c.id}</td>
+                            <td>${c.building}</td>
+                            <td>${c.roomNumber}</td>
+                            <td>${c.capacity}</td>
+                            <td>
+                                ${currentUser.userType === 'ADMIN' ? `<button onclick="openEditModal(${c.id})">编辑</button>
+                                <button onclick="deleteClassroom(${c.id})">删除</button>` : ''}
+                            </td>`;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function openAddModal() {
+        document.getElementById('modalTitle').innerText = '新增教室';
+        document.getElementById('classroomId').value = '';
+        document.getElementById('building').value = '';
+        document.getElementById('roomNumber').value = '';
+        document.getElementById('capacity').value = '';
+        document.getElementById('modalMsg').innerText = '';
+        document.getElementById('classroomModal').style.display = 'flex';
+    }
+
+    function openEditModal(id) {
+        const c = classrooms.find(x => x.id === id);
+        if (!c) return;
+        document.getElementById('modalTitle').innerText = '编辑教室';
+        document.getElementById('classroomId').value = c.id;
+        document.getElementById('building').value = c.building;
+        document.getElementById('roomNumber').value = c.roomNumber;
+        document.getElementById('capacity').value = c.capacity;
+        document.getElementById('modalMsg').innerText = '';
+        document.getElementById('classroomModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('classroomModal').style.display = 'none';
+        document.getElementById('modalMsg').innerText = '';
+    }
+
+    function submitClassroom() {
+        const id = document.getElementById('classroomId').value;
+        const building = document.getElementById('building').value;
+        const roomNumber = document.getElementById('roomNumber').value;
+        const capacity = document.getElementById('capacity').value;
+
+        if (!building || !roomNumber || !capacity) {
+            document.getElementById('modalMsg').innerText = '请填写完整信息';
+            return;
+        }
+
+        const payload = { building, roomNumber, capacity };
+        let url = API_ENDPOINTS.CLASSROOMS;
+        let method = 'POST';
+        if (id) { url = API_ENDPOINTS.CLASSROOM(id); method = 'PUT'; }
+
+        apiRequest(url, {
+            method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        })
+            .then(resp => {
+                if (!resp.ok) throw new Error('操作失败: ' + resp.status);
+                return resp.json();
+            })
+            .then(() => {
+                closeModal();
+                loadClassrooms();
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('modalMsg').innerText = '操作失败';
+            });
+    }
+
+    function deleteClassroom(id) {
+        if (!confirm('确定删除该教室吗？')) return;
+        apiRequest(API_ENDPOINTS.CLASSROOM(id), {
+            method: 'DELETE'
+        })
+            .then(resp => {
+                if (!resp.ok) throw new Error('删除失败: ' + resp.status);
+                loadClassrooms();
+            })
+            .catch(err => {
+                console.error(err);
+                alert('删除失败');
+            });
+    }
+</script>
+</body>
+</html>

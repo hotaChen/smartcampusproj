@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Egg University 登录</title>
+
+    <!-- 全局样式 -->
+    <link rel="stylesheet" href="/css/style.css?v=egg-final">
+
+    <!-- 登录页专属样式 -->
+    <link rel="stylesheet" href="/css/login.css?v=egg-final">
+</head>
+<body>
+
+<!-- 粒子背景 -->
+<canvas id="bg"></canvas>
+
+<!-- 主题切换 -->
+<button class="theme-toggle" onclick="toggleTheme()">🌓</button>
+
+<div class="login-box card">
+
+    <!-- 🥚 鸡蛋 Logo 区 -->
+    <div class="logo">
+        <canvas id="egg" width="120" height="150" style="width:120px;height:150px;"></canvas>
+
+        <!-- 毛笔书法标题容器 -->
+        <div id="school-title-container"></div>
+
+        <span class="school-en">EGG UNIVERSITY</span>
+        <span class="school-sub">Since 2025</span>
+    </div>
+
+    <input id="username" type="text" placeholder="用户名" class="input">
+    <input id="password" type="password" placeholder="密码" class="input">
+
+    <select id="userType" class="input">
+        <option value="STUDENT">学生</option>
+        <option value="TEACHER">教师</option>
+        <option value="ADMIN">管理员</option>
+    </select>
+
+    <button class="btn" onclick="login()">登 录</button>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<!-- JS 文件 -->
+<script src="/js/api.js"></script>
+<script src="/js/particles.js?v=egg-final"></script>
+<script src="../js/egg.js" defer></script>
+
+<!-- 毛笔标题 -->
+<script type="module" src="/js/schoolTitle.js"></script>
+<script type="module">
+    import { renderSchoolTitle } from '/js/schoolTitle.js';
+    renderSchoolTitle('school-title-container', '鸡蛋大学');
+</script>
+
+<script>
+    // Toast 提示
+    function showToast(msg) {
+        const toast = document.getElementById("toast");
+        toast.textContent =  msg;
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 2500);
+    }
+
+    // 主题切换
+    function toggleTheme() {
+        document.body.classList.toggle("light");
+        localStorage.setItem(
+            "theme",
+            document.body.classList.contains("light") ? "light" : "dark"
+        );
+    }
+
+    // 页面加载时恢复主题
+    if (localStorage.getItem("theme") === "light") {
+        document.body.classList.add("light");
+    }
+
+    // 登录逻辑
+    function login() {
+        const username = document.getElementById("username").value;
+        const password = document.getElementById("password").value;
+        const userType = document.getElementById("userType").value;
+
+        fetch(API_ENDPOINTS.LOGIN, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username, password, userType })
+        })
+            .then(res => {
+                if (!res.ok) throw new Error("用户名或密码错误");
+                return res.json();
+            })
+            .then(data => {
+                localStorage.setItem("token", data.token);
+                window.location.href = "../system/index.html";
+            })
+            .catch(err => showToast(err.message));
+    }
+</script>
+
+</body>
+</html>

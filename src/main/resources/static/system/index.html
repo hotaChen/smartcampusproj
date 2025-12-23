@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>首页</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .user-info { margin-top: 20px; padding: 15px; border: 1px solid #ccc; min-width: 300px; }
+        h2 { margin-top: 0; }
+        p { margin: 5px 0; }
+        button { margin-top: 10px; padding: 5px 10px; margin-right: 5px; }
+        input { margin: 3px 0; padding: 5px; width: 200px; }
+        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
+        .modal-content { background: #fff; padding: 20px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+<h1>登录成功</h1>
+<p>欢迎进入 Smart Campus</p>
+
+<div class="user-info" id="user-info">
+    <p>正在加载用户信息...</p>
+</div>
+
+<!-- 修改密码弹窗 -->
+<div class="modal" id="changePasswordModal">
+    <div class="modal-content">
+        <h3>修改密码</h3>
+        <input type="password" id="oldPassword" placeholder="旧密码"><br>
+        <input type="password" id="newPassword" placeholder="新密码"><br>
+        <button onclick="submitChangePassword()">提交</button>
+        <button onclick="closeChangePassword()">取消</button>
+        <p id="changePasswordMsg"></p>
+    </div>
+</div>
+
+<!-- 管理员重置密码弹窗 -->
+<div class="modal" id="resetPasswordModal">
+    <div class="modal-content">
+        <h3>重置用户密码（管理员）</h3>
+        <input type="text" id="resetUsername" placeholder="用户名"><br>
+        <input type="password" id="resetNewPassword" placeholder="新密码"><br>
+        <button onclick="submitResetPassword()">提交</button>
+        <button onclick="closeResetPassword()">取消</button>
+        <p id="resetPasswordMsg"></p>
+    </div>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+    const token = localStorage.getItem('token'); // 登录后存储 JWT
+    let currentUser = null;
+
+    if (!token) {
+        document.getElementById('user-info').innerHTML = '<p style="color:red;">未检测到登录信息，请重新登录</p>';
+    } else {
+        apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
+            .then(resp => resp.json())
+            .then(user => {
+                currentUser = user;
+                const div = document.getElementById('user-info');
+                let html = `<h2>用户信息</h2>
+                        <p><strong>用户名：</strong>${user.username}</p>
+                        <p><strong>真实姓名：</strong>${user.realName}</p>
+                        <p><strong>邮箱：</strong>${user.email || '-'}</p>
+                        <p><strong>电话：</strong>${user.phone || '-'}</p>
+                        <p><strong>身份：</strong>${user.userType}</p>`;
+
+                if (user.userType === 'STUDENT') {
+                    html += `<hr>
+                     <p><strong>学号：</strong>${user.studentId || '-'}</p>
+                     <p><strong>院系：</strong>${user.department || '-'}</p>
+                     <p><strong>专业：</strong>${user.major || '-'}</p>
+                     <p><strong>年级：</strong>${user.grade || '-'}</p>
+                     <p><strong>班级：</strong>${user.className || '-'}</p>`;
+                } else if (user.userType === 'TEACHER') {
+                    html += `<hr>
+                     <p><strong>工号：</strong>${user.teacherId || '-'}</p>
+                     <p><strong>职称：</strong>${user.title || '-'}</p>`;
+                } else if (user.userType === 'ADMIN') {
+                    html += `<hr><p>管理员用户，无额外信息</p>`;
+                }
+
+                // 公共按钮
+                html += `<button onclick="goToAppointment()">进入预约模块</button>
+                         <button onclick="goToClassroom()">教室系统</button>
+                         <button onclick="goToCourse()">课程管理</button>
+                         <button onclick="openChangePassword()">修改密码</button>
+                         <button onclick="goTotimetable()">排课系统</button>
+                         <button onclick="goToSyllabus()">课程大纲</button>
+                         <button onclick="goToGrade()">成绩管理</button>
+                         <button onclick="goToFinance()">财务管理</button>`;
+
+                // 管理员专用按钮
+                if (user.userType === 'ADMIN') {
+                    html += `<button onclick="goToRegister()">注册新用户</button>
+                             <button onclick="openResetPassword()">重置用户密码</button>`;
+                }
+
+                if (user.userType === 'STUDENT') {
+                    html += `<button onclick="goToCourseSelection()">学生选课系统</button>
+                             <button onclick="goToStimetable()">学生课表</button>`;
+                }
+                if (user.userType === 'TEACHER') {
+                    html += `<button onclick="goToTtimetable()">教师课表</button>`;
+                }
+
+                div.innerHTML = html;
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('user-info').innerHTML = `<p style="color:red;">获取用户信息失败</p>`;
+            });
+    }
+
+    // 页面跳转
+    function goToAppointment() { window.location.href = '../classroom/appointment.html'; }
+    function goToRegister() { window.location.href = '../auth/register.html'; }
+    function goToClassroom() { window.location.href = '../classroom/classroom.html'; }
+    function goToCourse() {window.location.href = '../course/course.html';}
+    function goToCourseSelection() {window.location.href = '../course/courseselection.html';}
+    function goTotimetable() {window.location.href = '../timetable/timetable.html';}
+    function goToTtimetable() {window.location.href = '../timetable/teachertimetable.html';}
+    function goToStimetable() {window.location.href = '../timetable/studenttimetable.html';}
+    function goToSyllabus() {window.location.href = '../course/syllabus.html';}
+    function goToGrade() {window.location.href = '../grade/grade-index.html';}
+    function goToFinance() {window.location.href = '../finance/finance-index.html';}
+
+    // ================= 修改密码 =================
+    function openChangePassword() { document.getElementById('changePasswordModal').style.display = 'flex'; }
+    function closeChangePassword() {
+        document.getElementById('changePasswordModal').style.display = 'none';
+        document.getElementById('changePasswordMsg').innerText = '';
+    }
+    function submitChangePassword() {
+        const oldPwd = document.getElementById('oldPassword').value;
+        const newPwd = document.getElementById('newPassword').value;
+        apiRequest(`${API_ENDPOINTS.CHANGE_PASSWORD}?userId=${currentUser.id}&oldPassword=${oldPwd}&newPassword=${newPwd}`, {
+            method: 'POST'
+        })
+            .then(resp => resp.text())
+            .then(msg => {
+                document.getElementById('changePasswordMsg').innerText = msg;
+            })
+            .catch(err => {
+                document.getElementById('changePasswordMsg').innerText = '修改失败';
+                console.error(err);
+            });
+    }
+
+    // ================= 管理员重置用户密码 =================
+    function openResetPassword() { document.getElementById('resetPasswordModal').style.display = 'flex'; }
+    function closeResetPassword() {
+        document.getElementById('resetPasswordModal').style.display = 'none';
+        document.getElementById('resetPasswordMsg').innerText = '';
+    }
+    function submitResetPassword() {
+        const username = document.getElementById('resetUsername').value;
+        const newPwd = document.getElementById('resetNewPassword').value;
+        apiRequest(`${API_ENDPOINTS.RESET_PASSWORD}?username=${username}&newPassword=${newPwd}`, {
+            method: 'POST'
+        })
+            .then(resp => resp.text())
+            .then(msg => {
+                document.getElementById('resetPasswordMsg').innerText = msg;
+            })
+            .catch(err => {
+                document.getElementById('resetPasswordMsg').innerText = '重置失败';
+                console.error(err);
+            });
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>系统报表管理</title>
+    <link rel="stylesheet" href="../css/common.css">
+    <link rel="stylesheet" href="../css/systemreport.css">
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="header-title">
+                <h1>系统报表管理</h1>
+            </div>
+            <div class="header-actions">
+                <button id="logout-btn" class="btn-logout">退出登录</button>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <section class="tabs-section">
+            <div class="tabs-container">
+                <button class="tab-btn active" data-tab="query">查询报表</button>
+                <button class="tab-btn" data-tab="generate">生成报表</button>
+                <button class="tab-btn" data-tab="update">更新报表</button>
+                <button class="tab-btn" data-tab="operations">操作记录</button>
+                <button class="tab-btn" data-tab="statistics">统计信息</button>
+            </div>
+
+            <div class="tab-contents">
+                <!-- 查询报表 -->
+                <div id="query" class="tab-content active">
+                    <h2>查询报表</h2>
+                    <div class="search-form">
+                        <div class="form-group">
+                            <label for="report-type">报表类型</label>
+                            <select id="report-type">
+                                <option value="all">全部</option>
+                                <option value="daily">日报</option>
+                                <option value="weekly">周报</option>
+                                <option value="monthly">月报</option>
+                                <option value="custom">自定义</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="date-range">日期范围</label>
+                            <input type="date" id="start-date"> 至 <input type="date" id="end-date">
+                        </div>
+                        <div class="form-group">
+                            <label for="status">状态</label>
+                            <select id="status">
+                                <option value="all">全部</option>
+                                <option value="pending">待生成</option>
+                                <option value="generating">生成中</option>
+                                <option value="completed">已完成</option>
+                                <option value="failed">失败</option>
+                            </select>
+                        </div>
+                        <button id="search-reports" class="btn-primary">查询</button>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>报表ID</th>
+                                    <th>报表名称</th>
+                                    <th>类型</th>
+                                    <th>创建时间</th>
+                                    <th>状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="reports-tbody">
+                                <!-- 报表数据将在这里动态加载 -->
+                            </tbody>
+                        </table>
+                        <div class="pagination">
+                            <button id="prev-page" class="btn-secondary">上一页</button>
+                            <span id="page-info">第 1 页，共 1 页</span>
+                            <button id="next-page" class="btn-secondary">下一页</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 生成报表 -->
+                <div id="generate" class="tab-content hidden">
+                    <h2>生成报表</h2>
+                    <form id="generate-form" class="form-container">
+                        <div class="form-group">
+                            <label for="new-report-name">报表名称</label>
+                            <input type="text" id="new-report-name" placeholder="请输入报表名称" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="new-report-type">报表类型</label>
+                            <select id="new-report-type" required>
+                                <option value="">请选择报表类型</option>
+                                <option value="daily">日报</option>
+                                <option value="weekly">周报</option>
+                                <option value="monthly">月报</option>
+                                <option value="custom">自定义</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="report-start-date">开始日期</label>
+                            <input type="date" id="report-start-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="report-end-date">结束日期</label>
+                            <input type="date" id="report-end-date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="report-description">描述</label>
+                            <textarea id="report-description" placeholder="请输入报表描述"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button type="submit" class="btn-primary">生成报表</button>
+                            <button type="reset" class="btn-secondary">重置</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- 更新报表 -->
+                <div id="update" class="tab-content hidden">
+                    <h2>更新报表</h2>
+                    <div class="update-container">
+                        <div class="form-group">
+                            <label for="update-report-id">报表ID</label>
+                            <input type="text" id="update-report-id" placeholder="请输入报表ID">
+                        </div>
+                        <div class="form-group">
+                            <label for="update-report-name">报表名称</label>
+                            <input type="text" id="update-report-name" placeholder="请输入报表名称">
+                        </div>
+                        <div class="form-group">
+                            <label for="update-report-description">描述</label>
+                            <textarea id="update-report-description" placeholder="请输入报表描述"></textarea>
+                        </div>
+                        <div class="form-actions">
+                            <button id="update-report-btn" class="btn-primary">更新报表</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 操作记录 -->
+                <div id="operations" class="tab-content hidden">
+                    <h2>操作记录</h2>
+                    <div class="table-container">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>操作ID</th>
+                                    <th>报表ID</th>
+                                    <th>操作类型</th>
+                                    <th>操作人</th>
+                                    <th>操作时间</th>
+                                    <th>详情</th>
+                                </tr>
+                            </thead>
+                            <tbody id="operations-tbody">
+                                <!-- 操作记录将在这里动态加载 -->
+                            </tbody>
+                        </table>
+                        <div class="pagination">
+                            <button id="ops-prev-page" class="btn-secondary">上一页</button>
+                            <span id="ops-page-info">第 1 页，共 1 页</span>
+                            <button id="ops-next-page" class="btn-secondary">下一页</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 统计信息 -->
+                <div id="statistics" class="tab-content hidden">
+                    <h2>统计信息</h2>
+                    <div class="stats-container">
+                        <div class="stat-card">
+                            <h3>总报表数</h3>
+                            <p id="total-reports">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>今日生成</h3>
+                            <p id="today-generated">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>本周生成</h3>
+                            <p id="week-generated">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>本月生成</h3>
+                            <p id="month-generated">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>生成中</h3>
+                            <p id="generating-count">0</p>
+                        </div>
+                        <div class="stat-card">
+                            <h3>已完成</h3>
+                            <p id="completed-count">0</p>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>报表生成趋势</h3>
+                        <canvas id="report-trend-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-container">
+            <p>&copy; 2023 智慧校园系统. 保留所有权利.</p>
+        </div>
+    </footer>
+
+    <script src="../js/common.js"></script>
+    <script src="../js/systemreport.js"></script>
+</body>
+</html>

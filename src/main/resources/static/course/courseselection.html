@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>学生选课系统</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { margin-bottom: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
+        th { background-color: #f4f4f4; }
+        button { padding: 5px 10px; margin: 2px; }
+        .section { margin-bottom: 40px; }
+    </style>
+</head>
+<body>
+<h1>学生选课系统</h1>
+<div>
+    <button onclick="goBack()">返回首页</button>
+</div>
+
+<div class="section">
+    <h2>已选课程</h2>
+    <table id="myCoursesTable">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>课程代码</th>
+            <th>课程名称</th>
+            <th>学分</th>
+            <th>容量</th>
+            <th>教师</th>
+            <th>教室</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr><td colspan="8">正在加载已选课程...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<div class="section">
+    <h2>可选课程</h2>
+    <table id="allCoursesTable">
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>课程代码</th>
+            <th>课程名称</th>
+            <th>学分</th>
+            <th>容量</th>
+            <th>教师</th>
+            <th>教室</th>
+            <th>操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr><td colspan="8">正在加载可选课程...</td></tr>
+        </tbody>
+    </table>
+</div>
+
+<script src="../js/api.js"></script>
+<script>
+    const token = localStorage.getItem('token');
+    let currentUser = null;
+    let myCourses = [];
+    let allCourses = [];
+
+    if (!token) {
+        alert('未检测到登录信息，请重新登录');
+        window.location.href = '../auth/login.html';
+    } else {
+        apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
+            .then(resp => resp.json())
+            .then(user => {
+                currentUser = user;
+                if (user.userType !== 'STUDENT') {
+                    alert('非学生无法访问选课系统');
+                    window.location.href = '../index.html';
+                } else {
+                    loadCourses();
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('获取用户信息失败');
+            });
+    }
+
+        function goBack() { window.location.href = '../index.html'; }
+
+        // 同时加载已选课程和所有课程
+        function loadCourses() {
+        Promise.all([
+            apiRequest(API_ENDPOINTS.MY_COURSE_SELECTIONS).then(r => r.json()),
+            apiRequest(API_ENDPOINTS.COURSES).then(r => r.json())
+        ]).then(([my, all]) => {
+            myCourses = Array.isArray(my) ? my : [];
+            allCourses = Array.isArray(all) ? all : [];
+            renderMyCourses();
+            renderAllCourses();
+        }).catch(err => console.error(err));
+    }
+
+        function renderMyCourses() {
+        const tbody = document.querySelector('#myCoursesTable tbody');
+        if (!myCourses.length) {
+        tbody.innerHTML = '<tr><td colspan="8">暂无已选课程</td></tr>';
+        return;
+    }
+        tbody.innerHTML = '';
+        myCourses.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${c.id}</td>
+            <td>${c.courseCode}</td>
+            <td>${c.name}</td>
+            <td>${c.credit}</td>
+            <td>${c.capacity}</td>
+            <td>${c.teacherName || '-'}</td>
+            <td>${c.classroomName || '-'}</td>
+            <td><button onclick="dropCourse(${c.id})">退课</button></td>
+        `;
+        tbody.appendChild(tr);
+    });
+    }
+
+        function renderAllCourses() {
+        const tbody = document.querySelector('#allCoursesTable tbody');
+        if (!allCourses.length) {
+        tbody.innerHTML = '<tr><td colspan="8">暂无课程</td></tr>';
+        return;
+    }
+        tbody.innerHTML = '';
+        allCourses.forEach(c => {
+        const alreadySelected = myCourses.some(mc => mc.id === c.id);
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${c.id}</td>
+            <td>${c.courseCode}</td>
+            <td>${c.name}</td>
+            <td>${c.credit}</td>
+            <td>${c.capacity}</td>
+            <td>${c.teacherName || '-'}</td>
+            <td>${c.classroomName || '-'}</td>
+            <td>
+                <button onclick="selectCourse(${c.id})" ${alreadySelected ? 'disabled' : ''}>
+                    ${alreadySelected ? '已选' : '选课'}
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+    }
+
+        function selectCourse(courseId) {
+        apiRequest(API_ENDPOINTS.COURSE_SELECTION(courseId), {
+            method: 'POST'
+        })
+            .then(resp => {
+                if (!resp.ok) throw new Error('选课失败');
+                return resp.json(); // 不依赖返回数据，只用来确保成功
+            })
+            .then(() => {
+                // 更新状态
+                const course = allCourses.find(c => c.id === courseId);
+                if (course) myCourses.push(course);
+                renderMyCourses();
+                renderAllCourses();
+                alert('选课成功');
+            })
+            .catch(err => alert(err.message));
+    }
+
+        function dropCourse(courseId) {
+        if (!confirm('确定退选该课程吗？')) return;
+        apiRequest(API_ENDPOINTS.COURSE_SELECTION(courseId), {
+        method: 'DELETE'
+    })
+        .then(resp => {
+        if (!resp.ok) throw new Error('退课失败');
+        // 更新状态
+        myCourses = myCourses.filter(c => c.id !== courseId);
+        renderMyCourses();
+        renderAllCourses();
+        alert('退课成功');
+    })
+        .catch(err => alert(err.message));
+    }
+</script>
+</body>
+</html>

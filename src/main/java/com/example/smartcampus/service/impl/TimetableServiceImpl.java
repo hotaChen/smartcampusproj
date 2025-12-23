@@ -104,17 +104,5 @@ public class TimetableServiceImpl implements TimetableService {
         timetableRepo.deleteById(id);
     }
 
-
-
-
-    @Override
-    public void deleteTimetable(Long id) {
-        if (!timetableRepo.existsById(id)) {
-            throw new RuntimeException("课表不存在");
-        }
-        timetableRepo.deleteById(id);
-    }
-
-
 }
 
