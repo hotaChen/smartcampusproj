@@ -3,83 +3,121 @@
 <head>
     <meta charset="UTF-8">
     <title>课程管理</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h1 { margin-bottom: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-        th { background-color: #f4f4f4; }
-        button { padding: 5px 10px; margin-right: 5px; }
-        input { margin: 3px 0; padding: 5px; width: 150px; }
-        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%;
-            background: rgba(0,0,0,0.5); justify-content: center; align-items: center; }
-        .modal-content { background: #fff; padding: 20px; border-radius: 5px; }
-    </style>
+    <link rel="stylesheet" href="../css/style.css?v=egg-final">
+    <link rel="stylesheet" href="../css/page.css?v=egg-final">
+    <link rel="stylesheet" href="../css/sidebar.css?v=egg-final">
 </head>
-<body>
-<h1>课程管理</h1>
-<div>
-    <button onclick="goBack()">返回首页</button>
-    <button id="addBtn" style="display:none;" onclick="openAddModal()">新增课程</button>
+<body class="with-sidebar">
+<canvas id="bg"></canvas>
+<script src="../js/api.js"></script>
+<script src="../js/particles.js?v=egg-final"></script>
+<script src="../js/sidebar.js"></script>
+<script src="../js/header.js"></script>
+
+<div id="header-container"></div>
+<div id="toast" class="toast"></div>
+
+<div class="page-content">
+    <h1 class="page-title">课程管理</h1>
+    
+    <div class="toolbar">
+        <button class="btn secondary" onclick="goBack()">返回首页</button>
+        <button class="btn primary" id="addBtn" style="display:none;" onclick="openAddModal()">新增课程</button>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>课程代码</th>
+                <th>课程名称</th>
+                <th>学分</th>
+                <th>容量</th>
+                <th>教师ID</th>
+                <th>教师姓名</th>
+                <th>教室ID</th>
+                <th>教室名称</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="courseTableBody">
+            <tr><td colspan="10" class="empty-state">正在加载课程信息...</td></tr>
+        </tbody>
+    </table>
 </div>
 
-<table id="courseTable">
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>课程代码</th>
-        <th>课程名称</th>
-        <th>学分</th>
-        <th>容量</th>
-        <th>教师ID</th>
-        <th>教师姓名</th>
-        <th>教室ID</th>
-        <th>教室名称</th>
-        <th>操作</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr><td colspan="10">正在加载课程信息...</td></tr>
-    </tbody>
-</table>
-
-<!-- 新增/编辑课程弹窗 -->
-<!-- 课程编辑弹窗 -->
 <div class="modal" id="courseModal">
     <div class="modal-content">
-        <h3 id="modalTitle">新增课程</h3>
+        <div class="modal-header">
+            <h3 id="modalTitle">新增课程</h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
         <input type="hidden" id="courseId">
-        <input type="text" id="courseCode" placeholder="课程编号"><br>
-        <input type="text" id="name" placeholder="课程名称"><br>
-        <input type="number" id="credit" placeholder="学分"><br>
-        <input type="number" id="capacity" placeholder="容量"><br>
-        <input type="number" id="teacherId" placeholder="教师ID（管理员可修改）"><br>
-        <input type="number" id="classroomId" placeholder="教室ID"><br>
-        <button onclick="submitCourse()">提交</button>
-        <button onclick="closeModal()">取消</button>
-        <p id="modalMsg" style="color:red;"></p>
+        <div class="form-group">
+            <label>课程编号</label>
+            <input type="text" id="courseCode" placeholder="请输入课程编号">
+        </div>
+        <div class="form-group">
+            <label>课程名称</label>
+            <input type="text" id="name" placeholder="请输入课程名称">
+        </div>
+        <div class="form-group">
+            <label>学分</label>
+            <input type="number" id="credit" placeholder="请输入学分">
+        </div>
+        <div class="form-group">
+            <label>容量</label>
+            <input type="number" id="capacity" placeholder="请输入容量">
+        </div>
+        <div class="form-group">
+            <label>教师ID（管理员可修改）</label>
+            <input type="number" id="teacherId" placeholder="请输入教师ID">
+        </div>
+        <div class="form-group">
+            <label>教室ID</label>
+            <input type="number" id="classroomId" placeholder="请输入教室ID">
+        </div>
+        <p id="modalMsg" class="message error" style="display:none;"></p>
+        <div class="form-actions">
+            <button class="btn primary" onclick="submitCourse()">提交</button>
+            <button class="btn secondary" onclick="closeModal()">取消</button>
+        </div>
     </div>
 </div>
 
-<script src="../js/api.js"></script>
-<script src="/js/sidebar.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        SidebarManager.init({ currentPage: 'course' });
-    });
-    
     const token = localStorage.getItem('token');
     let currentUser = null;
     let courses = [];
 
-    // 获取用户信息
-    apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
-        .then(resp => resp.json())
-        .then(user => {
-            currentUser = user;
-            loadCourses();
-        })
-        .catch(err => console.error(err));
+    function goBack() { window.location.href = '../index.html'; }
+
+    function showToast(msg) {
+        const toast = document.getElementById("toast");
+        toast.textContent = msg;
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 2500);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        SidebarManager.init({ currentPage: 'course' });
+        HeaderComponent.init();
+    });
+
+    if (!token) {
+        document.getElementById('courseTableBody').innerHTML = '<tr><td colspan="10" class="empty-state">未检测到登录信息，请重新登录</td></tr>';
+    } else {
+        apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
+            .then(resp => resp.json())
+            .then(user => {
+                currentUser = user;
+                loadCourses();
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById('courseTableBody').innerHTML = '<tr><td colspan="10" class="empty-state">获取用户信息失败</td></tr>';
+            });
+    }
 
     function loadCourses() {
         apiRequest(API_ENDPOINTS.COURSES)
@@ -88,13 +126,16 @@
                 courses = Array.isArray(data) ? data : [];
                 renderTable();
             })
-            .catch(err => console.error(err));
+            .catch(err => {
+                console.error(err);
+                document.getElementById('courseTableBody').innerHTML = '<tr><td colspan="10" class="empty-state">加载失败，请检查接口或权限</td></tr>';
+            });
     }
 
     function renderTable() {
-        const tbody = document.querySelector('#courseTable tbody');
+        const tbody = document.getElementById('courseTableBody');
         if (!courses || courses.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8">暂无课程信息</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="empty-state">暂无课程信息</td></tr>';
             return;
         }
         tbody.innerHTML = '';
@@ -111,12 +152,27 @@
                 <td>${c.classroomId || '-'}</td>
                 <td>${c.classroomName || '-'}</td>
                 <td>
-                    ${(currentUser.userType === 'ADMIN' || currentUser.userType === 'TEACHER')
-                ? `<button onclick="openEditModal(${c.id})">编辑</button>
-                           <button onclick="deleteCourse(${c.id})">删除</button>` : ''}
+                    <div class="table-actions">
+                        ${(currentUser.userType === 'ADMIN' || currentUser.userType === 'TEACHER')
+                            ? `<button class="action-btn edit" onclick="openEditModal(${c.id})">编辑</button>
+                               <button class="action-btn delete" onclick="deleteCourse(${c.id})">删除</button>` : ''}
+                    </div>
                 </td>`;
             tbody.appendChild(tr);
         });
+    }
+
+    function openAddModal() {
+        document.getElementById('modalTitle').innerText = '新增课程';
+        document.getElementById('courseId').value = '';
+        document.getElementById('courseCode').value = '';
+        document.getElementById('name').value = '';
+        document.getElementById('credit').value = '';
+        document.getElementById('capacity').value = '';
+        document.getElementById('teacherId').value = '';
+        document.getElementById('classroomId').value = '';
+        document.getElementById('modalMsg').style.display = 'none';
+        document.getElementById('courseModal').classList.add('show');
     }
 
     function openEditModal(id) {
@@ -130,12 +186,12 @@
         document.getElementById('capacity').value = c.capacity;
         document.getElementById('teacherId').value = c.teacherId || '';
         document.getElementById('classroomId').value = c.classroomId || '';
-        document.getElementById('modalMsg').innerText = '';
-        document.getElementById('courseModal').style.display = 'flex';
+        document.getElementById('modalMsg').style.display = 'none';
+        document.getElementById('courseModal').classList.add('show');
     }
 
     function closeModal() {
-        document.getElementById('courseModal').style.display = 'none';
+        document.getElementById('courseModal').classList.remove('show');
     }
 
     function submitCourse() {
@@ -148,7 +204,9 @@
         const classroomId = parseInt(document.getElementById('classroomId').value);
 
         if (!courseCode || !name || isNaN(credit) || isNaN(capacity) || isNaN(classroomId)) {
-            document.getElementById('modalMsg').innerText = '请填写完整信息';
+            const msgEl = document.getElementById('modalMsg');
+            msgEl.innerText = '请填写完整信息';
+            msgEl.style.display = 'block';
             return;
         }
 
@@ -176,11 +234,14 @@
             })
             .then(() => {
                 closeModal();
-                loadCourses(); // 刷新表格
+                showToast('操作成功');
+                loadCourses();
             })
             .catch(err => {
                 console.error(err);
-                document.getElementById('modalMsg').innerText = '操作失败';
+                const msgEl = document.getElementById('modalMsg');
+                msgEl.innerText = '操作失败';
+                msgEl.style.display = 'block';
             });
     }
 
@@ -189,11 +250,14 @@
         apiRequest(API_ENDPOINTS.COURSE(id), { method: 'DELETE' })
             .then(resp => {
                 if (!resp.ok) throw new Error('删除失败');
+                showToast('删除成功');
                 loadCourses();
             })
-            .catch(err => alert('删除失败'));
+            .catch(err => {
+                console.error(err);
+                showToast('删除失败');
+            });
     }
 </script>
-
 </body>
 </html>
