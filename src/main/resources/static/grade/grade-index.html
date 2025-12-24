@@ -22,7 +22,7 @@
     <h1 class="page-title">成绩管理系统</h1>
     
     <div class="grade-card-container">
-        <a href="grade-entry.html" class="grade-card">
+        <a href="grade-entry.html" class="grade-card teacher-only">
             <div class="grade-card-icon">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -157,9 +157,40 @@
 </style>
 
 <script>
+const GradeIndexManager = {
+    currentUser: null,
+    
+    init: function() {
+        this.token = localStorage.getItem('token');
+        if (this.token) {
+            this.loadUserInfo();
+        }
+    },
+    
+    loadUserInfo: function() {
+        apiRequest(API_ENDPOINTS.USER_INFO + `?token=${this.token}`)
+            .then(resp => resp.json())
+            .then(user => {
+                this.currentUser = user;
+                this.updateMenuVisibility(user.userType);
+            })
+            .catch(err => {
+                console.error('加载用户信息失败', err);
+            });
+    },
+    
+    updateMenuVisibility: function(userType) {
+        const isTeacherOrAdmin = (userType === 'TEACHER' || userType === 'ADMIN');
+        document.querySelectorAll('.teacher-only').forEach(item => {
+            item.style.display = isTeacherOrAdmin ? 'flex' : 'none';
+        });
+    }
+};
+
 document.addEventListener('DOMContentLoaded', function() {
     SidebarManager.init({ currentPage: 'grade-index' });
     HeaderComponent.init();
+    GradeIndexManager.init();
 });
 </script>
 </body>
