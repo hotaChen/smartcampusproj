@@ -158,6 +158,23 @@ logging:
 
 SQL语句会在控制台输出。
 
+### 状态码debug
+
+- 405 Method Not Allowed：请求方法不被允许。
+   - 检查请求方法是否为POST或PUT，是否与后端接口一致。
+- 400 Bad Request：请求参数错误。
+   - 检查DTO与Service的Impl中是否有字段类型错误。
+- 401 Unauthorized：未认证。
+- 403 Forbidden：无权限。
+   - token过期了，需要重新登录获取新的token。
+- 404 Not Found：资源不存在。
+- 500 Internal Server Error：服务器内部错误。
+
+### 字段类型debug
+
+- 字段类型不正确，在`dto`下修改创建的字段
+- 在`Impl`中修改操作的方法
+
 ## 许可证
 
 本项目采用MIT许可证。

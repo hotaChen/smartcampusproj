@@ -45,11 +45,9 @@ const API_ENDPOINTS = {
   // Grades
   GRADES: `${API_BASE_URL}/api/grades`,
   MY_GRADES: `${API_BASE_URL}/api/grades/report/my`,
-  GRADES_ENTER_BY_STUDENT_NUMBER: `${API_BASE_URL}/api/grades/enter-by-student-number`,
+  GRADES_ENTER: `${API_BASE_URL}/api/grades/enter`,
   GRADES_BATCH: `${API_BASE_URL}/api/grades/batch`,
-  GRADES_BATCH_BY_STUDENT_NUMBER: `${API_BASE_URL}/api/grades/batch-by-student-number`,
   GRADES_UPDATE: (id) => `${API_BASE_URL}/api/grades/${id}`,
-  GRADES_UPDATE_BY_STUDENT_NUMBER: (id) => `${API_BASE_URL}/api/grades/${id}/update-by-student-number`,
   GRADES_DELETE: (id) => `${API_BASE_URL}/api/grades/${id}`,
   GRADES_BY_ID: (id) => `${API_BASE_URL}/api/grades/${id}`,
   GRADES_BY_STUDENT: (id) => `${API_BASE_URL}/api/grades/student/${id}`,

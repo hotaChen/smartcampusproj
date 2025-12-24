@@ -34,12 +34,20 @@ public class GradeServiceImpl implements GradeService {
                 .orElseThrow(() -> new RuntimeException("教师不存在"));
 
         // 验证学生是否存在
-        User student = userRepository.findById(gradeRequest.getStudentId())
-                .orElseThrow(() -> new RuntimeException("学生不存在"));
+        User student;
+        if (gradeRequest.getStudentId() != null) {
+            student = userRepository.findById(gradeRequest.getStudentId())
+                    .orElseThrow(() -> new RuntimeException("学生不存在"));
+        } else if (gradeRequest.getStudentNumber() != null && !gradeRequest.getStudentNumber().isEmpty()) {
+            student = userRepository.findByStudentId(gradeRequest.getStudentNumber())
+                    .orElseThrow(() -> new RuntimeException("学号为" + gradeRequest.getStudentNumber() + "的学生不存在"));
+        } else {
+            throw new RuntimeException("学生ID或学号不能为空");
+        }
 
         // 检查是否已存在相同学生、课程、考试类型和学期的成绩
         Optional<Grade> existingGrade = gradeRepository.findByStudentIdAndCourseCodeAndExamTypeAndSemester(
-                gradeRequest.getStudentId(), 
+                student.getId(), 
                 gradeRequest.getCourseCode(), 
                 gradeRequest.getExamType(), 
                 gradeRequest.getSemester()
@@ -82,6 +90,21 @@ public class GradeServiceImpl implements GradeService {
         if (!grade.getTeacher().getId().equals(teacherId) && 
             !"ADMIN".equals(userRepository.findById(teacherId).get().getUserType())) {
             throw new RuntimeException("无权限修改此成绩");
+        }
+
+        // 如果请求中提供了学生ID或学号，则验证并更新学生信息
+        if (gradeRequest.getStudentId() != null || (gradeRequest.getStudentNumber() != null && !gradeRequest.getStudentNumber().isEmpty())) {
+            User student;
+            if (gradeRequest.getStudentId() != null) {
+                student = userRepository.findById(gradeRequest.getStudentId())
+                        .orElseThrow(() -> new RuntimeException("学生不存在"));
+            } else if (gradeRequest.getStudentNumber() != null && !gradeRequest.getStudentNumber().isEmpty()) {
+                student = userRepository.findByStudentId(gradeRequest.getStudentNumber())
+                        .orElseThrow(() -> new RuntimeException("学号为" + gradeRequest.getStudentNumber() + "的学生不存在"));
+            } else {
+                throw new RuntimeException("学生ID或学号不能为空");
+            }
+            grade.setStudent(student);
         }
 
         // 更新成绩信息
