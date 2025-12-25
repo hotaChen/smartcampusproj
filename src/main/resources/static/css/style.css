@@ -63,6 +63,60 @@ body::before {
     cursor: pointer;
 }
 
+/* 用户信息头部 */
+.user-info-header {
+    position: fixed;
+    top: 20px;
+    right: 80px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 30px;
+    backdrop-filter: blur(10px);
+    transition: opacity 0.3s;
+}
+
+.user-info-header[data-hidden="true"] {
+    display: none !important;
+}
+
+.user-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #fde68a, #f59e0b);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 18px;
+    color: #3a2a14;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.user-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: var(--text);
+}
+
+.user-dept {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.light .user-dept {
+    color: rgba(58, 42, 20, 0.7);
+}
+
 /* ===== 通用组件 ===== */
 
 /* 卡片 */

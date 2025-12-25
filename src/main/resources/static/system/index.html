@@ -8,6 +8,50 @@
     <link rel="stylesheet" href="/css/style.css?v=egg-final">
     <link rel="stylesheet" href="/css/index.css?v=egg-final">
     <link rel="stylesheet" href="/css/sidebar.css?v=egg-final">
+    
+    <style>
+        .user-info-header {
+            position: fixed;
+            top: 20px;
+            right: 80px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .user-info-header[data-hidden="true"] {
+            display: none !important;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fde68a, #f59e0b);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: #3a2a14;
+        }
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .user-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: #fff7ed;
+        }
+        .user-dept {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+        }
+    </style>
 </head>
 <body>
 
@@ -216,7 +260,42 @@
     document.addEventListener('DOMContentLoaded', function() {
         SidebarManager.init({ currentPage: 'home' });
         HeaderComponent.init();
+        loadHeaderUserInfo();
     });
+    
+    function loadHeaderUserInfo() {
+        const token = localStorage.getItem('token');
+        if (!token) return;
+        
+        const userInfoHeader = document.getElementById('user-info-header');
+        if (!userInfoHeader) {
+            setTimeout(loadHeaderUserInfo, 100);
+            return;
+        }
+        
+        apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
+            .then(resp => resp.json())
+            .then(user => {
+                const avatarText = document.getElementById('avatar-text');
+                const userName = document.getElementById('user-name');
+                const userDept = document.getElementById('user-dept');
+                
+                const displayName = user.realName || user.username;
+                if (avatarText) avatarText.textContent = displayName.charAt(0).toUpperCase();
+                if (userName) userName.textContent = displayName;
+                
+                let deptText = '';
+                if (user.userType === 'STUDENT') {
+                    deptText = user.department || '';
+                } else if (user.userType === 'TEACHER') {
+                    deptText = user.department || '';
+                } else if (user.userType === 'ADMIN') {
+                    deptText = '管理员';
+                }
+                if (userDept) userDept.textContent = deptText;
+            })
+            .catch(err => console.error(err));
+    }
 </script>
 
 </body>
