@@ -134,7 +134,7 @@ function getSidebarHTML() {
                                 </a>
                             </li>
                             <li class="sidebar-menu-item admin-only">
-                                <a href="#" class="sidebar-menu-link" data-page="register">
+                                <a href="#" class="sidebar-menu-link" id="sidebarRegisterUser">
                                     <span class="sidebar-menu-icon">${icons.user}</span>
                                     <span class="sidebar-menu-text">注册新用户</span>
                                 </a>
@@ -190,6 +190,40 @@ function getSidebarHTML() {
                 <button class="btn" onclick="SidebarManager.submitResetPassword()">提交</button>
                 <button class="btn" onclick="SidebarManager.closeResetPassword()" style="margin-top: 10px; background: rgba(255,255,255,0.2);">取消</button>
                 <p id="sidebarResetPasswordMsg"></p>
+            </div>
+        </div>
+        
+        <!-- 管理员注册新用户弹窗 -->
+        <div class="modal" id="registerUserModal">
+            <div class="modal-content card">
+                <h3>注册新用户（管理员）</h3>
+                <input type="text" id="sidebarRegUsername" placeholder="用户名" class="input"><br>
+                <input type="text" id="sidebarRegRealname" placeholder="真实姓名" class="input"><br>
+                <input type="password" id="sidebarRegPassword" placeholder="密码" class="input"><br>
+                <input type="text" id="sidebarRegEmail" placeholder="邮箱（可选）" class="input"><br>
+                <input type="text" id="sidebarRegPhone" placeholder="电话（可选）" class="input"><br>
+                <label for="sidebarRegUsertype" style="color: var(--text);">用户类型:</label>
+                <select id="sidebarRegUsertype" class="input" onchange="SidebarManager.toggleRegRoleFields()">
+                    <option value="">请选择角色</option>
+                    <option value="STUDENT">学生</option>
+                    <option value="TEACHER">教师</option>
+                    <option value="ADMIN">管理员</option>
+                </select>
+                <div id="sidebarStudentFields" style="display: none;">
+                    <input type="text" id="sidebarStudentId" placeholder="学号" class="input"><br>
+                    <input type="text" id="sidebarDepartmentS" placeholder="院系" class="input"><br>
+                    <input type="text" id="sidebarMajor" placeholder="专业" class="input"><br>
+                    <input type="number" id="sidebarGrade" placeholder="年级" class="input"><br>
+                    <input type="text" id="sidebarClassName" placeholder="班级" class="input"><br>
+                </div>
+                <div id="sidebarTeacherFields" style="display: none;">
+                    <input type="text" id="sidebarTeacherId" placeholder="工号" class="input"><br>
+                    <input type="text" id="sidebarTitle" placeholder="职称" class="input"><br>
+                    <input type="text" id="sidebarDepartmentT" placeholder="院系" class="input"><br>
+                </div>
+                <button class="btn" onclick="SidebarManager.submitRegisterUser()">注册</button>
+                <button class="btn" onclick="SidebarManager.closeRegisterUser()" style="margin-top: 10px; background: rgba(255,255,255,0.2);">取消</button>
+                <p id="sidebarRegisterUserMsg"></p>
             </div>
         </div>
     `;
@@ -267,6 +301,14 @@ const SidebarManager = {
             resetPasswordLink.addEventListener('click', (e) => {
                 e.preventDefault();
                 this.openResetPassword();
+            });
+        }
+        
+        const registerUserLink = document.getElementById('sidebarRegisterUser');
+        if (registerUserLink) {
+            registerUserLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.openRegisterUser();
             });
         }
     },
@@ -453,6 +495,99 @@ const SidebarManager = {
             .catch(err => {
                 document.getElementById('sidebarResetPasswordMsg').innerText = '重置失败';
                 this.showToast('重置失败');
+                console.error(err);
+            });
+    },
+    
+    openRegisterUser: function() {
+        if (!this.currentUser || this.currentUser.userType !== 'ADMIN') {
+            this.showToast('无权限访问');
+            return;
+        }
+        document.getElementById('registerUserModal').style.display = 'flex';
+    },
+    
+    closeRegisterUser: function() {
+        document.getElementById('registerUserModal').style.display = 'none';
+        document.getElementById('sidebarRegisterUserMsg').innerText = '';
+        document.getElementById('sidebarRegUsername').value = '';
+        document.getElementById('sidebarRegRealname').value = '';
+        document.getElementById('sidebarRegPassword').value = '';
+        document.getElementById('sidebarRegEmail').value = '';
+        document.getElementById('sidebarRegPhone').value = '';
+        document.getElementById('sidebarRegUsertype').value = '';
+        document.getElementById('sidebarStudentFields').style.display = 'none';
+        document.getElementById('sidebarTeacherFields').style.display = 'none';
+        document.getElementById('sidebarStudentId').value = '';
+        document.getElementById('sidebarDepartmentS').value = '';
+        document.getElementById('sidebarMajor').value = '';
+        document.getElementById('sidebarGrade').value = '';
+        document.getElementById('sidebarClassName').value = '';
+        document.getElementById('sidebarTeacherId').value = '';
+        document.getElementById('sidebarTitle').value = '';
+        document.getElementById('sidebarDepartmentT').value = '';
+    },
+    
+    toggleRegRoleFields: function() {
+        const userType = document.getElementById('sidebarRegUsertype').value;
+        document.getElementById('sidebarStudentFields').style.display = userType === 'STUDENT' ? 'block' : 'none';
+        document.getElementById('sidebarTeacherFields').style.display = userType === 'TEACHER' ? 'block' : 'none';
+    },
+    
+    submitRegisterUser: function() {
+        if (!this.currentUser || this.currentUser.userType !== 'ADMIN') {
+            this.showToast('无权限访问');
+            return;
+        }
+        
+        const userType = document.getElementById('sidebarRegUsertype').value;
+        if (!userType) {
+            document.getElementById('sidebarRegisterUserMsg').innerText = '请选择用户类型';
+            this.showToast('请选择用户类型');
+            return;
+        }
+        
+        const data = {
+            username: document.getElementById('sidebarRegUsername').value,
+            realName: document.getElementById('sidebarRegRealname').value,
+            password: document.getElementById('sidebarRegPassword').value,
+            email: document.getElementById('sidebarRegEmail').value,
+            phone: document.getElementById('sidebarRegPhone').value,
+            userType: userType
+        };
+        
+        if (userType === 'STUDENT') {
+            data.studentId = document.getElementById('sidebarStudentId').value;
+            data.department = document.getElementById('sidebarDepartmentS').value;
+            data.major = document.getElementById('sidebarMajor').value;
+            data.grade = document.getElementById('sidebarGrade').value;
+            data.className = document.getElementById('sidebarClassName').value;
+        }
+        
+        if (userType === 'TEACHER') {
+            data.teacherId = document.getElementById('sidebarTeacherId').value;
+            data.title = document.getElementById('sidebarTitle').value;
+            data.department = document.getElementById('sidebarDepartmentT').value;
+        }
+        
+        apiRequest(API_ENDPOINTS.REGISTER, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(resp => resp.text())
+            .then(msg => {
+                document.getElementById('sidebarRegisterUserMsg').innerText = msg;
+                this.showToast(msg);
+                if (msg.includes('成功')) {
+                    this.closeRegisterUser();
+                }
+            })
+            .catch(err => {
+                document.getElementById('sidebarRegisterUserMsg').innerText = '注册失败';
+                this.showToast('注册失败');
                 console.error(err);
             });
     },

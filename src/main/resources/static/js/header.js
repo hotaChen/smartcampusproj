@@ -104,10 +104,12 @@ const HeaderComponent = {
         if (!user) {
             console.log('没有用户数据，隐藏用户信息');
             userInfoHeader.setAttribute('data-hidden', 'true');
+            userInfoHeader.removeAttribute('data-user-type');
             return;
         }
 
         userInfoHeader.removeAttribute('data-hidden');
+        userInfoHeader.setAttribute('data-user-type', user.userType);
         
         const displayName = user.realName || user.username;
         console.log('显示名称:', displayName);

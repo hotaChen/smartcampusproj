@@ -161,36 +161,81 @@ const GradeIndexManager = {
     currentUser: null,
     
     init: function() {
-        this.token = localStorage.getItem('token');
-        if (this.token) {
-            this.loadUserInfo();
+        this.updateMenuVisibilityDirectly();
+    },
+    
+    updateMenuVisibilityDirectly: function() {
+        const userInfoHeader = document.getElementById('user-info-header');
+        
+        if (userInfoHeader) {
+            const userType = userInfoHeader.getAttribute('data-user-type');
+            if (userType) {
+                const isTeacherOrAdmin = (userType === 'TEACHER' || userType === 'ADMIN');
+                this.setTeacherOnlyVisibility(isTeacherOrAdmin);
+                return;
+            }
+        }
+        
+        const token = localStorage.getItem('token');
+        if (token) {
+            apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
+                .then(resp => resp.json())
+                .then(user => {
+                    this.currentUser = user;
+                    const isTeacherOrAdmin = (user.userType === 'TEACHER' || user.userType === 'ADMIN');
+                    this.setTeacherOnlyVisibility(isTeacherOrAdmin);
+                    if (userInfoHeader) {
+                        userInfoHeader.setAttribute('data-user-type', user.userType);
+                    }
+                })
+                .catch(err => {
+                    console.error('加载用户信息失败', err);
+                });
         }
     },
     
-    loadUserInfo: function() {
-        apiRequest(API_ENDPOINTS.USER_INFO + `?token=${this.token}`)
-            .then(resp => resp.json())
-            .then(user => {
-                this.currentUser = user;
-                this.updateMenuVisibility(user.userType);
-            })
-            .catch(err => {
-                console.error('加载用户信息失败', err);
-            });
-    },
-    
-    updateMenuVisibility: function(userType) {
-        const isTeacherOrAdmin = (userType === 'TEACHER' || userType === 'ADMIN');
+    setTeacherOnlyVisibility: function(isTeacherOrAdmin) {
         document.querySelectorAll('.teacher-only').forEach(item => {
             item.style.display = isTeacherOrAdmin ? 'flex' : 'none';
         });
     }
 };
 
+function updateGradeManagerUserType(userType) {
+    const isTeacherOrAdmin = (userType === 'TEACHER' || userType === 'ADMIN');
+    document.querySelectorAll('.teacher-only').forEach(item => {
+        item.style.display = isTeacherOrAdmin ? 'flex' : 'none';
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     SidebarManager.init({ currentPage: 'grade-index' });
     HeaderComponent.init();
     GradeIndexManager.init();
+    
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'data-user-type') {
+                const userInfoHeader = mutation.target;
+                const userType = userInfoHeader.getAttribute('data-user-type');
+                if (userType) {
+                    updateGradeManagerUserType(userType);
+                }
+            }
+        });
+    });
+    
+    setTimeout(function() {
+        const userInfoHeader = document.getElementById('user-info-header');
+        if (userInfoHeader) {
+            const userType = userInfoHeader.getAttribute('data-user-type');
+            if (userType) {
+                updateGradeManagerUserType(userType);
+            }
+            
+            observer.observe(userInfoHeader, { attributes: true });
+        }
+    }, 500);
 });
 </script>
 </body>

@@ -27,7 +27,8 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
     /**
      * 根据教师ID查找成绩
      */
-    List<Grade> findByTeacherId(Long teacherId);
+    @Query("SELECT g FROM Grade g WHERE g.teacher.id = :teacherId AND g.status = 1")
+    List<Grade> findByTeacherId(@Param("teacherId") Long teacherId);
 
     /**
      * 根据课程代码查找成绩

@@ -3,45 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <title>成绩统计</title>
-    <script src="../js/api.js"></script>
-    <script src="/js/sidebar.js"></script>
+    <link rel="stylesheet" href="../css/style.css?v=egg-final">
+    <link rel="stylesheet" href="../css/page.css?v=egg-final">
+    <link rel="stylesheet" href="../css/sidebar.css?v=egg-final">
 </head>
-<body>
-    <h1>成绩统计</h1>
-    <div>
-        <a href="grade-index.html">返回成绩管理</a> |
-        <a href="grade-entry.html">成绩录入</a> |
-        <a href="grade-query.html">成绩查询</a> |
-        <a href="grade-report.html">成绩单生成</a> |
-        <a href="makeup-exam.html">补考管理</a> |
-        <a href="../index.html">返回首页</a>
+<body class="with-sidebar">
+<canvas id="bg"></canvas>
+<script src="../js/api.js"></script>
+<script src="../js/particles.js?v=egg-final"></script>
+<script src="../js/egg.js"></script>
+<script src="../js/sidebar.js"></script>
+<script src="../js/header.js"></script>
+
+<div id="header-container"></div>
+<div id="toast" class="toast"></div>
+
+<div class="page-content">
+    <h1 class="page-title">成绩统计</h1>
+    
+    <div class="toolbar">
+        <div class="search-box">
+            <input type="text" id="statsStudentId" placeholder="请输入学号">
+            <input type="text" id="statsSemester" value="2023-2024-1" placeholder="学期">
+            <input type="text" id="statsCourseCode" placeholder="课程代码">
+        </div>
+        <button class="btn primary" onclick="calculateStudentAverage()">计算学生平均分</button>
+        <button class="btn secondary" onclick="calculateCourseAverage()">计算课程平均分</button>
     </div>
     
     <div id="message" class="message" style="display: none;"></div>
     
-    <h2>成绩统计</h2>
-    
-    <div class="form-row">
-        <div class="form-group">
-            <label for="statsStudentId">学号:</label>
-            <input type="text" id="statsStudentId">
-        </div>
-        <div class="form-group">
-            <label for="statsSemester">学期:</label>
-            <input type="text" id="statsSemester" value="2023-2024-1">
-        </div>
-        <div class="form-group">
-            <label for="statsCourseCode">课程代码:</label>
-            <input type="text" id="statsCourseCode">
-        </div>
-    </div>
-    
-    <button onclick="calculateStudentAverage()">计算学生平均分</button>
-    <button onclick="calculateCourseAverage()">计算课程平均分</button>
-    
     <div id="statsResult" class="stats-container" style="display: none;">
         <!-- 统计结果将通过JavaScript动态填充 -->
     </div>
+</div>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -98,16 +93,18 @@ function calculateStudentAverage() {
         
         if (data.code === 200 && data.data) {
             resultDiv.innerHTML = `
-                <h3>学生成绩统计</h3>
-                <p>学号: ${studentId}</p>
-                <p>学期: ${semester}</p>
-                <p>平均分: ${data.data.averageScore.toFixed(2)}</p>
-                <p>最高分: ${data.data.maxScore}</p>
-                <p>最低分: ${data.data.minScore}</p>
-                <p>课程数: ${data.data.courseCount}</p>
+                <div class="stats-card">
+                    <h3>学生成绩统计</h3>
+                    <p><strong>学号:</strong> <span class="stat-value">${studentId}</span></p>
+                    <p><strong>学期:</strong> <span class="stat-value">${semester}</span></p>
+                    <p><strong>平均分:</strong> <span class="stat-highlight">${data.data.averageScore.toFixed(2)}</span></p>
+                    <p><strong>最高分:</strong> <span class="stat-value">${data.data.maxScore}</span></p>
+                    <p><strong>最低分:</strong> <span class="stat-value">${data.data.minScore}</span></p>
+                    <p><strong>课程数:</strong> <span class="stat-value">${data.data.courseCount}</span></p>
+                </div>
             `;
         } else {
-            resultDiv.innerHTML = `<p>未找到该学生的成绩记录</p>`;
+            resultDiv.innerHTML = `<div class="stats-card"><p>未找到该学生的成绩记录</p></div>`;
         }
     })
     .catch(err => {
@@ -134,159 +131,24 @@ function calculateCourseAverage() {
         
         if (data.code === 200 && data.data) {
             resultDiv.innerHTML = `
-                <h3>课程成绩统计</h3>
-                <p>课程代码: ${courseCode}</p>
-                <p>学期: ${semester}</p>
-                <p>平均分: ${data.data.averageScore.toFixed(2)}</p>
-                <p>最高分: ${data.data.maxScore}</p>
-                <p>最低分: ${data.data.minScore}</p>
-                <p>学生数: ${data.data.studentCount}</p>
+                <div class="stats-card">
+                    <h3>课程成绩统计</h3>
+                    <p><strong>课程代码:</strong> <span class="stat-value">${courseCode}</span></p>
+                    <p><strong>学期:</strong> <span class="stat-value">${semester}</span></p>
+                    <p><strong>平均分:</strong> <span class="stat-highlight">${data.data.averageScore.toFixed(2)}</span></p>
+                    <p><strong>最高分:</strong> <span class="stat-value">${data.data.maxScore}</span></p>
+                    <p><strong>最低分:</strong> <span class="stat-value">${data.data.minScore}</span></p>
+                    <p><strong>学生数:</strong> <span class="stat-value">${data.data.studentCount}</span></p>
+                </div>
             `;
         } else {
-            resultDiv.innerHTML = `<p>未找到该课程的成绩记录</p>`;
+            resultDiv.innerHTML = `<div class="stats-card"><p>未找到该课程的成绩记录</p></div>`;
         }
     })
     .catch(err => {
         console.error('Error:', err);
         showMessage('计算失败: ' + err.message, true);
     });
-}
-</script>
-</body>
-</html>
-
-// 计算学生平均分
-function calculateStudentAverage() {
-    const studentNumber = document.getElementById('statsStudentId').value;
-    const semester = document.getElementById('statsSemester').value;
-    
-    if (!studentNumber) {
-        showMessage('请输入学号', true);
-        return;
-    }
-    
-    if (!semester) {
-        showMessage('请输入学期', true);
-        return;
-    }
-    
-    // 使用成绩报告API获取完整的统计信息
-    const url = semester ? 
-        `${API_ENDPOINTS.GRADES_REPORT_BY_STUDENT_NUMBER(studentNumber)}?semester=${semester}` :
-        API_ENDPOINTS.GRADES_REPORT_BY_STUDENT_NUMBER(studentNumber);
-    
-    apiRequest(url)
-    .then(resp => resp.json())
-    .then(data => {
-        displayStudentStats(data, studentNumber, semester);
-    })
-    .catch(err => {
-        console.error('Error:', err);
-        showMessage('获取学生成绩统计失败', true);
-    });
-}
-
-// 计算课程平均分
-function calculateCourseAverage() {
-    const courseCode = document.getElementById('statsCourseCode').value;
-    const semester = document.getElementById('statsSemester').value;
-    
-    if (!courseCode) {
-        showMessage('请输入课程代码', true);
-        return;
-    }
-    
-    if (!semester) {
-        showMessage('请输入学期', true);
-        return;
-    }
-    
-    apiRequest(API_ENDPOINTS.GRADES_COURSE_AVERAGE(courseCode, semester))
-    .then(resp => resp.json())
-    .then(data => {
-        displayCourseStats(data, courseCode, semester);
-    })
-    .catch(err => {
-        console.error('Error:', err);
-        showMessage('计算课程平均分失败', true);
-    });
-}
-
-// 显示学生统计结果
-function displayStudentStats(data, studentNumber, semester) {
-    const statsResult = document.getElementById('statsResult');
-    statsResult.style.display = 'block';
-    
-    // 成绩报告API返回的是完整的GradeReportDTO对象
-    statsResult.innerHTML = `
-        <div class="stats-card">
-            <h3>学生成绩统计</h3>
-            <p><strong>学号:</strong> ${studentNumber}</p>
-            <p><strong>学期:</strong> ${semester || '全部学期'}</p>
-            <p><strong>平均分:</strong> ${data.averageScore || '无数据'}</p>
-            <p><strong>总学分:</strong> ${data.totalCredits || '无数据'}</p>
-            <p><strong>已获得学分:</strong> ${data.totalCredits || '无数据'}</p>
-            <p><strong>课程数量:</strong> ${data.totalCourses || '无数据'}</p>
-            <p><strong>最高分:</strong> ${getHighestScore(data.courseGrades) || '无数据'}</p>
-            <p><strong>最低分:</strong> ${getLowestScore(data.courseGrades) || '无数据'}</p>
-            <p><strong>通过课程数:</strong> ${data.passedCourses || '无数据'}</p>
-            <p><strong>不通过课程数:</strong> ${data.failedCourses || '无数据'}</p>
-            <p><strong>通过率:</strong> ${data.passRate ? (data.passRate).toFixed(2) + '%' : '无数据'}</p>
-        </div>
-    `;
-}
-
-// 获取最高分
-function getHighestScore(courseGrades) {
-    if (!courseGrades || courseGrades.length === 0) {
-        return null;
-    }
-    
-    let highest = 0;
-    for (const grade of courseGrades) {
-        if (grade.score && grade.score > highest) {
-            highest = grade.score;
-        }
-    }
-    return highest > 0 ? highest : null;
-}
-
-// 获取最低分
-function getLowestScore(courseGrades) {
-    if (!courseGrades || courseGrades.length === 0) {
-        return null;
-    }
-    
-    let lowest = 100;
-    for (const grade of courseGrades) {
-        if (grade.score && grade.score < lowest) {
-            lowest = grade.score;
-        }
-    }
-    return lowest < 100 ? lowest : null;
-}
-
-// 显示课程统计结果
-function displayCourseStats(data, courseCode, semester) {
-    const statsResult = document.getElementById('statsResult');
-    statsResult.style.display = 'block';
-    
-    // API返回的是简单的Float值，需要适配显示
-    const averageScore = typeof data === 'number' ? data : (data.averageScore || '无数据');
-    
-    statsResult.innerHTML = `
-        <div class="stats-card">
-            <h3>课程成绩统计</h3>
-            <p><strong>课程代码:</strong> ${courseCode}</p>
-            <p><strong>学期:</strong> ${semester}</p>
-            <p><strong>平均分:</strong> ${averageScore}</p>
-            <p><strong>学生人数:</strong> 无数据</p>
-            <p><strong>最高分:</strong> 无数据</p>
-            <p><strong>最低分:</strong> 无数据</p>
-            <p><strong>及格率:</strong> 无数据</p>
-            <p><strong>优秀率:</strong> 无数据</p>
-        </div>
-    `;
 }
 </script>
 </body>

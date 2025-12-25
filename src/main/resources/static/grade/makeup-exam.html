@@ -4,43 +4,39 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>补考管理</title>
-    <script src="../js/api.js"></script>
-    <script src="/js/sidebar.js"></script>
+    <link rel="stylesheet" href="../css/style.css?v=egg-final">
+    <link rel="stylesheet" href="../css/page.css?v=egg-final">
+    <link rel="stylesheet" href="../css/sidebar.css?v=egg-final">
 </head>
-<body>
-    <h1>补考管理</h1>
-    <div>
-        <a href="grade-index.html">返回成绩管理</a> |
-        <a href="grade-entry.html">成绩录入</a> |
-        <a href="grade-query.html">成绩查询</a> |
-        <a href="grade-stats.html">成绩统计</a> |
-        <a href="grade-report.html">成绩单生成</a> |
-        <a href="../index.html">返回首页</a>
-    </div>
+<body class="with-sidebar">
+<canvas id="bg"></canvas>
+<script src="../js/api.js"></script>
+<script src="../js/particles.js?v=egg-final"></script>
+<script src="../js/egg.js"></script>
+<script src="../js/sidebar.js"></script>
+<script src="../js/header.js"></script>
 
-    <h2>补考管理</h2>
+<div id="header-container"></div>
+<div id="toast" class="toast"></div>
+
+<div class="page-content">
+    <h1 class="page-title">补考管理</h1>
     
-    <div class="form-row">
-        <div class="form-group">
-            <label for="makeupStudentId">学号:</label>
-            <input type="text" id="makeupStudentId">
+    <div class="toolbar">
+        <div class="search-box">
+            <input type="text" id="makeupStudentId" placeholder="请输入学号">
+            <input type="text" id="makeupCourseCode" placeholder="课程代码">
+            <input type="text" id="makeupSemester" value="2023-2024-1" placeholder="学期">
         </div>
-        <div class="form-group">
-            <label for="makeupCourseCode">课程代码:</label>
-            <input type="text" id="makeupCourseCode">
-        </div>
-        <div class="form-group">
-            <label for="makeupSemester">学期:</label>
-            <input type="text" id="makeupSemester" value="2023-2024-1">
-        </div>
+        <button class="btn primary" onclick="queryMakeupExams()">查询补考安排</button>
+        <button class="btn secondary" onclick="queryMyMakeupExams()">查询我的补考</button>
+        <button class="btn primary" onclick="showScheduleForm()">安排补考</button>
+        <button class="btn secondary" onclick="showGradeForm()">录入补考成绩</button>
     </div>
     
-    <button onclick="queryMakeupExams()">查询补考安排</button>
-    <button onclick="queryMyMakeupExams()">查询我的补考</button>
-    <button onclick="scheduleMakeupExam()">安排补考</button>
-    <button onclick="enterMakeupGrade()">录入补考成绩</button>
+    <div id="message" class="message" style="display: none;"></div>
     
-    <table id="makeupExamTable">
+    <table class="data-table">
         <thead>
             <tr>
                 <th>ID</th>
@@ -55,62 +51,309 @@
                 <th>操作</th>
             </tr>
         </thead>
-        <tbody>
-            <!-- 补考数据将通过JavaScript动态填充 -->
+        <tbody id="makeupExamTableBody">
         </tbody>
     </table>
-
-    <div id="makeupExamForm" style="display: none;">
-        <h3>安排补考</h3>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="scheduleStudentId">学号:</label>
-                <input type="text" id="scheduleStudentId" required>
+    
+    <div class="empty-state" id="emptyState" style="display: none;">
+        <div class="empty-state-icon">📋</div>
+        <div class="empty-state-text">未找到补考记录</div>
+    </div>
+    
+    <div id="makeupExamModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">安排补考</h3>
+                <span class="modal-close" onclick="closeModal()">&times;</span>
             </div>
-            <div class="form-group">
-                <label for="scheduleCourseCode">课程代码:</label>
-                <input type="text" id="scheduleCourseCode" required>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="scheduleStudentId">学号:</label>
+                    <input type="text" id="scheduleStudentId" required>
+                </div>
+                <div class="form-group">
+                    <label for="scheduleCourseCode">课程代码:</label>
+                    <input type="text" id="scheduleCourseCode" required>
+                </div>
+                <div class="form-group">
+                    <label for="makeupDate">补考时间:</label>
+                    <input type="datetime-local" id="makeupDate" required>
+                </div>
+                <div class="form-group">
+                    <label for="makeupLocation">补考地点:</label>
+                    <input type="text" id="makeupLocation" required>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="makeupDate">补考时间:</label>
-                <input type="datetime-local" id="makeupDate" required>
-            </div>
-            <div class="form-group">
-                <label for="makeupLocation">补考地点:</label>
-                <input type="text" id="makeupLocation" required>
+            <div class="modal-footer">
+                <button class="btn secondary" onclick="closeModal()">取消</button>
+                <button class="btn primary" onclick="saveMakeupExam()">保存</button>
             </div>
         </div>
-        <button onclick="saveMakeupExam()">保存</button>
-        <button onclick="cancelMakeupExam()">取消</button>
     </div>
-
-    <div id="makeupGradeForm" style="display: none;">
-        <h3>录入补考成绩</h3>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="gradeMakeupId">补考ID:</label>
-                <input type="text" id="gradeMakeupId" readonly>
+    
+    <div id="makeupGradeModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>录入补考成绩</h3>
+                <span class="modal-close" onclick="closeGradeModal()">&times;</span>
             </div>
-            <div class="form-group">
-                <label for="makeupScore">补考分数:</label>
-                <input type="number" id="makeupScore" min="0" max="100" step="0.1" required>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="gradeMakeupId">补考ID:</label>
+                    <input type="text" id="gradeMakeupId" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="makeupScore">补考分数:</label>
+                    <input type="number" id="makeupScore" min="0" max="100" step="0.1" required>
+                </div>
+                <div class="form-group">
+                    <label for="makeupGradeLevel">成绩等级:</label>
+                    <select id="makeupGradeLevel">
+                        <option value="优秀">优秀</option>
+                        <option value="良好">良好</option>
+                        <option value="中等">中等</option>
+                        <option value="及格">及格</option>
+                        <option value="不及格">不及格</option>
+                    </select>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="makeupGradeLevel">成绩等级:</label>
-                <select id="makeupGradeLevel">
-                    <option value="优秀">优秀</option>
-                    <option value="良好">良好</option>
-                    <option value="中等">中等</option>
-                    <option value="及格">及格</option>
-                    <option value="不及格">不及格</option>
-                </select>
+            <div class="modal-footer">
+                <button class="btn secondary" onclick="closeGradeModal()">取消</button>
+                <button class="btn primary" onclick="saveMakeupGrade()">保存</button>
             </div>
         </div>
-        <button onclick="saveMakeupGrade()">保存</button>
-        <button onclick="cancelMakeupGrade()">取消</button>
     </div>
+</div>
 
-    <div id="message" class="message" style="display: none;"></div>
+<style>
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
+    align-items: center;
+}
+
+.toolbar .search-box {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    max-width: 500px;
+}
+
+.toolbar .search-box input {
+    flex: 1;
+    height: 42px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.1);
+    color: var(--text);
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.toolbar .search-box input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.2);
+}
+
+.toolbar .btn {
+    height: 42px;
+    padding: 0 24px;
+    font-size: 14px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.toolbar .btn.primary {
+    background: linear-gradient(135deg, #fde68a, #f59e0b);
+    color: #1a1a1a;
+}
+
+.toolbar .btn.secondary {
+    background: rgba(255,255,255,0.15);
+    color: var(--text);
+}
+
+.toolbar .btn.secondary:hover {
+    background: rgba(255,255,255,0.25);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--card);
+    backdrop-filter: blur(18px);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.data-table th,
+.data-table td {
+    padding: 14px 18px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.data-table th {
+    background: rgba(245,158,11,0.15);
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 14px;
+}
+
+.data-table td {
+    font-size: 14px;
+    color: var(--text);
+}
+
+.data-table tbody tr {
+    transition: background 0.2s ease;
+}
+
+.data-table tbody tr:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.data-table .btn {
+    height: 32px;
+    padding: 0 12px;
+    font-size: 12px;
+    border-radius: 6px;
+    margin-right: 4px;
+}
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+}
+
+.modal-content {
+    background: var(--card);
+    backdrop-filter: blur(18px);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 480px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.modal-close {
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text);
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.modal-close:hover {
+    opacity: 1;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-body .form-group {
+    margin-bottom: 16px;
+}
+
+.modal-body .form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+}
+
+.modal-body .form-group input,
+.modal-body .form-group select {
+    width: 100%;
+    height: 42px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.1);
+    color: var(--text);
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.modal-body .form-group input:focus,
+.modal-body .form-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.modal-footer .btn {
+    height: 40px;
+    padding: 0 20px;
+    font-size: 14px;
+    border-radius: 8px;
+    font-weight: 500;
+}
+
+.modal-footer .btn.primary {
+    background: linear-gradient(135deg, #fde68a, #f59e0b);
+    color: #1a1a1a;
+}
+
+.modal-footer .btn.secondary {
+    background: rgba(255,255,255,0.15);
+    color: var(--text);
+}
+
+.empty-state {
+    background: var(--card);
+    backdrop-filter: blur(18px);
+    border-radius: 16px;
+    padding: 60px 40px;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+}
+
+.empty-state-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+}
+
+.empty-state-text {
+    font-size: 16px;
+    color: var(--text);
+    opacity: 0.7;
+}
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -118,16 +361,16 @@ document.addEventListener('DOMContentLoaded', function() {
     getUserInfo();
 });
 
-// 获取用户信息
 function getUserInfo() {
-    apiRequest(API_ENDPOINTS.USER_INFO)
+    const token = localStorage.getItem('token');
+    apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
     .then(resp => resp.json())
     .then(data => {
         if (data.userType === 'STUDENT') {
             document.getElementById('makeupStudentId').parentElement.style.display = 'none';
             document.querySelector('button[onclick="queryMakeupExams()"]').style.display = 'none';
-            document.querySelector('button[onclick="scheduleMakeupExam()"]').style.display = 'none';
-            document.querySelector('button[onclick="enterMakeupGrade()"]').style.display = 'none';
+            document.querySelector('button[onclick="showScheduleForm()"]').style.display = 'none';
+            document.querySelector('button[onclick="showGradeForm()"]').style.display = 'none';
             queryMyMakeupExams();
         }
     })
@@ -137,7 +380,6 @@ function getUserInfo() {
     });
 }
 
-// 显示消息
 function showMessage(message, isError = false) {
     const messageDiv = document.getElementById('message');
     messageDiv.textContent = message;
@@ -149,7 +391,15 @@ function showMessage(message, isError = false) {
     }, 3000);
 }
 
-// 查询补考安排
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
 function queryMakeupExams() {
     const studentId = document.getElementById('makeupStudentId').value;
     const courseCode = document.getElementById('makeupCourseCode').value;
@@ -162,32 +412,7 @@ function queryMakeupExams() {
     apiRequest(url)
     .then(resp => resp.json())
     .then(data => {
-        const tbody = document.querySelector('#makeupExamTable tbody');
-        tbody.innerHTML = '';
-        
-        if (data.code === 200 && data.data) {
-            data.data.forEach(exam => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${exam.id}</td>
-                    <td>${exam.studentId}</td>
-                    <td>${exam.courseCode}</td>
-                    <td>${exam.courseName}</td>
-                    <td>${exam.originalScore}</td>
-                    <td>${new Date(exam.makeupDate).toLocaleString()}</td>
-                    <td>${exam.makeupLocation}</td>
-                    <td>${exam.makeupScore || '-'}</td>
-                    <td>${exam.status}</td>
-                    <td>
-                        ${exam.status === '待考' ? '<button onclick="editMakeupExam(' + exam.id + ')">编辑</button>' : ''}
-                        <button onclick="deleteMakeupExam(${exam.id})">删除</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
-            });
-        } else {
-            showMessage('未找到补考记录', true);
-        }
+        renderMakeupExams(data);
     })
     .catch(err => {
         console.error('Error:', err);
@@ -195,34 +420,11 @@ function queryMakeupExams() {
     });
 }
 
-// 查询我的补考
 function queryMyMakeupExams() {
     apiRequest(API_ENDPOINTS.MY_MAKEUP_EXAMS)
     .then(resp => resp.json())
     .then(data => {
-        const tbody = document.querySelector('#makeupExamTable tbody');
-        tbody.innerHTML = '';
-        
-        if (data.code === 200 && data.data) {
-            data.data.forEach(exam => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${exam.id}</td>
-                    <td>${exam.studentId}</td>
-                    <td>${exam.courseCode}</td>
-                    <td>${exam.courseName}</td>
-                    <td>${exam.originalScore}</td>
-                    <td>${new Date(exam.makeupDate).toLocaleString()}</td>
-                    <td>${exam.makeupLocation}</td>
-                    <td>${exam.makeupScore || '-'}</td>
-                    <td>${exam.status}</td>
-                    <td>-</td>
-                `;
-                tbody.appendChild(row);
-            });
-        } else {
-            showMessage('未找到补考记录', true);
-        }
+        renderMakeupExams(data);
     })
     .catch(err => {
         console.error('Error:', err);
@@ -230,22 +432,68 @@ function queryMyMakeupExams() {
     });
 }
 
-// 显示安排补考表单
-function scheduleMakeupExam() {
-    document.getElementById('makeupExamForm').style.display = 'block';
-    document.getElementById('makeupGradeForm').style.display = 'none';
+function renderMakeupExams(data) {
+    const tbody = document.querySelector('#makeupExamTableBody');
+    const emptyState = document.getElementById('emptyState');
+    tbody.innerHTML = '';
+    
+    if (data.code === 200 && data.data && data.data.length > 0) {
+        data.data.forEach(exam => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${exam.id}</td>
+                <td>${exam.studentId}</td>
+                <td>${exam.courseCode}</td>
+                <td>${exam.courseName}</td>
+                <td>${exam.originalScore}</td>
+                <td>${new Date(exam.makeupDate).toLocaleString()}</td>
+                <td>${exam.makeupLocation}</td>
+                <td>${exam.makeupScore || '-'}</td>
+                <td>${exam.status}</td>
+                <td>
+                    ${exam.status === '待考' ? '<button class="btn secondary" onclick="editMakeupExam(' + exam.id + ')">编辑</button>' : ''}
+                    <button class="btn secondary" onclick="deleteMakeupExam(' + exam.id + ')">删除</button>
+                </td>
+            `;
+            tbody.appendChild(row);
+        });
+        emptyState.style.display = 'none';
+    } else {
+        tbody.innerHTML = '';
+        emptyState.style.display = 'block';
+    }
 }
 
-// 取消安排补考
-function cancelMakeupExam() {
-    document.getElementById('makeupExamForm').style.display = 'none';
+function showScheduleForm() {
+    document.getElementById('modalTitle').textContent = '安排补考';
     document.getElementById('scheduleStudentId').value = '';
     document.getElementById('scheduleCourseCode').value = '';
     document.getElementById('makeupDate').value = '';
     document.getElementById('makeupLocation').value = '';
+    document.getElementById('makeupExamModal').style.display = 'flex';
 }
 
-// 保存补考安排
+function showGradeForm() {
+    const selectedExam = document.querySelector('#makeupExamTableBody tr.selected');
+    if (!selectedExam) {
+        showMessage('请先选择要录入成绩的补考记录', true);
+        return;
+    }
+    const examId = selectedExam.querySelector('td').textContent;
+    document.getElementById('gradeMakeupId').value = examId;
+    document.getElementById('makeupScore').value = '';
+    document.getElementById('makeupGradeLevel').value = '及格';
+    document.getElementById('makeupGradeModal').style.display = 'flex';
+}
+
+function closeModal() {
+    document.getElementById('makeupExamModal').style.display = 'none';
+}
+
+function closeGradeModal() {
+    document.getElementById('makeupGradeModal').style.display = 'none';
+}
+
 function saveMakeupExam() {
     const studentId = document.getElementById('scheduleStudentId').value;
     const courseCode = document.getElementById('scheduleCourseCode').value;
@@ -253,7 +501,7 @@ function saveMakeupExam() {
     const makeupLocation = document.getElementById('makeupLocation').value;
     
     if (!studentId || !courseCode || !makeupDate || !makeupLocation) {
-        showMessage('请填写所有字段', true);
+        showMessage('请填写所有必填字段', true);
         return;
     }
     
@@ -266,109 +514,96 @@ function saveMakeupExam() {
     
     apiRequest(API_ENDPOINTS.MAKEUP_EXAMS, {
         method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(examData)
     })
     .then(resp => resp.json())
     .then(data => {
         if (data.code === 200) {
-            showMessage('补考安排成功');
-            cancelMakeupExam();
+            closeModal();
+            showToast('补考安排成功');
             queryMakeupExams();
         } else {
-            showMessage('安排失败: ' + data.message, true);
+            showMessage(data.message || '保存失败', true);
         }
     })
     .catch(err => {
         console.error('Error:', err);
-        showMessage('安排失败: ' + err.message, true);
+        showMessage('保存失败: ' + err.message, true);
     });
 }
 
-// 显示录入补考成绩表单
-function enterMakeupGrade() {
-    const selectedExam = document.querySelector('#makeupExamTable tbody tr.selected');
-    if (!selectedExam) {
-        showMessage('请先选择一个补考记录', true);
-        return;
-    }
-    
-    const examId = selectedExam.cells[0].textContent;
-    document.getElementById('gradeMakeupId').value = examId;
-    document.getElementById('makeupScore').value = '';
-    document.getElementById('makeupGradeForm').style.display = 'block';
-    document.getElementById('makeupExamForm').style.display = 'none';
-}
-
-// 取消录入补考成绩
-function cancelMakeupGrade() {
-    document.getElementById('makeupGradeForm').style.display = 'none';
-    document.getElementById('gradeMakeupId').value = '';
-    document.getElementById('makeupScore').value = '';
-}
-
-// 保存补考成绩
 function saveMakeupGrade() {
     const examId = document.getElementById('gradeMakeupId').value;
-    const makeupScore = document.getElementById('makeupScore').value;
-    const makeupGradeLevel = document.getElementById('makeupGradeLevel').value;
+    const score = document.getElementById('makeupScore').value;
+    const gradeLevel = document.getElementById('makeupGradeLevel').value;
     
-    if (!makeupScore) {
-        showMessage('请填写补考分数', true);
+    if (!examId || !score) {
+        showMessage('请填写所有必填字段', true);
         return;
     }
     
     const gradeData = {
-        makeupScore: parseFloat(makeupScore),
-        makeupGradeLevel: makeupGradeLevel,
-        status: parseFloat(makeupScore) >= 60 ? '已通过' : '未通过'
+        makeupScore: parseFloat(score),
+        makeupGradeLevel: gradeLevel
     };
     
-    apiRequest(`${API_ENDPOINTS.MAKEUP_EXAMS}/${examId}`, {
+    apiRequest(`${API_ENDPOINTS.MAKEUP_EXAMS}/${examId}/grade`, {
         method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(gradeData)
     })
     .then(resp => resp.json())
     .then(data => {
         if (data.code === 200) {
-            showMessage('补考成绩录入成功');
-            cancelMakeupGrade();
+            closeGradeModal();
+            showToast('成绩录入成功');
             queryMakeupExams();
         } else {
-            showMessage('录入失败: ' + data.message, true);
+            showMessage(data.message || '保存失败', true);
         }
     })
     .catch(err => {
         console.error('Error:', err);
-        showMessage('录入失败: ' + err.message, true);
+        showMessage('保存失败: ' + err.message, true);
     });
 }
 
-// 编辑补考
 function editMakeupExam(id) {
-    const rows = document.querySelectorAll('#makeupExamTable tbody tr');
-    rows.forEach(row => {
-        if (row.cells[0].textContent === id.toString()) {
-            document.getElementById('scheduleStudentId').value = row.cells[1].textContent;
-            document.getElementById('scheduleCourseCode').value = row.cells[2].textContent;
-            document.getElementById('makeupDate').value = new Date(row.cells[5].textContent).toISOString().slice(0, 16);
-            document.getElementById('makeupLocation').value = row.cells[6].textContent;
+    apiRequest(`${API_ENDPOINTS.MAKEUP_EXAMS}/${id}`)
+    .then(resp => resp.json())
+    .then(data => {
+        if (data.code === 200 && data.data) {
+            const exam = data.data;
+            document.getElementById('modalTitle').textContent = '编辑补考';
+            document.getElementById('scheduleStudentId').value = exam.studentId;
+            document.getElementById('scheduleCourseCode').value = exam.courseCode;
+            document.getElementById('makeupDate').value = exam.makeupDate ? exam.makeupDate.substring(0, 16) : '';
+            document.getElementById('makeupLocation').value = exam.makeupLocation || '';
+            document.getElementById('makeupExamModal').style.display = 'flex';
         }
+    })
+    .catch(err => {
+        console.error('Error:', err);
+        showMessage('获取补考信息失败', true);
     });
-    document.getElementById('makeupExamForm').style.display = 'block';
 }
 
-// 删除补考
 function deleteMakeupExam(id) {
-    if (!confirm('确定要删除这条补考记录吗？')) return;
+    if (!confirm('确定要删除这条补考记录吗？')) {
+        return;
+    }
     
-    apiRequest(`${API_ENDPOINTS.MAKEUP_EXAMS}/${id}`, { method: 'DELETE' })
+    apiRequest(`${API_ENDPOINTS.MAKEUP_EXAMS}/${id}`, {
+        method: 'DELETE'
+    })
     .then(resp => resp.json())
     .then(data => {
         if (data.code === 200) {
-            showMessage('删除成功');
+            showToast('删除成功');
             queryMakeupExams();
         } else {
-            showMessage('删除失败: ' + data.message, true);
+            showMessage(data.message || '删除失败', true);
         }
     })
     .catch(err => {
@@ -376,384 +611,15 @@ function deleteMakeupExam(id) {
         showMessage('删除失败: ' + err.message, true);
     });
 }
+
+document.addEventListener('click', function(e) {
+    if (e.target.closest('#makeupExamModal') && !e.target.closest('.modal-content')) {
+        closeModal();
+    }
+    if (e.target.closest('#makeupGradeModal') && !e.target.closest('.modal-content')) {
+        closeGradeModal();
+    }
+});
 </script>
-</body>
-</html>
-            </div>
-        </div>
-        <button onclick="submitMakeupSchedule()">提交安排</button>
-        <button onclick="cancelMakeupSchedule()">取消</button>
-    </div>
-
-    <div id="makeupGradeForm" style="display: none;">
-        <h3>录入补考成绩</h3>
-        <div class="form-row">
-            <div class="form-group">
-                <label for="gradeMakeupId">补考ID:</label>
-                <input type="number" id="gradeMakeupId" required>
-            </div>
-            <div class="form-group">
-                <label for="makeupScore">补考成绩:</label>
-                <input type="number" id="makeupScore" min="0" max="100" required>
-            </div>
-            <div class="form-group">
-                <label for="makeupComment">评语:</label>
-                <textarea id="makeupComment"></textarea>
-            </div>
-        </div>
-        <button onclick="submitMakeupGrade()">提交成绩</button>
-        <button onclick="cancelMakeupGrade()">取消</button>
-    </div>
-
-    <script>
-        // 当前用户信息
-        let currentUser = null;
-        
-        // 显示消息
-        function showMessage(message, isError = false) {
-            // 创建消息元素
-            const messageDiv = document.createElement('div');
-            messageDiv.textContent = message;
-            messageDiv.className = isError ? 'message error' : 'message success';
-            messageDiv.style.display = 'block';
-            messageDiv.style.position = 'fixed';
-            messageDiv.style.top = '20px';
-            messageDiv.style.left = '50%';
-            messageDiv.style.transform = 'translateX(-50%)';
-            messageDiv.style.padding = '10px 20px';
-            messageDiv.style.borderRadius = '4px';
-            messageDiv.style.zIndex = '1000';
-            messageDiv.style.backgroundColor = isError ? '#f44336' : '#4CAF50';
-            messageDiv.style.color = 'white';
-            
-            // 添加到页面
-            document.body.appendChild(messageDiv);
-            
-            // 3秒后自动移除
-            setTimeout(() => {
-                if (messageDiv.parentNode) {
-                    messageDiv.parentNode.removeChild(messageDiv);
-                }
-            }, 3000);
-        }
-
-        // 页面加载时检查用户角色并调整界面
-        document.addEventListener('DOMContentLoaded', function() {
-            checkUserRole();
-            loadMakeupExams();
-        });
-
-        // 检查用户角色并调整界面
-        function checkUserRole() {
-            apiRequest(API_ENDPOINTS.USER_INFO)
-            .then(resp => resp.json())
-            .then(data => {
-                // 保存当前用户信息
-                currentUser = data;
-                const role = data.userType;
-                
-                // 如果是学生，隐藏一些功能
-                if (role === 'STUDENT') {
-                    // 隐藏学号输入框，因为学生只能查看自己的补考
-                    document.getElementById('makeupStudentId').parentElement.style.display = 'none';
-                    
-                    // 隐藏课程代码输入框，因为学生只能查看自己的补考
-                    document.getElementById('makeupCourseCode').parentElement.style.display = 'none';
-                    
-                    // 隐藏查询补考安排按钮
-                    const queryBtn = document.querySelector('button[onclick="queryMakeupExams()"]');
-                    if (queryBtn) queryBtn.style.display = 'none';
-                    
-                    // 隐藏安排补考按钮
-                    const scheduleBtn = document.querySelector('button[onclick="scheduleMakeupExam()"]');
-                    if (scheduleBtn) scheduleBtn.style.display = 'none';
-                    
-                    // 隐藏录入补考成绩按钮
-                    const gradeBtn = document.querySelector('button[onclick="enterMakeupGrade()"]');
-                    if (gradeBtn) gradeBtn.style.display = 'none';
-                    
-                    // 自动查询学生的补考
-                    queryMyMakeupExams();
-                }
-            })
-            .catch(err => {
-                console.error('获取用户信息失败:', err);
-                showMessage('获取用户信息失败，请刷新页面重试', true);
-            });
-        }
-
-        // 加载补考列表
-        function loadMakeupExams() {
-            apiRequest(API_ENDPOINTS.MAKEUP_BY_TEACHER)
-                .then(resp => resp.json())
-                .then(data => {
-                    displayMakeupExams(data);
-                })
-                .catch(error => {
-                    console.error('加载补考列表失败:', error);
-                    showMessage('加载补考列表失败: ' + error.message, true);
-                });
-        }
-
-        // 显示补考列表
-        function displayMakeupExams(makeupExams) {
-            const tableBody = document.querySelector('#makeupExamTable tbody');
-            tableBody.innerHTML = '';
-            
-            if (!makeupExams || makeupExams.length === 0) {
-                tableBody.innerHTML = '<tr><td colspan="10" style="text-align: center;">暂无补考记录</td></tr>';
-                return;
-            }
-            
-            makeupExams.forEach(makeup => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${makeup.id}</td>
-                    <td>${makeup.student ? makeup.student.studentId : '-'}</td>
-                    <td>${makeup.courseCode}</td>
-                    <td>${makeup.courseName || '-'}</td>
-                    <td>${makeup.originalGrade || '-'}</td>
-                    <td>${formatDateTime(makeup.examDate)}</td>
-                    <td>${makeup.examLocation || '-'}</td>
-                    <td>${makeup.score || '-'}</td>
-                    <td>${getMakeupStatusText(makeup.status)}</td>
-                    <td>
-                        ${getMakeupActions(makeup)}
-                    </td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-
-        // 获取补考状态文本
-        function getMakeupStatusText(status) {
-            switch (status) {
-                case '待审批': return '待审批';
-                case '已批准': return '已安排';
-                case '已完成': return '已完成';
-                case '已取消': return '已取消';
-                default: return status || '未知';
-            }
-        }
-
-        // 获取补考操作按钮
-        function getMakeupActions(makeup) {
-            const role = currentUser ? currentUser.userType : '';
-            
-            let actions = '';
-            
-            // 教师和管理员可以编辑补考安排
-            if (role === 'TEACHER' || role === 'ADMIN') {
-                if (makeup.status === '已批准') {
-                    actions += `<button onclick="editMakeupExam(${makeup.id})">编辑</button> `;
-                    actions += `<button onclick="cancelMakeupExam(${makeup.id})">取消</button> `;
-                }
-                
-                if (makeup.status === '已批准' || makeup.status === '已完成') {
-                    if (!makeup.score) {
-                        actions += `<button onclick="showMakeupGradeForm(${makeup.id})">录入成绩</button> `;
-                    }
-                }
-            }
-            
-            // 学生可以查看详情
-            if (role === 'STUDENT') {
-                actions += `<button onclick="viewMakeupDetails(${makeup.id})">查看详情</button> `;
-            }
-            
-            return actions;
-        }
-
-        // 查询补考安排
-        function queryMakeupExams() {
-            const studentId = document.getElementById('makeupStudentId').value;
-            const courseCode = document.getElementById('makeupCourseCode').value;
-            const semester = document.getElementById('makeupSemester').value;
-            
-            let url;
-            if (studentId && courseCode && semester) {
-                url = API_ENDPOINTS.MAKEUP_TEACHER_COURSE_SEMESTER(courseCode, semester);
-            } else if (studentId) {
-                url = API_ENDPOINTS.MAKEUP_BY_STUDENT_NUMBER(studentId);
-            } else {
-                url = API_ENDPOINTS.MAKEUP_BY_TEACHER;
-            }
-            
-            apiRequest(url)
-                .then(resp => resp.json())
-                .then(data => {
-                    displayMakeupExams(data);
-                })
-                .catch(error => {
-                    console.error('查询补考安排失败:', error);
-                    showMessage('查询补考安排失败: ' + error.message, true);
-                });
-        }
-
-        // 查询我的补考
-        function queryMyMakeupExams() {
-            apiRequest(API_ENDPOINTS.MAKEUP_MY)
-                .then(resp => resp.json())
-                .then(data => {
-                    displayMakeupExams(data);
-                })
-                .catch(error => {
-                    console.error('查询我的补考失败:', error);
-                    showMessage('查询我的补考失败: ' + error.message, true);
-                });
-        }
-
-        // 显示安排补考表单
-        function scheduleMakeupExam() {
-            document.getElementById('makeupExamForm').style.display = 'block';
-        }
-
-        // 取消安排补考
-        function cancelMakeupSchedule() {
-            document.getElementById('makeupExamForm').style.display = 'none';
-            // 清空表单
-            document.getElementById('scheduleStudentId').value = '';
-            document.getElementById('scheduleCourseCode').value = '';
-            document.getElementById('makeupDate').value = '';
-            document.getElementById('makeupLocation').value = '';
-        }
-
-        // 提交补考安排
-        function submitMakeupSchedule() {
-            const studentId = document.getElementById('scheduleStudentId').value;
-            const courseCode = document.getElementById('scheduleCourseCode').value;
-            const examTime = document.getElementById('makeupDate').value;
-            const examLocation = document.getElementById('makeupLocation').value;
-            
-            if (!studentId || !courseCode || !examTime || !examLocation) {
-                showMessage('请填写所有必填字段', true);
-                return;
-            }
-            
-            const makeupData = {
-                studentNumber: studentId,  // 使用studentNumber而不是studentId
-                courseCode: courseCode,
-                examDate: examTime,
-                examLocation: examLocation,
-                status: '已批准'
-            };
-            
-            apiRequest(API_ENDPOINTS.MAKEUP_APPLY, {
-                method: 'POST',
-                body: JSON.stringify(makeupData)
-            })
-                .then(resp => {
-                    if (resp.ok) {
-                        showMessage('补考安排成功');
-                        cancelMakeupSchedule();
-                        loadMakeupExams();
-                    } else {
-                        showMessage('补考安排失败', true);
-                    }
-                })
-                .catch(error => {
-                    console.error('安排补考失败:', error);
-                    showMessage('安排补考失败: ' + error.message, true);
-                });
-        }
-
-        // 显示录入补考成绩表单
-        function enterMakeupGrade() {
-            document.getElementById('makeupGradeForm').style.display = 'block';
-        }
-
-        // 显示录入补考成绩表单（带补考ID）
-        function showMakeupGradeForm(makeupId) {
-            document.getElementById('gradeMakeupId').value = makeupId;
-            document.getElementById('makeupGradeForm').style.display = 'block';
-        }
-
-        // 取消录入补考成绩
-        function cancelMakeupGrade() {
-            document.getElementById('makeupGradeForm').style.display = 'none';
-            // 清空表单
-            document.getElementById('gradeMakeupId').value = '';
-            document.getElementById('makeupScore').value = '';
-            document.getElementById('makeupComment').value = '';
-        }
-
-        // 提交补考成绩
-        function submitMakeupGrade() {
-            const makeupId = document.getElementById('gradeMakeupId').value;
-            const makeupScore = document.getElementById('makeupScore').value;
-            const comment = document.getElementById('makeupComment').value;
-            
-            if (!makeupId || !makeupScore) {
-                showMessage('请填写补考ID和成绩', true);
-                return;
-            }
-            
-            const gradeData = {
-                score: parseInt(makeupScore),
-                comment: comment
-            };
-            
-            apiRequest(API_ENDPOINTS.MAKEUP_GRADE(makeupId), {
-                method: 'PUT',
-                body: JSON.stringify(gradeData)
-            })
-                .then(resp => {
-                    if (resp.ok) {
-                        showMessage('补考成绩录入成功');
-                        cancelMakeupGrade();
-                        loadMakeupExams();
-                    } else {
-                        showMessage('补考成绩录入失败', true);
-                    }
-                })
-                .catch(error => {
-                    console.error('录入补考成绩失败:', error);
-                    showMessage('录入补考成绩失败: ' + error.message, true);
-                });
-        }
-
-        // 编辑补考安排
-        function editMakeupExam(makeupId) {
-            // 这里可以实现编辑补考安排的功能
-            alert('编辑补考安排功能待实现');
-        }
-
-        // 取消补考
-        function cancelMakeupExam(makeupId) {
-            if (!confirm('确定要取消这个补考安排吗？')) {
-                return;
-            }
-            
-            apiRequest(API_ENDPOINTS.MAKEUP_DELETE(makeupId), {
-                method: 'DELETE'
-            })
-                .then(resp => {
-                    if (resp.ok) {
-                        showMessage('补考已取消');
-                        loadMakeupExams();
-                    } else {
-                        showMessage('取消补考失败', true);
-                    }
-                })
-                .catch(error => {
-                    console.error('取消补考失败:', error);
-                    showMessage('取消补考失败: ' + error.message, true);
-                });
-        }
-
-        // 查看补考详情
-        function viewMakeupDetails(makeupId) {
-            // 这里可以实现查看补考详情的功能
-            alert('查看补考详情功能待实现');
-        }
-
-        // 格式化日期时间
-        function formatDateTime(dateTimeStr) {
-            if (!dateTimeStr) return '-';
-            
-            const date = new Date(dateTimeStr);
-            return date.toLocaleString('zh-CN');
-        }
-    </script>
 </body>
 </html>

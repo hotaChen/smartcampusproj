@@ -320,7 +320,7 @@ const GradeEntryManager = {
         if (this.currentUser.userType === 'STUDENT') {
             this.showPermissionDenied();
         } else {
-            this.loadRecentGrades();
+            loadRecentGrades();
         }
     },
     
@@ -372,9 +372,10 @@ const GradeEntryManager = {
             const recentGrades = data.slice(0, 10);
             recentGrades.forEach(grade => {
                 const row = document.createElement('tr');
+                const studentNumber = grade.student && grade.student.studentId ? grade.student.studentId : '-';
                 row.innerHTML = `
                     <td>${grade.id}</td>
-                    <td>${grade.studentId}</td>
+                    <td>${studentNumber}</td>
                     <td>${grade.courseCode}</td>
                     <td>${grade.courseName}</td>
                     <td>${grade.examType}</td>
@@ -399,6 +400,7 @@ const GradeEntryManager = {
 
 function enterGrade() {
     const gradeData = {
+        studentId: null,
         studentNumber: document.getElementById('studentId').value,
         courseCode: document.getElementById('courseCode').value,
         courseName: document.getElementById('courseName').value,
@@ -407,6 +409,12 @@ function enterGrade() {
         semester: document.getElementById('semester').value,
         credit: parseFloat(document.getElementById('credit').value),
         gradeLevel: document.getElementById('gradeLevel').value,
+        finalScore: parseFloat(document.getElementById('score').value) || 0,
+        midtermScore: 0,
+        regularScore: 0,
+        remark: '',
+        totalScore: parseFloat(document.getElementById('score').value) || 0,
+        grade: 0,
         comment: document.getElementById('comment').value
     };
     
@@ -430,7 +438,7 @@ function enterGrade() {
 }
 
 function batchEnterGrades() {
-    const batchData = prompt('请输入批量成绩数据(JSON格式):', '[{"studentNumber":"2023001","courseCode":"CS101","courseName":"计算机基础","examType":"期末考试","score":85,"semester":"2023-2024-1","credit":3,"gradeLevel":"良好","comment":"表现良好"}]');
+    const batchData = prompt('请输入批量成绩数据(JSON格式):', '[{"studentId":null,"studentNumber":"2023001","courseCode":"CS101","courseName":"计算机基础","examType":"期末考试","score":85,"semester":"2023-2024-1","credit":3,"gradeLevel":"良好","finalScore":85,"midtermScore":0,"regularScore":0,"remark":"","totalScore":85,"grade":0,"comment":"表现良好"}]');
     
     if (batchData) {
         try {
@@ -475,7 +483,7 @@ GradeEntryManager.editGrade = function(id) {
     .then(resp => resp.json())
     .then(grade => {
         document.getElementById('editGradeId').value = grade.id;
-        document.getElementById('editStudentId').value = grade.studentId;
+        document.getElementById('editStudentId').value = grade.student ? grade.student.studentId : '';
         document.getElementById('editCourseCode').value = grade.courseCode;
         document.getElementById('editCourseName').value = grade.courseName;
         document.getElementById('editExamType').value = grade.examType;
@@ -496,6 +504,7 @@ GradeEntryManager.editGrade = function(id) {
 function updateGrade() {
     const id = document.getElementById('editGradeId').value;
     const gradeData = {
+        studentId: null,
         studentNumber: document.getElementById('editStudentId').value,
         courseCode: document.getElementById('editCourseCode').value,
         courseName: document.getElementById('editCourseName').value,
@@ -504,6 +513,12 @@ function updateGrade() {
         semester: document.getElementById('editSemester').value,
         credit: parseFloat(document.getElementById('editCredit').value),
         gradeLevel: document.getElementById('editGradeLevel').value,
+        finalScore: parseFloat(document.getElementById('editScore').value) || 0,
+        midtermScore: 0,
+        regularScore: 0,
+        remark: '',
+        totalScore: parseFloat(document.getElementById('editScore').value) || 0,
+        grade: 0,
         comment: document.getElementById('editComment').value
     };
     
@@ -512,7 +527,7 @@ function updateGrade() {
         body: JSON.stringify(gradeData)
     })
     .then(resp => {
-        if (resp.ok) {
+        if (resp.ok || resp.status === 204) {
             GradeEntryManager.showMessage('成绩更新成功');
             closeEditGradeModal();
             loadRecentGrades();
@@ -533,7 +548,7 @@ GradeEntryManager.deleteGrade = function(id) {
         method: 'DELETE'
     })
     .then(resp => {
-        if (resp.ok) {
+        if (resp.ok || resp.status === 204) {
             GradeEntryManager.showMessage('成绩删除成功');
             loadRecentGrades();
         } else {

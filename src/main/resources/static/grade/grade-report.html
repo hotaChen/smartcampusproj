@@ -3,42 +3,228 @@
 <head>
     <meta charset="UTF-8">
     <title>成绩单生成</title>
-    <script src="../js/api.js"></script>
-    <script src="/js/sidebar.js"></script>
+    <link rel="stylesheet" href="../css/style.css?v=egg-final">
+    <link rel="stylesheet" href="../css/page.css?v=egg-final">
+    <link rel="stylesheet" href="../css/sidebar.css?v=egg-final">
 </head>
-<body>
-    <h1>成绩单生成</h1>
-    <div>
-        <a href="grade-index.html">返回成绩管理</a> |
-        <a href="grade-entry.html">成绩录入</a> |
-        <a href="grade-query.html">成绩查询</a> |
-        <a href="grade-stats.html">成绩统计</a> |
-        <a href="makeup-exam.html">补考管理</a> |
-        <a href="../index.html">返回首页</a>
+<body class="with-sidebar">
+<canvas id="bg"></canvas>
+<script src="../js/api.js"></script>
+<script src="../js/particles.js?v=egg-final"></script>
+<script src="../js/egg.js"></script>
+<script src="../js/sidebar.js"></script>
+<script src="../js/header.js"></script>
+
+<div id="header-container"></div>
+<div id="toast" class="toast"></div>
+
+<div class="page-content">
+    <h1 class="page-title">成绩单生成</h1>
+    
+    <div class="toolbar">
+        <div class="search-box">
+            <input type="text" id="reportStudentId" placeholder="请输入学号">
+            <input type="text" id="reportSemester" value="2023-2024-1" placeholder="学期">
+        </div>
+        <button class="btn primary" onclick="generateGradeReport()">生成成绩单</button>
+        <button class="btn secondary" onclick="generateMyGradeReport()">生成我的成绩单</button>
     </div>
     
     <div id="message" class="message" style="display: none;"></div>
     
-    <h2>成绩单生成</h2>
-    
-    <div class="form-row">
-        <div class="form-group">
-            <label for="reportStudentId">学号:</label>
-            <input type="text" id="reportStudentId">
-        </div>
-        <div class="form-group">
-            <label for="reportSemester">学期:</label>
-            <input type="text" id="reportSemester" value="2023-2024-1">
-            <small>留空则查询所有学期</small>
-        </div>
+    <div id="gradeReportContent" class="report-container-wrapper" style="display: none;">
     </div>
-    
-    <button onclick="generateGradeReport()">生成成绩单</button>
-    <button onclick="generateMyGradeReport()">生成我的成绩单</button>
-    
-    <div id="gradeReportContent" style="display: none;">
-        <!-- 成绩单内容将通过JavaScript动态填充 -->
-    </div>
+</div>
+
+<style>
+.toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
+    align-items: center;
+}
+
+.toolbar .search-box {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+    max-width: 400px;
+}
+
+.toolbar .search-box input {
+    flex: 1;
+    height: 42px;
+    padding: 0 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.1);
+    color: var(--text);
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.toolbar .search-box input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(245,158,11,0.2);
+}
+
+.toolbar .btn {
+    height: 42px;
+    padding: 0 24px;
+    font-size: 14px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.toolbar .btn.primary {
+    background: linear-gradient(135deg, #fde68a, #f59e0b);
+    color: #1a1a1a;
+}
+
+.toolbar .btn.secondary {
+    background: rgba(255,255,255,0.15);
+    color: var(--text);
+}
+
+.toolbar .btn.secondary:hover {
+    background: rgba(255,255,255,0.25);
+}
+
+.report-container-wrapper {
+    background: var(--card);
+    backdrop-filter: blur(18px);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    margin-top: 20px;
+}
+
+.report-header {
+    text-align: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.report-header h2 {
+    margin: 0 0 16px 0;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.report-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.report-info p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--text);
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+}
+
+.report-info p strong {
+    font-weight: 500;
+    opacity: 0.8;
+}
+
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 16px;
+}
+
+.report-table th,
+.report-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.report-table th {
+    background: rgba(245,158,11,0.1);
+    font-weight: 600;
+    color: var(--primary);
+    font-size: 14px;
+}
+
+.report-table td {
+    font-size: 14px;
+    color: var(--text);
+}
+
+.report-table tbody tr:hover {
+    background: rgba(255,255,255,0.05);
+}
+
+.report-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 16px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.summary-item {
+    text-align: center;
+    padding: 16px;
+    background: rgba(245,158,11,0.1);
+    border-radius: 12px;
+}
+
+.summary-item .label {
+    font-size: 12px;
+    color: var(--text);
+    opacity: 0.8;
+    margin-bottom: 8px;
+}
+
+.summary-item .value {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.report-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 24px;
+    justify-content: center;
+}
+
+.report-actions .btn {
+    height: 42px;
+    padding: 0 24px;
+    font-size: 14px;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.report-actions .btn.primary {
+    background: linear-gradient(135deg, #fde68a, #f59e0b);
+    color: #1a1a1a;
+}
+
+.report-actions .btn.secondary {
+    background: rgba(255,255,255,0.15);
+    color: var(--text);
+}
+
+.report-actions .btn.secondary:hover {
+    background: rgba(255,255,255,0.25);
+}
+</style>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -46,9 +232,9 @@ document.addEventListener('DOMContentLoaded', function() {
     getUserInfo();
 });
 
-// 获取用户信息
 function getUserInfo() {
-    apiRequest(API_ENDPOINTS.USER_INFO)
+    const token = localStorage.getItem('token');
+    apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
     .then(resp => resp.json())
     .then(data => {
         if (data.userType === 'STUDENT') {
@@ -64,7 +250,6 @@ function getUserInfo() {
     });
 }
 
-// 显示消息
 function showMessage(message, isError = false) {
     const messageDiv = document.getElementById('message');
     messageDiv.textContent = message;
@@ -76,7 +261,15 @@ function showMessage(message, isError = false) {
     }, 3000);
 }
 
-// 生成成绩单
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
 function generateGradeReport() {
     const studentId = document.getElementById('reportStudentId').value;
     const semester = document.getElementById('reportSemester').value;
@@ -94,61 +287,7 @@ function generateGradeReport() {
     apiRequest(url)
     .then(resp => resp.json())
     .then(data => {
-        const reportDiv = document.getElementById('gradeReportContent');
-        reportDiv.style.display = 'block';
-        
-        if (data.code === 200 && data.data) {
-            const report = data.data;
-            let html = `
-                <div class="report-container" style="border: 1px solid #ccc; padding: 20px; margin: 20px 0;">
-                    <h2 style="text-align: center;">成绩单</h2>
-                    <p><strong>学号:</strong> ${report.studentId}</p>
-                    <p><strong>姓名:</strong> ${report.studentName || '未知'}</p>
-                    <p><strong>学期:</strong> ${report.semester || '所有学期'}</p>
-                    <p><strong>生成时间:</strong> ${new Date().toLocaleString()}</p>
-                    
-                    <table border="1" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-                        <thead>
-                            <tr>
-                                <th>课程代码</th>
-                                <th>课程名称</th>
-                                <th>学分</th>
-                                <th>成绩</th>
-                                <th>等级</th>
-                                <th>学期</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-            
-            report.courses.forEach(course => {
-                html += `
-                    <tr>
-                        <td>${course.courseCode}</td>
-                        <td>${course.courseName}</td>
-                        <td>${course.credit}</td>
-                        <td>${course.score}</td>
-                        <td>${course.gradeLevel}</td>
-                        <td>${course.semester}</td>
-                    </tr>
-                `;
-            });
-            
-            html += `
-                        </tbody>
-                    </table>
-                    <p style="margin-top: 20px;"><strong>平均分:</strong> ${report.averageScore.toFixed(2)}</p>
-                    <p><strong>总学分:</strong> ${report.totalCredits}</p>
-                    <p><strong>已通过学分:</strong> ${report.passedCredits}</p>
-                </div>
-                <button onclick="printReport()">打印成绩单</button>
-                <button onclick="downloadReport()">下载成绩单</button>
-            `;
-            
-            reportDiv.innerHTML = html;
-        } else {
-            reportDiv.innerHTML = `<p>未找到该学生的成绩记录</p>`;
-        }
+        displayGradeReport(data);
     })
     .catch(err => {
         console.error('Error:', err);
@@ -156,66 +295,18 @@ function generateGradeReport() {
     });
 }
 
-// 生成我的成绩单
 function generateMyGradeReport() {
-    apiRequest(API_ENDPOINTS.MY_GRADES_REPORT)
+    const semester = document.getElementById('reportSemester').value;
+    
+    let url = API_ENDPOINTS.MY_GRADES_REPORT;
+    if (semester) {
+        url += `?semester=${semester}`;
+    }
+    
+    apiRequest(url)
     .then(resp => resp.json())
     .then(data => {
-        const reportDiv = document.getElementById('gradeReportContent');
-        reportDiv.style.display = 'block';
-        
-        if (data.code === 200 && data.data) {
-            const report = data.data;
-            let html = `
-                <div class="report-container" style="border: 1px solid #ccc; padding: 20px; margin: 20px 0;">
-                    <h2 style="text-align: center;">成绩单</h2>
-                    <p><strong>学号:</strong> ${report.studentId}</p>
-                    <p><strong>姓名:</strong> ${report.studentName || '未知'}</p>
-                    <p><strong>学期:</strong> ${report.semester || '所有学期'}</p>
-                    <p><strong>生成时间:</strong> ${new Date().toLocaleString()}</p>
-                    
-                    <table border="1" style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-                        <thead>
-                            <tr>
-                                <th>课程代码</th>
-                                <th>课程名称</th>
-                                <th>学分</th>
-                                <th>成绩</th>
-                                <th>等级</th>
-                                <th>学期</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
-            
-            report.courses.forEach(course => {
-                html += `
-                    <tr>
-                        <td>${course.courseCode}</td>
-                        <td>${course.courseName}</td>
-                        <td>${course.credit}</td>
-                        <td>${course.score}</td>
-                        <td>${course.gradeLevel}</td>
-                        <td>${course.semester}</td>
-                    </tr>
-                `;
-            });
-            
-            html += `
-                        </tbody>
-                    </table>
-                    <p style="margin-top: 20px;"><strong>平均分:</strong> ${report.averageScore.toFixed(2)}</p>
-                    <p><strong>总学分:</strong> ${report.totalCredits}</p>
-                    <p><strong>已通过学分:</strong> ${report.passedCredits}</p>
-                </div>
-                <button onclick="printReport()">打印成绩单</button>
-                <button onclick="downloadReport()">下载成绩单</button>
-            `;
-            
-            reportDiv.innerHTML = html;
-        } else {
-            reportDiv.innerHTML = `<p>未找到您的成绩记录</p>`;
-        }
+        displayGradeReport(data);
     })
     .catch(err => {
         console.error('Error:', err);
@@ -223,9 +314,78 @@ function generateMyGradeReport() {
     });
 }
 
-// 打印成绩单
+function displayGradeReport(data) {
+    const reportDiv = document.getElementById('gradeReportContent');
+    reportDiv.style.display = 'block';
+    
+    if (data.code === 200 && data.data) {
+        const report = data.data;
+        const html = `
+            <div class="report-header">
+                <h2>成绩单</h2>
+            </div>
+            <div class="report-info">
+                <p><strong>学号:</strong> <span>${report.studentId}</span></p>
+                <p><strong>姓名:</strong> <span>${report.studentName || '未知'}</span></p>
+                <p><strong>学期:</strong> <span>${report.semester || '所有学期'}</span></p>
+                <p><strong>生成时间:</strong> <span>${new Date().toLocaleString()}</span></p>
+            </div>
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th>课程代码</th>
+                        <th>课程名称</th>
+                        <th>学分</th>
+                        <th>成绩</th>
+                        <th>等级</th>
+                        <th>学期</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${report.courses.map(course => `
+                        <tr>
+                            <td>${course.courseCode}</td>
+                            <td>${course.courseName}</td>
+                            <td>${course.credit}</td>
+                            <td>${course.score}</td>
+                            <td>${course.gradeLevel}</td>
+                            <td>${course.semester}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            <div class="report-summary">
+                <div class="summary-item">
+                    <div class="label">平均分</div>
+                    <div class="value">${report.averageScore ? report.averageScore.toFixed(2) : '-'}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">总学分</div>
+                    <div class="value">${report.totalCredits || 0}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">已通过学分</div>
+                    <div class="value">${report.passedCredits || 0}</div>
+                </div>
+            </div>
+            <div class="report-actions">
+                <button class="btn primary" onclick="printReport()">打印成绩单</button>
+                <button class="btn secondary" onclick="downloadReport()">下载成绩单</button>
+            </div>
+        `;
+        reportDiv.innerHTML = html;
+    } else {
+        reportDiv.innerHTML = `
+            <div class="empty-state" style="text-align: center; padding: 40px; color: var(--text);">
+                <div style="font-size: 48px; margin-bottom: 16px;">📋</div>
+                <div>未找到成绩记录</div>
+            </div>
+        `;
+    }
+}
+
 function printReport() {
-    const reportContent = document.querySelector('.report-container').innerHTML;
+    const reportContent = document.querySelector('.report-container-wrapper').innerHTML;
     const printWindow = window.open('', '_blank');
     printWindow.document.write(`
         <html>
@@ -245,9 +405,8 @@ function printReport() {
     printWindow.print();
 }
 
-// 下载成绩单
 function downloadReport() {
-    const reportDiv = document.querySelector('.report-container');
+    const reportDiv = document.querySelector('.report-container-wrapper');
     const content = reportDiv.innerText;
     const blob = new Blob([content], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
@@ -256,167 +415,7 @@ function downloadReport() {
     a.download = '成绩单.txt';
     a.click();
     URL.revokeObjectURL(url);
-}
-</script>
-</body>
-</html>
-
-// 生成成绩单
-function generateGradeReport() {
-    const studentNumber = document.getElementById('reportStudentId').value;
-    const semester = document.getElementById('reportSemester').value;
-    
-    if (!studentNumber) {
-        showMessage('请输入学号', true);
-        return;
-    }
-    
-    let url;
-    if (semester) {
-        url = API_ENDPOINTS.GRADES_STUDENT_NUMBER_SEMESTER(studentNumber, semester);
-    } else {
-        url = API_ENDPOINTS.GRADES_BY_STUDENT_NUMBER(studentNumber);
-    }
-    
-    apiRequest(url)
-    .then(resp => resp.json())
-    .then(data => {
-        displayGradeReport(data);
-    })
-    .catch(err => {
-        console.error('Error:', err);
-        showMessage('生成成绩单失败', true);
-    });
-}
-
-// 生成我的成绩单
-function generateMyGradeReport() {
-    const semester = document.getElementById('reportSemester').value;
-    
-    let url = API_ENDPOINTS.GRADES_MY_REPORT;
-    if (semester) {
-        url += `?semester=${semester}`;
-    }
-    
-    apiRequest(url)
-    .then(resp => resp.json())
-    .then(data => {
-        displayGradeReport(data);
-    })
-    .catch(err => {
-        console.error('Error:', err);
-        showMessage('生成我的成绩单失败', true);
-    });
-}
-
-// 显示成绩单
-function displayGradeReport(report) {
-    const reportContent = document.getElementById('gradeReportContent');
-    reportContent.style.display = 'block';
-    
-    let gradesHtml = '';
-    if (report.grades && report.grades.length > 0) {
-        gradesHtml = `
-            <table>
-                <thead>
-                    <tr>
-                        <th>课程代码</th>
-                        <th>课程名称</th>
-                        <th>考试类型</th>
-                        <th>分数</th>
-                        <th>成绩等级</th>
-                        <th>学分</th>
-                        <th>学期</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${report.grades.map(grade => `
-                        <tr>
-                            <td>${grade.courseCode}</td>
-                            <td>${grade.courseName}</td>
-                            <td>${grade.examType}</td>
-                            <td>${grade.score}</td>
-                            <td>${grade.gradeLevel}</td>
-                            <td>${grade.credit}</td>
-                            <td>${grade.semester}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
-        `;
-    } else {
-        gradesHtml = '<p>暂无成绩记录</p>';
-    }
-    
-    reportContent.innerHTML = `
-        <h3>学生成绩单</h3>
-        <div class="stats-container">
-            <div class="stats-card">
-                <h3>学生信息</h3>
-                <p><strong>学号:</strong> ${report.student ? report.student.studentId : '-'}</p>
-                <p><strong>学生姓名:</strong> ${report.studentName || '-'}</p>
-                <p><strong>学期:</strong> ${report.semester || '全部'}</p>
-            </div>
-            <div class="stats-card">
-                <h3>成绩统计</h3>
-                <p><strong>总课程数:</strong> ${report.totalCourses || 0}</p>
-                <p><strong>平均分:</strong> ${report.averageScore || 0}</p>
-                <p><strong>总学分:</strong> ${report.totalCredits || 0}</p>
-                <p><strong>GPA:</strong> ${report.gpa || 0}</p>
-                <p><strong>已获得学分:</strong> ${report.earnedCredits || 0}</p>
-                <p><strong>最高分:</strong> ${report.highestScore || 0}</p>
-                <p><strong>最低分:</strong> ${report.lowestScore || 0}</p>
-            </div>
-        </div>
-        <h4>成绩详情</h4>
-        ${gradesHtml}
-        <button onclick="window.print()">打印成绩单</button>
-        <button onclick="exportGradeReport()">导出成绩单</button>
-    `;
-}
-
-// 导出成绩单
-function exportGradeReport() {
-    // 获取成绩单内容
-    const reportContent = document.getElementById('gradeReportContent');
-    
-    // 创建一个新的窗口用于打印
-    const printWindow = window.open('', '_blank');
-    
-    // 构建HTML内容
-    const htmlContent = `
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <title>成绩单</title>
-            <style>
-                body { font-family: Arial, sans-serif; margin: 20px; }
-                table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
-                th { background-color: #f2f2f2; }
-                .stats-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 20px; border-radius: 5px; }
-                .stats-container { display: flex; gap: 20px; margin-bottom: 20px; }
-                @media print {
-                    button { display: none; }
-                }
-            </style>
-        </head>
-        <body>
-            ${reportContent.innerHTML}
-        </body>
-        </html>
-    `;
-    
-    // 写入内容并打印
-    printWindow.document.write(htmlContent);
-    printWindow.document.close();
-    printWindow.focus();
-    
-    // 等待内容加载完成后打印
-    setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-    }, 500);
+    showToast('成绩单已下载');
 }
 </script>
 </body>
