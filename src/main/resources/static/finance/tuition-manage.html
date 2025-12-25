@@ -2,65 +2,461 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>学费管理</title>
-    <script src="../js/api.js"></script>
-    <script src="/js/sidebar.js"></script>
+    <title>学费管理 - Egg University</title>
+    <link rel="stylesheet" href="../css/style.css?v=egg-final">
+    <link rel="stylesheet" href="../css/page.css?v=egg-final">
+    <link rel="stylesheet" href="../css/sidebar.css?v=egg-final">
 </head>
-<body>
-    <h1>学费管理</h1>
-    
-    <div>
-        <h2>添加学费记录</h2>
-        <div>
-            <label>学生ID:</label>
-            <input type="number" id="studentId" placeholder="请输入学生ID">
-            <br>
-            <label>学费金额:</label>
-            <input type="number" id="amount" placeholder="请输入学费金额" step="0.01">
-            <br>
-            <label>学期:</label>
-            <input type="text" id="semester" placeholder="例如: 2023-2024学年第一学期">
-            <br>
-            <label>缴费截止日期:</label>
-            <input type="date" id="dueDate">
-            <br>
-            <button onclick="addTuition()">添加学费记录</button>
+<body class="with-sidebar">
+<canvas id="bg"></canvas>
+<script src="../js/api.js"></script>
+<script src="../js/particles.js?v=egg-final"></script>
+<script src="../js/egg.js"></script>
+<script src="../js/sidebar.js"></script>
+<script src="../js/header.js"></script>
+
+<div id="header-container"></div>
+<div id="toast" class="toast"></div>
+
+<div id="edit-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>编辑学费记录</h2>
+            <span class="close-btn" onclick="closeEditModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="edit-tuition-id">
+            <input type="hidden" id="edit-student-id">
+            <div class="form-group">
+                <label>学生姓名</label>
+                <input type="text" id="edit-student-name" class="input" readonly>
+            </div>
+            <div class="form-group">
+                <label>学号</label>
+                <input type="text" id="edit-student-number" class="input" readonly>
+            </div>
+            <div class="form-group">
+                <label>学期</label>
+                <input type="text" id="edit-semester" class="input" placeholder="请输入学期">
+            </div>
+            <div class="form-group">
+                <label>学费金额</label>
+                <input type="number" id="edit-amount" class="input" placeholder="请输入学费金额" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>缴费状态</label>
+                <select id="edit-payment-status" class="input">
+                    <option value="未缴费">未缴费</option>
+                    <option value="已缴费">已缴费</option>
+                    <option value="待审核">待审核</option>
+                    <option value="已退款">已退款</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>缴费截止日期</label>
+                <input type="date" id="edit-due-date" class="input">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn secondary" onclick="closeEditModal()">取消</button>
+            <button class="btn primary" onclick="saveTuition()">保存</button>
         </div>
     </div>
+</div>
+
+<div class="page-content">
+    <h1 class="page-title">学费管理</h1>
     
-    <div>
-        <h2>学费记录列表</h2>
-        <div id="tuition-list">
-            <p>正在加载学费信息...</p>
+    <div class="toolbar">
+        <button class="btn secondary" onclick="goBack()">返回</button>
+    </div>
+
+    <div class="form-card">
+        <div class="form-card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>添加学费记录</span>
+        </div>
+        <div class="form-card-body">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>学生ID</label>
+                    <input type="number" id="studentId" class="input" placeholder="请输入学生ID">
+                </div>
+                <div class="form-group">
+                    <label>学费金额</label>
+                    <input type="number" id="amount" class="input" placeholder="请输入学费金额" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>学期</label>
+                    <input type="text" id="semester" class="input" placeholder="例如: 2023-2024学年第一学期">
+                </div>
+                <div class="form-group">
+                    <label>缴费截止日期</label>
+                    <input type="date" id="dueDate" class="input">
+                </div>
+            </div>
+            <button class="btn primary" onclick="addTuition()">添加学费记录</button>
         </div>
     </div>
-    
-    <div>
-        <br>
-        <button onclick="goBack()">返回财务管理</button>
+
+    <div class="info-card">
+        <div class="info-card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            <span>学费记录列表</span>
+        </div>
+        <div class="info-card-body">
+            <div id="tuition-list">
+                <div class="empty-state">正在加载学费信息...</div>
+            </div>
+        </div>
     </div>
-    
+</div>
+
+<style>
+.form-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+.form-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, rgba(167, 243, 208, 0.15), rgba(16, 185, 129, 0.1));
+    border-bottom: 1px solid rgba(167, 243, 208, 0.2);
+    font-size: 18px;
+    font-weight: 600;
+    color: #a7f3d0;
+}
+
+.form-card-header svg {
+    width: 24px;
+    height: 24px;
+    stroke: #10b981;
+    stroke-width: 2;
+    fill: none;
+}
+
+.form-card-body {
+    padding: 24px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.info-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.info-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, rgba(167, 243, 208, 0.15), rgba(16, 185, 129, 0.1));
+    border-bottom: 1px solid rgba(167, 243, 208, 0.2);
+    font-size: 18px;
+    font-weight: 600;
+    color: #a7f3d0;
+}
+
+.info-card-header svg {
+    width: 24px;
+    height: 24px;
+    stroke: #10b981;
+    stroke-width: 2;
+    fill: none;
+}
+
+.info-card-body {
+    padding: 24px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.data-table th {
+    background: rgba(167, 243, 208, 0.1);
+    color: #a7f3d0;
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(167, 243, 208, 0.2);
+}
+
+.data-table th:first-child {
+    border-radius: 12px 0 0 0;
+}
+
+.data-table th:last-child {
+    border-radius: 0 12px 0 0;
+}
+
+.data-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    font-size: 14px;
+}
+
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tr:hover td {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.data-table .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-success {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-error {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-pending {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-refunded {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.form-group {
+    margin-bottom: 0;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.input {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.input:focus {
+    outline: none;
+    border-color: rgba(16, 185, 129, 0.5);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.action-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin-right: 8px;
+}
+
+.action-btn:last-child {
+    margin-right: 0;
+}
+
+.action-btn.edit {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2));
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.action-btn.edit:hover {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3));
+}
+
+.action-btn.delete {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.action-btn.delete:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.3));
+}
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: #f1f5f9;
+    font-size: 20px;
+}
+
+.close-btn {
+    font-size: 28px;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: color 0.2s;
+    line-height: 1;
+}
+
+.close-btn:hover {
+    color: #f1f5f9;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-footer .btn {
+    min-width: 80px;
+}
+</style>
+
 <script>
+function getStatusBadge(status) {
+    const statusMap = {
+        '已缴费': 'status-success',
+        '未缴费': 'status-error',
+        '待审核': 'status-pending',
+        '已退款': 'status-refunded'
+    };
+    return `<span class="status-badge ${statusMap[status] || 'status-pending'}">${status}</span>`;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     SidebarManager.init({ 
         currentPage: 'tuition-manage',
         onReady: function(user) {
             if (user.userType !== 'ADMIN' && user.userType !== 'TEACHER') {
-                document.querySelector('h1').innerHTML = '您没有权限访问此页面';
-                document.querySelector('h1').style.color = 'red';
+                document.querySelector('.page-title').innerHTML = '您没有权限访问此页面';
+                document.querySelector('.page-title').style.color = '#f87171';
+                document.querySelector('.page-content').style.display = 'none';
                 return;
             }
             loadTuitionInfo();
         }
     });
+    HeaderComponent.init();
 });
 
 function loadTuitionInfo() {
-    apiRequest('/api/tuition')
+    apiRequest('/api/tuitions')
         .then(resp => resp.json())
         .then(data => {
-            let html = '<table border="1" cellpadding="5" cellspacing="0">';
-            html += '<tr><th>学生姓名</th><th>学号</th><th>学期</th><th>学费金额</th><th>缴费状态</th><th>缴费截止日期</th><th>操作</th></tr>';
+            let html = '<table class="data-table"><thead><tr>';
+            html += '<th>学生姓名</th><th>学号</th><th>学期</th><th>学费金额</th><th>缴费状态</th><th>缴费截止日期</th><th>操作</th></tr>';
+            html += '</thead><tbody>';
             
             if (data && data.length > 0) {
                 data.forEach(tuition => {
@@ -68,25 +464,25 @@ function loadTuitionInfo() {
                         <td>${tuition.studentName || '-'}</td>
                         <td>${tuition.studentNumber || '-'}</td>
                         <td>${tuition.semester || '-'}</td>
-                        <td>${tuition.amount || '-'}</td>
-                        <td>${tuition.paymentStatus || '-'}</td>
-                        <td>${tuition.dueDate || '-'}</td>
+                        <td>${tuition.amount ? '¥' + tuition.amount : '-'}</td>
+                        <td>${getStatusBadge(tuition.paymentStatus || '未缴费')}</td>
+                        <td>${tuition.dueDate ? tuition.dueDate.split('T')[0] : '-'}</td>
                         <td>
-                            <button onclick="editTuition(${tuition.id})">编辑</button>
-                            <button onclick="deleteTuition(${tuition.id})">删除</button>
+                            <button class="action-btn edit" onclick="editTuition(${tuition.id})">编辑</button>
+                            <button class="action-btn delete" onclick="deleteTuition(${tuition.id})">删除</button>
                         </td>
                     </tr>`;
                 });
             } else {
-                html += '<tr><td colspan="7">暂无学费记录</td></tr>';
+                html += '<tr><td colspan="7" class="empty-state">暂无学费记录</td></tr>';
             }
             
-            html += '</table>';
+            html += '</tbody></table>';
             document.getElementById('tuition-list').innerHTML = html;
         })
         .catch(err => {
             console.error(err);
-            document.getElementById('tuition-list').innerHTML = '<p style="color:red;">加载学费信息失败</p>';
+            document.getElementById('tuition-list').innerHTML = '<div class="empty-state" style="color: #f87171;">加载学费信息失败</div>';
         });
 }
 
@@ -97,7 +493,7 @@ function addTuition() {
     const dueDate = document.getElementById('dueDate').value;
     
     if (!studentId || !amount || !semester || !dueDate) {
-        alert('请填写完整信息');
+        showToast('请填写完整信息');
         return;
     }
     
@@ -108,7 +504,7 @@ function addTuition() {
         dueDate: dueDate
     };
     
-    apiRequest('/api/tuition', {
+    apiRequest('/api/tuitions', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -117,7 +513,7 @@ function addTuition() {
     })
     .then(resp => resp.json())
     .then(data => {
-        alert('学费记录添加成功');
+        showToast('学费记录添加成功');
         document.getElementById('studentId').value = '';
         document.getElementById('amount').value = '';
         document.getElementById('semester').value = '';
@@ -126,29 +522,86 @@ function addTuition() {
     })
     .catch(err => {
         console.error(err);
-        alert('添加学费记录失败');
+        showToast('添加学费记录失败');
     });
 }
 
 function editTuition(id) {
-    alert('编辑功能待实现');
-}
-
-function deleteTuition(id) {
-    if (confirm('确定要删除这条学费记录吗？')) {
-        apiRequest(`/api/tuition/${id}`, {
-            method: 'DELETE'
-        })
-        .then(resp => resp.text())
-        .then(msg => {
-            alert('学费记录删除成功');
-            loadTuitionInfo();
+    apiRequest(`/api/tuitions/${id}`)
+        .then(resp => resp.json())
+        .then(tuition => {
+            document.getElementById('edit-tuition-id').value = tuition.id;
+            document.getElementById('edit-student-id').value = tuition.studentId || '';
+            document.getElementById('edit-student-name').value = tuition.studentName || '';
+            document.getElementById('edit-student-number').value = tuition.studentNumber || '';
+            document.getElementById('edit-semester').value = tuition.semester || '';
+            document.getElementById('edit-amount').value = tuition.amount || '';
+            document.getElementById('edit-payment-status').value = tuition.paymentStatus || '未缴费';
+            document.getElementById('edit-due-date').value = tuition.dueDate ? tuition.dueDate.split('T')[0] : '';
+            
+            document.getElementById('edit-modal').classList.add('show');
         })
         .catch(err => {
             console.error(err);
-            alert('删除学费记录失败');
+            showToast('加载学费信息失败');
         });
+}
+
+function closeEditModal() {
+    document.getElementById('edit-modal').classList.remove('show');
+}
+
+function saveTuition() {
+    const tuitionId = document.getElementById('edit-tuition-id').value;
+    const tuitionData = {
+        id: parseInt(tuitionId),
+        semester: document.getElementById('edit-semester').value,
+        amount: parseFloat(document.getElementById('edit-amount').value),
+        paymentStatus: document.getElementById('edit-payment-status').value,
+        dueDate: document.getElementById('edit-due-date').value
+    };
+    
+    if (!tuitionData.semester || !tuitionData.amount || !tuitionData.dueDate) {
+        showToast('请填写完整信息');
+        return;
     }
+    
+    apiRequest(`/api/tuitions/${tuitionId}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(tuitionData)
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        showToast('学费记录更新成功');
+        closeEditModal();
+        loadTuitionInfo();
+    })
+    .catch(err => {
+        console.error(err);
+        showToast('更新学费记录失败');
+    });
+}
+
+function deleteTuition(id) {
+    if (!confirm('确定要删除这条学费记录吗？')) {
+        return;
+    }
+    
+    apiRequest(`/api/tuitions/${id}`, {
+        method: 'DELETE'
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        showToast('学费记录删除成功');
+        loadTuitionInfo();
+    })
+    .catch(err => {
+        console.error(err);
+        showToast('删除学费记录失败');
+    });
 }
 
 function goBack() {

@@ -78,14 +78,14 @@ const API_ENDPOINTS = {
   MAKEUP_MY: `${API_BASE_URL}/api/makeup-exams/my`,
    
    // Tuition
-   TUITION: `${API_BASE_URL}/api/tuition`,
-   TUITION_BY_ID: (id) => `${API_BASE_URL}/api/tuition/${id}`,
-   TUITION_BY_STUDENT: (id) => `${API_BASE_URL}/api/tuition/student/${id}`,
-   TUITION_BY_STUDENT_NUMBER: (studentNumber) => `${API_BASE_URL}/api/tuition/student/number/${studentNumber}`,
-   TUITION_BY_SEMESTER: (semester) => `${API_BASE_URL}/api/tuition/semester/${semester}`,
-   TUITION_BY_STUDENT_AND_SEMESTER: (id, semester) => `${API_BASE_URL}/api/tuition/student/${id}/semester/${semester}`,
-   TUITION_BY_STUDENT_NUMBER_AND_SEMESTER: (studentNumber, semester) => `${API_BASE_URL}/api/tuition/student/number/${studentNumber}/semester/${semester}`,
-   TUITION_ALL: `${API_BASE_URL}/api/tuition/all`,
+   TUITION: `${API_BASE_URL}/api/tuitions`,
+   TUITION_BY_ID: (id) => `${API_BASE_URL}/api/tuitions/${id}`,
+   TUITION_BY_STUDENT: (id) => `${API_BASE_URL}/api/tuitions/student/${id}`,
+   TUITION_BY_STUDENT_NUMBER: (studentNumber) => `${API_BASE_URL}/api/tuitions/student/number/${studentNumber}`,
+   TUITION_BY_SEMESTER: (semester) => `${API_BASE_URL}/api/tuitions/semester/${semester}`,
+   TUITION_BY_STUDENT_AND_SEMESTER: (id, semester) => `${API_BASE_URL}/api/tuitions/student/${id}/semester/${semester}`,
+   TUITION_BY_STUDENT_NUMBER_AND_SEMESTER: (studentNumber, semester) => `${API_BASE_URL}/api/tuitions/student/number/${studentNumber}/semester/${semester}`,
+   TUITION_ALL: `${API_BASE_URL}/api/tuitions/all`,
    
    // Scholarship
    SCHOLARSHIP: `${API_BASE_URL}/api/scholarships`,

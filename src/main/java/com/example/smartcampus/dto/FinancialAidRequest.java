@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 public class FinancialAidRequest {
-    private Long studentId;
+    private String studentNumber;
     private BigDecimal amount;
     private String name;
     private String type;
@@ -14,12 +14,12 @@ public class FinancialAidRequest {
     private String reason;
     private Integer status;
 
-    public Long getStudentId() {
-        return studentId;
+    public String getStudentNumber() {
+        return studentNumber;
     }
 
-    public void setStudentId(Long studentId) {
-        this.studentId = studentId;
+    public void setStudentNumber(String studentNumber) {
+        this.studentNumber = studentNumber;
     }
 
     public BigDecimal getAmount() {

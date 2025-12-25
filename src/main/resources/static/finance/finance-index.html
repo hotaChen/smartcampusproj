@@ -2,27 +2,217 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>财务管理</title>
-    <script src="../js/api.js"></script>
-    <script src="/js/sidebar.js"></script>
+    <title>财务管理 - Egg University</title>
+    <link rel="stylesheet" href="../css/style.css?v=egg-final">
+    <link rel="stylesheet" href="../css/page.css?v=egg-final">
+    <link rel="stylesheet" href="../css/sidebar.css?v=egg-final">
 </head>
-<body>
-    <h1>财务管理模块</h1>
-    <div>
-        <a href="tuition-view.html">学费查询</a> |
-        <a href="tuition-manage.html">学费管理</a> |
-        <a href="payment-view.html">缴费记录</a> |
-        <a href="payment-manage.html">缴费记录管理</a> |
-        <a href="scholarship-view.html">奖学金查询</a> |
-        <a href="scholarship-manage.html">奖学金管理</a> |
-        <a href="financialaid-view.html">助学金查询</a> |
-        <a href="financialaid-manage.html">助学金管理</a> |
-        <a href="../index.html">返回首页</a>
+<body class="with-sidebar">
+<canvas id="bg"></canvas>
+<script src="../js/api.js"></script>
+<script src="../js/particles.js?v=egg-final"></script>
+<script src="../js/egg.js"></script>
+<script src="../js/sidebar.js"></script>
+<script src="../js/header.js"></script>
+
+<div id="header-container"></div>
+<div id="toast" class="toast"></div>
+
+<div class="page-content">
+    <h1 class="page-title">财务管理</h1>
+    
+    <div class="finance-card-container">
+        <a href="tuition-view.html" class="finance-card">
+            <div class="finance-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="1" x2="12" y2="23"/>
+                    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+                </svg>
+            </div>
+            <span class="finance-card-text">学费查询</span>
+        </a>
+        <a href="tuition-manage.html" class="finance-card teacher-only">
+            <div class="finance-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                    <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                </svg>
+            </div>
+            <span class="finance-card-text">学费管理</span>
+        </a>
+        <a href="payment-view.html" class="finance-card">
+            <div class="finance-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="1" y="4" width="22" height="16" rx="2" ry="2"/>
+                    <line x1="1" y1="10" x2="23" y2="10"/>
+                </svg>
+            </div>
+            <span class="finance-card-text">缴费记录</span>
+        </a>
+        <a href="scholarship-view.html" class="finance-card">
+            <div class="finance-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="8" r="7"/>
+                    <polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+                </svg>
+            </div>
+            <span class="finance-card-text">奖学金查询</span>
+        </a>
+        <a href="scholarship-manage.html" class="finance-card teacher-only">
+            <div class="finance-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                </svg>
+            </div>
+            <span class="finance-card-text">奖学金管理</span>
+        </a>
+        <a href="financialaid-view.html" class="finance-card">
+            <div class="finance-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+                </svg>
+            </div>
+            <span class="finance-card-text">助学金查询</span>
+        </a>
+        <a href="financialaid-manage.html" class="finance-card teacher-only">
+            <div class="finance-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                </svg>
+            </div>
+            <span class="finance-card-text">助学金管理</span>
+        </a>
+        <a href="../index.html" class="finance-card">
+            <div class="finance-card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                    <polyline points="9 22 9 12 15 12 15 22"/>
+                </svg>
+            </div>
+            <span class="finance-card-text">返回首页</span>
+        </a>
     </div>
+</div>
+
+<style>
+.finance-card-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 20px;
+    padding: 20px 0;
+}
+
+.finance-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 20px;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    text-decoration: none;
+    color: var(--text);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+.finance-card:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 40px rgba(16, 185, 129, 0.25);
+    border-color: rgba(16, 185, 129, 0.4);
+}
+
+.finance-card:active {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(16, 185, 129, 0.2);
+}
+
+.finance-card-icon {
+    width: 52px;
+    height: 52px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(167, 243, 208, 0.2), rgba(16, 185, 129, 0.3));
+    border-radius: 16px;
+    border: 1px solid rgba(167, 243, 208, 0.3);
+    transition: all 0.3s ease;
+}
+
+.finance-card:hover .finance-card-icon {
+    background: linear-gradient(135deg, rgba(167, 243, 208, 0.35), rgba(16, 185, 129, 0.45));
+    transform: scale(1.05);
+}
+
+.finance-card-icon svg {
+    width: 28px;
+    height: 28px;
+    stroke: #a7f3d0;
+    stroke-width: 2;
+    fill: none;
+}
+
+.finance-card-text {
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-align: center;
+    color: var(--text);
+}
+</style>
 
 <script>
+const FinanceIndexManager = {
+    currentUser: null,
+    
+    init: function() {
+        this.token = localStorage.getItem('token');
+        if (this.token) {
+            this.loadUserInfo();
+        }
+    },
+    
+    loadUserInfo: function() {
+        apiRequest(API_ENDPOINTS.USER_INFO + `?token=${this.token}`)
+            .then(resp => resp.json())
+            .then(user => {
+                this.currentUser = user;
+                this.updateMenuVisibility(user.userType);
+            })
+            .catch(err => {
+                console.error('加载用户信息失败', err);
+            });
+    },
+    
+    updateMenuVisibility: function(userType) {
+        if (!userType) return;
+        const userTypeUpper = userType.toUpperCase();
+        const isTeacherOrAdmin = (userTypeUpper === 'TEACHER' || userTypeUpper === 'ADMIN');
+        document.querySelectorAll('.teacher-only').forEach(item => {
+            item.style.display = isTeacherOrAdmin ? 'flex' : 'none';
+        });
+    }
+};
+
 document.addEventListener('DOMContentLoaded', function() {
-    SidebarManager.init({ currentPage: 'finance-index' });
+    SidebarManager.init({ 
+        currentPage: 'finance-index',
+        onReady: function(user) {
+            if (user && user.userType) {
+                FinanceIndexManager.updateMenuVisibility(user.userType);
+            }
+        }
+    });
+    HeaderComponent.init();
+    FinanceIndexManager.init();
 });
 </script>
 </body>

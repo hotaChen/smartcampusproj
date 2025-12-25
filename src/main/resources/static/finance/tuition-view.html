@@ -2,26 +2,191 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>学费查询</title>
-    <script src="../js/api.js"></script>
-    <script src="/js/sidebar.js"></script>
+    <title>学费查询 - Egg University</title>
+    <link rel="stylesheet" href="../css/style.css?v=egg-final">
+    <link rel="stylesheet" href="../css/page.css?v=egg-final">
+    <link rel="stylesheet" href="../css/sidebar.css?v=egg-final">
 </head>
-<body>
-    <h1>学费查询</h1>
+<body class="with-sidebar">
+<canvas id="bg"></canvas>
+<script src="../js/api.js"></script>
+<script src="../js/particles.js?v=egg-final"></script>
+<script src="../js/egg.js"></script>
+<script src="../js/sidebar.js"></script>
+<script src="../js/header.js"></script>
+
+<div id="header-container"></div>
+<div id="toast" class="toast"></div>
+
+<div class="page-content">
+    <h1 class="page-title">学费查询</h1>
     
-    <div>
-        <h2>我的学费信息</h2>
-        <div id="tuition-list">
-            <p>正在加载学费信息...</p>
+    <div class="toolbar">
+        <button class="btn secondary" onclick="goBack()">返回</button>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="1" x2="12" y2="23"/>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            <span>我的学费信息</span>
+        </div>
+        <div class="info-card-body">
+            <div id="tuition-list">
+                <div class="empty-state">正在加载学费信息...</div>
+            </div>
         </div>
     </div>
-    
-    <div>
-        <br>
-        <button onclick="goBack()">返回财务管理</button>
-    </div>
-    
+</div>
+
+<style>
+.info-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.info-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, rgba(167, 243, 208, 0.15), rgba(16, 185, 129, 0.1));
+    border-bottom: 1px solid rgba(167, 243, 208, 0.2);
+    font-size: 18px;
+    font-weight: 600;
+    color: #a7f3d0;
+}
+
+.info-card-header svg {
+    width: 24px;
+    height: 24px;
+    stroke: #10b981;
+    stroke-width: 2;
+    fill: none;
+}
+
+.info-card-body {
+    padding: 24px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.data-table th {
+    background: rgba(167, 243, 208, 0.1);
+    color: #a7f3d0;
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(167, 243, 208, 0.2);
+}
+
+.data-table th:first-child {
+    border-radius: 12px 0 0 0;
+}
+
+.data-table th:last-child {
+    border-radius: 0 12px 0 0;
+}
+
+.data-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    font-size: 14px;
+}
+
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tr:hover td {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.data-table .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-success {
+    background: rgba(16, 185, 129, 0.2);
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-error {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-pending {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-refunded {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.action-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+    color: #a7f3d0;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.action-btn:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3));
+    transform: translateY(-1px);
+}
+
+.action-btn:active {
+    transform: translateY(0);
+}
+</style>
+
 <script>
+function getStatusBadge(status) {
+    const statusMap = {
+        '已缴费': 'status-success',
+        '未缴费': 'status-error',
+        '待审核': 'status-pending',
+        '已退款': 'status-refunded'
+    };
+    return `<span class="status-badge ${statusMap[status] || 'status-pending'}">${status}</span>`;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     SidebarManager.init({ 
         currentPage: 'tuition-view',
@@ -29,27 +194,28 @@ document.addEventListener('DOMContentLoaded', function() {
             loadTuitionInfo(user);
         }
     });
+    HeaderComponent.init();
 });
 
 function loadTuitionInfo(user) {
     let url;
     if (user.userType === 'STUDENT') {
-        url = `/api/tuition/student/${user.id}`;
+        url = `/api/tuitions/student/${user.id}`;
     } else if (user.userType === 'TEACHER' || user.userType === 'ADMIN') {
-        url = '/api/tuition';
+        url = '/api/tuitions';
     }
     
     apiRequest(url)
         .then(resp => resp.json())
         .then(data => {
-            let html = '<table border="1" cellpadding="5" cellspacing="0">';
-            html += '<tr><th>学生姓名</th><th>学号</th><th>学期</th><th>学费金额</th><th>缴费状态</th><th>缴费截止日期</th>';
+            let html = '<table class="data-table"><thead><tr>';
+            html += '<th>学生姓名</th><th>学号</th><th>学期</th><th>学费金额</th><th>缴费状态</th><th>缴费截止日期</th>';
             
             if (user.userType === 'ADMIN' || user.userType === 'TEACHER') {
                 html += '<th>操作</th>';
             }
             
-            html += '</tr>';
+            html += '</tr></thead><tbody>';
             
             if (data && data.length > 0) {
                 data.forEach(tuition => {
@@ -57,28 +223,28 @@ function loadTuitionInfo(user) {
                         <td>${tuition.studentName || '-'}</td>
                         <td>${tuition.studentNumber || '-'}</td>
                         <td>${tuition.semester || '-'}</td>
-                        <td>${tuition.amount || '-'}</td>
-                        <td>${tuition.paymentStatus || '-'}</td>
-                        <td>${tuition.dueDate || '-'}</td>`;
+                        <td>${tuition.amount ? '¥' + tuition.amount : '-'}</td>
+                        <td>${getStatusBadge(tuition.paymentStatus || '未缴费')}</td>
+                        <td>${tuition.dueDate ? tuition.dueDate.split('T')[0] : '-'}</td>`;
                     
                     if (user.userType === 'ADMIN' || user.userType === 'TEACHER') {
                         html += `<td>
-                            <button onclick="viewPaymentRecords(${tuition.id})">查看缴费记录</button>
+                            <button class="action-btn" onclick="viewPaymentRecords(${tuition.id})">查看缴费记录</button>
                         </td>`;
                     }
                     
                     html += '</tr>';
                 });
             } else {
-                html += '<tr><td colspan="7">暂无学费记录</td></tr>';
+                html += '<tr><td colspan="7" class="empty-state">暂无学费记录</td></tr>';
             }
             
-            html += '</table>';
+            html += '</tbody></table>';
             document.getElementById('tuition-list').innerHTML = html;
         })
         .catch(err => {
             console.error(err);
-            document.getElementById('tuition-list').innerHTML = '<p style="color:red;">加载学费信息失败</p>';
+            document.getElementById('tuition-list').innerHTML = '<div class="empty-state" style="color: #f87171;">加载学费信息失败</div>';
         });
 }
 

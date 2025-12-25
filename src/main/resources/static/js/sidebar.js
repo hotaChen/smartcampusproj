@@ -199,8 +199,10 @@ function getSidebarHTML() {
 const SidebarManager = {
     currentUser: null,
     token: null,
+    options: {},
     
     init: function(options = {}) {
+        this.options = options;
         this.token = localStorage.getItem('token');
         this.currentPage = options.currentPage || '';
         
@@ -290,6 +292,9 @@ const SidebarManager = {
     
     loadUserInfo: function() {
         if (!this.token) {
+            if (typeof this.options.onReady === 'function') {
+                this.options.onReady(null);
+            }
             return;
         }
         
@@ -298,9 +303,15 @@ const SidebarManager = {
             .then(user => {
                 this.currentUser = user;
                 this.updateSidebarMenu(user.userType);
+                if (typeof this.options.onReady === 'function') {
+                    this.options.onReady(user);
+                }
             })
             .catch(err => {
                 console.error('加载用户信息失败', err);
+                if (typeof this.options.onReady === 'function') {
+                    this.options.onReady(null);
+                }
             });
     },
     

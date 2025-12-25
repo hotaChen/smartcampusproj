@@ -2,151 +2,419 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>助学金查询</title>
-    <script src="/js/sidebar.js"></script>
+    <title>助学金查询 - Egg University</title>
+    <link rel="stylesheet" href="../css/style.css?v=egg-final">
+    <link rel="stylesheet" href="../css/page.css?v=egg-final">
+    <link rel="stylesheet" href="../css/sidebar.css?v=egg-final">
 </head>
-<body>
-    <h1>助学金查询</h1>
+<body class="with-sidebar">
+<canvas id="bg"></canvas>
+<script src="../js/api.js"></script>
+<script src="../js/particles.js?v=egg-final"></script>
+<script src="../js/egg.js"></script>
+<script src="../js/sidebar.js"></script>
+<script src="../js/header.js"></script>
+
+<div id="header-container"></div>
+<div id="toast" class="toast"></div>
+
+<div class="page-content">
+    <h1 class="page-title">助学金查询</h1>
     
-    <div>
-        <h2>我的助学金信息</h2>
-        <div id="financialaid-list">
-            <p>正在加载助学金信息...</p>
+    <div class="toolbar">
+        <button class="btn secondary" onclick="goBack()">返回财务管理</button>
+    </div>
+
+    <div class="info-card">
+        <div class="info-card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+            </svg>
+            <span>我的助学金信息</span>
+        </div>
+        <div class="info-card-body">
+            <div id="financialaid-list">
+                <div class="empty-state">正在加载助学金信息...</div>
+            </div>
         </div>
     </div>
-    
-    <div>
-        <br>
-        <button onclick="goBack()">返回财务管理</button>
-    </div>
-    
-    <script src="/js/api.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            SidebarManager.init({ 
-                currentPage: 'financialaid-view',
-                onReady: function(user) {
-                    loadFinancialAidInfo(user);
-                }
-            });
-        });
+</div>
 
-        function loadFinancialAidInfo(user) {
-            let url;
-            if (user.userType === 'STUDENT') {
-                url = `/api/financial-aid/student/${user.id}`;
-            } else if (user.userType === 'TEACHER' || user.userType === 'ADMIN') {
-                url = '/api/financial-aid';
+<style>
+.info-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+.info-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, rgba(167, 243, 208, 0.15), rgba(16, 185, 129, 0.1));
+    border-bottom: 1px solid rgba(167, 243, 208, 0.2);
+    font-size: 18px;
+    font-weight: 600;
+    color: #a7f3d0;
+}
+
+.info-card-header svg {
+    width: 24px;
+    height: 24px;
+    stroke: #10b981;
+    stroke-width: 2;
+    fill: none;
+}
+
+.info-card-body {
+    padding: 24px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.data-table th {
+    background: rgba(167, 243, 208, 0.1);
+    color: #a7f3d0;
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(167, 243, 208, 0.2);
+}
+
+.data-table th:first-child {
+    border-radius: 12px 0 0 0;
+}
+
+.data-table th:last-child {
+    border-radius: 0 12px 0 0;
+}
+
+.data-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    font-size: 14px;
+}
+
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tr:hover td {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.data-table .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.status-success {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-error {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-pending {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.2));
+    color: #fcd34d;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.action-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin-right: 8px;
+}
+
+.action-btn.success {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.action-btn.success:hover {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3));
+}
+
+.action-btn.danger {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.action-btn.danger:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.3));
+}
+
+.action-btn.view {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(124, 58, 237, 0.2));
+    color: #c4b5fd;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+}
+
+.action-btn.view:hover {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(124, 58, 237, 0.3));
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.status-success {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-error {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-pending {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.2));
+    color: #fcd34d;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    SidebarManager.init({ 
+        currentPage: 'financialaid-view',
+        onReady: function(user) {
+            loadFinancialAidInfo(user);
+        }
+    });
+    HeaderComponent.init();
+});
+
+function loadFinancialAidInfo(user) {
+    let url;
+    if (user.userType === 'STUDENT') {
+        url = `/api/financial-aids/student/${user.id}`;
+    } else if (user.userType === 'TEACHER' || user.userType === 'ADMIN') {
+        url = '/api/financial-aids';
+    }
+    
+    apiRequest(url)
+        .then(resp => resp.json())
+        .then(data => {
+            let html = '<table class="data-table"><thead><tr>';
+            html += '<th>助学金类型</th><th>学生姓名</th><th>学号</th><th>金额</th><th>申请状态</th><th>申请日期</th><th>审批日期</th>';
+            
+            if (user.userType === 'ADMIN' || user.userType === 'TEACHER') {
+                html += '<th>操作</th>';
             }
             
-            apiRequest(url)
-                .then(resp => resp.json())
-                .then(data => {
-                    let html = '<table border="1" cellpadding="5" cellspacing="0">';
-                    html += '<tr><th>助学金类型</th><th>学生姓名</th><th>学号</th><th>金额</th><th>申请状态</th><th>申请日期</th><th>审批日期</th>';
+            html += '</tr></thead><tbody>';
+            
+            if (data && data.length > 0) {
+                data.forEach(financialAid => {
+                    const statusMap = {
+                        0: '待审批',
+                        1: '已批准',
+                        2: '已拒绝'
+                    };
+                    const statusText = statusMap[financialAid.status] || '未知';
+                    const statusClass = financialAid.status === 1 ? 'success' : financialAid.status === 2 ? 'error' : 'pending';
+                    
+                    const applicationDate = financialAid.createTime ? new Date(financialAid.createTime).toLocaleDateString('zh-CN') : '-';
+                    const approvalDate = financialAid.updateTime ? new Date(financialAid.updateTime).toLocaleDateString('zh-CN') : '-';
+                    
+                    html += `<tr>
+                        <td>${financialAid.type || financialAid.name || '-'}</td>
+                        <td>${financialAid.studentName || '-'}</td>
+                        <td>${financialAid.studentNumber || '-'}</td>
+                        <td>¥${financialAid.amount ? financialAid.amount.toFixed(2) : '-'}</td>
+                        <td><span class="status-badge status-${statusClass}">${statusText}</span></td>
+                        <td>${applicationDate}</td>
+                        <td>${approvalDate}</td>`;
                     
                     if (user.userType === 'ADMIN' || user.userType === 'TEACHER') {
-                        html += '<th>操作</th>';
+                        html += `<td>
+                            <button class="action-btn view" onclick="viewFinancialAid(${financialAid.id})">查看</button>
+                        </td>`;
                     }
                     
                     html += '</tr>';
-                    
-                    if (data && data.length > 0) {
-                        data.forEach(financialAid => {
-                            html += `<tr>
-                                <td>${financialAid.type || '-'}</td>
-                                <td>${financialAid.studentName || '-'}</td>
-                                <td>${financialAid.studentNumber || '-'}</td>
-                                <td>${financialAid.amount || '-'}</td>
-                                <td>${financialAid.status || '-'}</td>
-                                <td>${financialAid.applicationDate || '-'}</td>
-                                <td>${financialAid.approvalDate || '-'}</td>`;
-                            
-                            if (user.userType === 'ADMIN' || user.userType === 'TEACHER') {
-                                if (financialAid.status === '待审批') {
-                                    html += `<td>
-                                        <button onclick="approveFinancialAid(${financialAid.id})">审批</button>
-                                        <button onclick="rejectFinancialAid(${financialAid.id})">拒绝</button>
-                                    </td>`;
-                                } else {
-                                    html += '<td>-</td>';
-                                }
-                            }
-                            
-                            html += '</tr>';
-                        });
-                    } else {
-                        const colspan = user.userType === 'ADMIN' || user.userType === 'TEACHER' ? 8 : 7;
-                        html += `<tr><td colspan="${colspan}">暂无助学金记录</td></tr>`;
-                    }
-                    
-                    html += '</table>';
-                    document.getElementById('financialaid-list').innerHTML = html;
-                })
-                .catch(err => {
-                    console.error(err);
-                    document.getElementById('financialaid-list').innerHTML = '<p style="color:red;">加载助学金信息失败</p>';
                 });
-        }
-
-        function approveFinancialAid(id) {
-            const reason = prompt('请输入审批意见（可选）:');
-            const approvalData = {
-                status: '已批准',
-                approvalRemark: reason || '审批通过'
-            };
-            
-            apiRequest(`/api/financial-aid/${id}/approve`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(approvalData)
-            })
-            .then(resp => resp.json())
-            .then(data => {
-                alert('助学金审批成功');
-                SidebarManager.getUser().then(user => loadFinancialAidInfo(user));
-            })
-            .catch(err => {
-                console.error(err);
-                alert('助学金审批失败');
-            });
-        }
-
-        function rejectFinancialAid(id) {
-            const reason = prompt('请输入拒绝理由:');
-            if (!reason) {
-                alert('拒绝理由不能为空');
-                return;
+            } else {
+                const colspan = user.userType === 'ADMIN' || user.userType === 'TEACHER' ? 8 : 7;
+                html += `<tr><td colspan="${colspan}" class="empty-state">暂无助学金记录</td></tr>`;
             }
             
-            const approvalData = {
-                status: '已拒绝',
-                approvalRemark: reason
-            };
-            
-            apiRequest(`/api/financial-aid/${id}/approve`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(approvalData)
-            })
-            .then(resp => resp.json())
-            .then(data => {
-                alert('助学金已拒绝');
-                SidebarManager.getUser().then(user => loadFinancialAidInfo(user));
-            })
-            .catch(err => {
-                console.error(err);
-                alert('操作失败');
-            });
-        }
+            html += '</tbody></table>';
+            document.getElementById('financialaid-list').innerHTML = html;
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('financialaid-list').innerHTML = '<div class="empty-state" style="color: #f87171;">加载助学金信息失败</div>';
+        });
+}
 
-        function goBack() {
-            window.location.href = 'finance-index.html';
-        }
-    </script>
+function approveFinancialAid(id) {
+    const reason = prompt('请输入审批意见（可选）:');
+    const approvalData = {
+        status: 1,
+        approvalRemark: reason || '审批通过'
+    };
+    
+    apiRequest(`/api/financial-aids/${id}/approve`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(approvalData)
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        showToast('助学金审批成功');
+        SidebarManager.getUser().then(user => loadFinancialAidInfo(user));
+    })
+    .catch(err => {
+        console.error(err);
+        showToast('助学金审批失败');
+    });
+}
+
+function rejectFinancialAid(id) {
+    const reason = prompt('请输入拒绝理由:');
+    if (!reason) {
+        showToast('拒绝理由不能为空');
+        return;
+    }
+    
+    const approvalData = {
+        status: 2,
+        approvalRemark: reason
+    };
+    
+    apiRequest(`/api/financial-aids/${id}/approve`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(approvalData)
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        showToast('助学金已拒绝');
+        SidebarManager.getUser().then(user => loadFinancialAidInfo(user));
+    })
+    .catch(err => {
+        console.error(err);
+        showToast('操作失败');
+    });
+}
+
+function viewFinancialAid(id) {
+    apiRequest(`/api/financial-aids/${id}`)
+        .then(resp => resp.json())
+        .then(financialAid => {
+            const statusMap = {
+                0: '待审批',
+                1: '已批准',
+                2: '已拒绝'
+            };
+            const statusText = statusMap[financialAid.status] || '未知';
+            const applicationDate = financialAid.createTime ? new Date(financialAid.createTime).toLocaleDateString('zh-CN') : '-';
+            const approvalDate = financialAid.updateTime ? new Date(financialAid.updateTime).toLocaleDateString('zh-CN') : '-';
+            
+            const details = `
+                <div style="padding: 20px; color: var(--text);">
+                    <p><strong>助学金类型：</strong>${financialAid.type || financialAid.name || '-'}</p>
+                    <p><strong>学生姓名：</strong>${financialAid.studentName || '-'}</p>
+                    <p><strong>学号：</strong>${financialAid.studentNumber || '-'}</p>
+                    <p><strong>院系：</strong>${financialAid.department || '-'}</p>
+                    <p><strong>专业：</strong>${financialAid.major || '-'}</p>
+                    <p><strong>年级：</strong>${financialAid.grade || '-'}</p>
+                    <p><strong>班级：</strong>${financialAid.className || '-'}</p>
+                    <p><strong>金额：</strong>¥${financialAid.amount ? financialAid.amount.toFixed(2) : '-'}</p>
+                    <p><strong>学期：</strong>${financialAid.semester || '-'}</p>
+                    <p><strong>状态：</strong>${statusText}</p>
+                    <p><strong>申请日期：</strong>${applicationDate}</p>
+                    <p><strong>审批日期：</strong>${approvalDate}</p>
+                    <p><strong>申请理由：</strong>${financialAid.reason || '-'}</p>
+                    <p><strong>描述：</strong>${financialAid.description || '-'}</p>
+                </div>
+            `;
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.id = 'financialaid-modal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:9999;';
+            modal.innerHTML = `
+                <div style="background:rgba(30,41,59,0.95);border-radius:16px;padding:0;max-width:500px;width:90%;border:1px solid rgba(255,255,255,0.1);box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
+                    <div style="padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;">
+                        <h3 style="margin:0;color:#f1f5f9;font-size:18px;font-weight:600;">助学金详情</h3>
+                        <button onclick="closeFinancialAidModal()" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:24px;line-height:1;padding:0;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:4px;">&times;</button>
+                    </div>
+                    ${details}
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) closeFinancialAidModal(); });
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('获取助学金详情失败');
+        });
+}
+
+function goBack() {
+    window.location.href = 'finance-index.html';
+}
+
+function closeFinancialAidModal() {
+    const modal = document.getElementById('financialaid-modal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+function showToast(msg) {
+    const toast = document.getElementById("toast");
+    toast.textContent = msg;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 2500);
+}
+</script>
 </body>
 </html>

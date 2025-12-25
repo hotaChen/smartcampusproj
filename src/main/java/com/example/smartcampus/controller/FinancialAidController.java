@@ -38,12 +38,17 @@ public class FinancialAidController {
     @PreAuthorize("hasAuthority('financial_aid:create')")
     public ResponseEntity<FinancialAidResponse> createFinancialAid(@RequestBody FinancialAidRequest request) {
         logger.info("=== FinancialAidController.createFinancialAid() 被调用 ===");
-        logger.info("创建助学金记录: 学生ID={}, 助学金类型={}, 金额={}", 
-                request.getStudentId(), request.getType(), request.getAmount());
+        logger.info("创建助学金记录: 学号={}, 助学金类型={}, 金额={}", 
+                request.getStudentNumber(), request.getType(), request.getAmount());
 
         try {
             // 获取学生信息
-            User student = userService.getUserById(request.getStudentId());
+            Optional<User> studentOpt = userService.getUserByStudentId(request.getStudentNumber());
+            if (!studentOpt.isPresent()) {
+                logger.warn("未找到学生: 学号={}", request.getStudentNumber());
+                return ResponseEntity.badRequest().build();
+            }
+            User student = studentOpt.get();
             
             // 创建助学金记录
             FinancialAid financialAid = new FinancialAid();

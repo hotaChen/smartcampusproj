@@ -2,169 +2,546 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>奖学金管理</title>
-    <script src="/js/sidebar.js"></script>
+    <title>奖学金管理 - Egg University</title>
+    <link rel="stylesheet" href="../css/style.css?v=egg-final">
+    <link rel="stylesheet" href="../css/page.css?v=egg-final">
+    <link rel="stylesheet" href="../css/sidebar.css?v=egg-final">
 </head>
-<body>
-    <h1>奖学金管理</h1>
+<body class="with-sidebar">
+<canvas id="bg"></canvas>
+<script src="../js/api.js"></script>
+<script src="../js/particles.js?v=egg-final"></script>
+<script src="../js/egg.js"></script>
+<script src="../js/sidebar.js"></script>
+<script src="../js/header.js"></script>
+
+<div id="header-container"></div>
+<div id="toast" class="toast"></div>
+
+<div class="page-content">
+    <h1 class="page-title">奖学金管理</h1>
     
-    <div>
-        <h2>添加奖学金记录</h2>
-        <div>
-            <label>学生ID:</label>
-            <input type="number" id="studentId" placeholder="请输入学生ID">
-            <br>
-            <label>奖学金名称:</label>
-            <input type="text" id="name" placeholder="请输入奖学金名称">
-            <br>
-            <label>奖学金金额:</label>
-            <input type="number" id="amount" placeholder="请输入奖学金金额" step="0.01">
-            <br>
-            <label>申请原因:</label>
-            <textarea id="reason" placeholder="请输入申请原因"></textarea>
-            <br>
-            <label>申请状态:</label>
-            <select id="status">
-                <option value="待审批">待审批</option>
-                <option value="已批准">已批准</option>
-                <option value="已拒绝">已拒绝</option>
-            </select>
-            <br>
-            <button onclick="addScholarship()">添加奖学金记录</button>
+    <div class="toolbar">
+        <button class="btn secondary" onclick="goBack()">返回财务管理</button>
+    </div>
+
+    <div class="form-card">
+        <div class="form-card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <span>添加奖学金记录</span>
+        </div>
+        <div class="form-card-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>学生ID</label>
+                    <input type="number" id="studentId" class="input" placeholder="请输入学生ID">
+                </div>
+                <div class="form-group">
+                    <label>奖学金名称</label>
+                    <input type="text" id="name" class="input" placeholder="请输入奖学金名称">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>奖学金金额</label>
+                    <input type="number" id="amount" class="input" placeholder="请输入奖学金金额" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label>申请状态</label>
+                    <select id="status" class="input">
+                        <option value="待审批">待审批</option>
+                        <option value="已批准">已批准</option>
+                        <option value="已拒绝">已拒绝</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>申请原因</label>
+                <textarea id="reason" class="input textarea" placeholder="请输入申请原因"></textarea>
+            </div>
+            <div class="form-actions">
+                <button class="btn primary" onclick="addScholarship()">添加奖学金记录</button>
+            </div>
         </div>
     </div>
-    
-    <div>
-        <h2>奖学金记录列表</h2>
-        <div id="scholarship-list">
-            <p>正在加载奖学金信息...</p>
+
+    <div class="info-card">
+        <div class="info-card-header">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            <span>奖学金记录列表</span>
+        </div>
+        <div class="info-card-body">
+            <div id="scholarship-list">
+                <div class="empty-state">正在加载奖学金信息...</div>
+            </div>
         </div>
     </div>
-    
-    <div>
-        <br>
-        <button onclick="goBack()">返回财务管理</button>
-    </div>
-    
-    <script src="/js/api.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            SidebarManager.init({ 
-                currentPage: 'scholarship-manage',
-                onReady: function(user) {
-                    if (user.userType !== 'ADMIN') {
-                        document.querySelector('h1').innerHTML = '您没有权限访问此页面';
-                        document.querySelector('h1').style.color = 'red';
-                        return;
-                    }
-                    loadScholarshipInfo();
-                }
-            });
-        });
+</div>
 
-        function loadScholarshipInfo() {
-            apiRequest('/api/scholarships')
-                .then(resp => resp.json())
-                .then(data => {
-                    let html = '<table border="1" cellpadding="5" cellspacing="0">';
-                    html += '<tr><th>奖学金名称</th><th>学生姓名</th><th>学号</th><th>金额</th><th>申请状态</th><th>申请日期</th><th>审批日期</th><th>操作</th></tr>';
-                    
-                    if (data && data.length > 0) {
-                        data.forEach(scholarship => {
-                            html += `<tr>
-                                <td>${scholarship.name || '-'}</td>
-                                <td>${scholarship.studentName || '-'}</td>
-                                <td>${scholarship.studentNumber || '-'}</td>
-                                <td>${scholarship.amount || '-'}</td>
-                                <td>${scholarship.status || '-'}</td>
-                                <td>${scholarship.applicationDate || '-'}</td>
-                                <td>${scholarship.approvalDate || '-'}</td>
-                                <td>
-                                    <button onclick="editScholarship(${scholarship.id})">编辑</button>
-                                    <button onclick="deleteScholarship(${scholarship.id})">删除</button>
-                                </td>
-                            </tr>`;
-                        });
-                    } else {
-                        html += '<tr><td colspan="8">暂无奖学金记录</td></tr>';
-                    }
-                    
-                    html += '</table>';
-                    document.getElementById('scholarship-list').innerHTML = html;
-                })
-                .catch(err => {
-                    console.error(err);
-                    document.getElementById('scholarship-list').innerHTML = '<p style="color:red;">加载奖学金信息失败</p>';
-                });
-        }
+<style>
+.form-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+    margin-bottom: 24px;
+}
 
-        function addScholarship() {
-            const studentId = document.getElementById('studentId').value;
-            const name = document.getElementById('name').value;
-            const amount = document.getElementById('amount').value;
-            const reason = document.getElementById('reason').value;
-            const status = document.getElementById('status').value;
-            
-            if (!studentId || !name || !amount || !reason) {
-                alert('请填写完整信息');
+.form-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, rgba(167, 243, 208, 0.15), rgba(16, 185, 129, 0.1));
+    border-bottom: 1px solid rgba(167, 243, 208, 0.2);
+    font-size: 18px;
+    font-weight: 600;
+    color: #a7f3d0;
+}
+
+.form-card-header svg {
+    width: 24px;
+    height: 24px;
+    stroke: #10b981;
+    stroke-width: 2;
+    fill: none;
+}
+
+.form-card-body {
+    padding: 24px;
+}
+
+.info-card {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.info-card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, rgba(167, 243, 208, 0.15), rgba(16, 185, 129, 0.1));
+    border-bottom: 1px solid rgba(167, 243, 208, 0.2);
+    font-size: 18px;
+    font-weight: 600;
+    color: #a7f3d0;
+}
+
+.info-card-header svg {
+    width: 24px;
+    height: 24px;
+    stroke: #10b981;
+    stroke-width: 2;
+    fill: none;
+}
+
+.info-card-body {
+    padding: 24px;
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+.data-table th {
+    background: rgba(167, 243, 208, 0.1);
+    color: #a7f3d0;
+    padding: 14px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 14px;
+    border-bottom: 1px solid rgba(167, 243, 208, 0.2);
+}
+
+.data-table th:first-child {
+    border-radius: 12px 0 0 0;
+}
+
+.data-table th:last-child {
+    border-radius: 0 12px 0 0;
+}
+
+.data-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    font-size: 14px;
+}
+
+.data-table tr:last-child td {
+    border-bottom: none;
+}
+
+.data-table tr:hover td {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.data-table .empty-state {
+    text-align: center;
+    padding: 40px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.input {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.input:focus {
+    outline: none;
+    border-color: rgba(16, 185, 129, 0.5);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+select.input {
+    cursor: pointer;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a7f3d0' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.action-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin-right: 8px;
+    white-space: nowrap;
+}
+
+.action-btn.edit {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2));
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.action-btn.edit:hover {
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(37, 99, 235, 0.3));
+}
+
+.action-btn.delete {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.action-btn.delete:hover {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.3), rgba(220, 38, 38, 0.3));
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.status-success {
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+    color: #6ee7b7;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.status-error {
+    background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+    color: #fca5a5;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-pending {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.2), rgba(217, 119, 6, 0.2));
+    color: #fcd34d;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    SidebarManager.init({ 
+        currentPage: 'scholarship-manage',
+        onReady: function(user) {
+            if (user.userType !== 'ADMIN') {
+                document.querySelector('.page-title').innerHTML = '您没有权限访问此页面';
+                document.querySelector('.page-title').style.color = '#f87171';
+                document.querySelector('.page-content').style.display = 'none';
                 return;
             }
-            
-            const scholarshipData = {
-                studentId: parseInt(studentId),
-                name: name,
-                amount: parseFloat(amount),
-                reason: reason,
-                status: status
-            };
-            
-            apiRequest('/api/scholarships', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(scholarshipData)
-            })
-            .then(resp => resp.json())
-            .then(data => {
-                alert('奖学金记录添加成功');
-                document.getElementById('studentId').value = '';
-                document.getElementById('name').value = '';
-                document.getElementById('amount').value = '';
-                document.getElementById('reason').value = '';
-                document.getElementById('status').value = '待审批';
-                loadScholarshipInfo();
-            })
-            .catch(err => {
-                console.error(err);
-                alert('添加奖学金记录失败');
-            });
+            loadScholarshipInfo();
         }
+    });
+    HeaderComponent.init();
+});
 
-        function editScholarship(id) {
-            alert('编辑功能待实现');
-        }
-
-        function deleteScholarship(id) {
-            if (confirm('确定要删除这条奖学金记录吗？')) {
-                apiRequest(`/api/scholarships/${id}`, {
-                    method: 'DELETE'
-                })
-                .then(resp => resp.text())
-                .then(msg => {
-                    alert('奖学金记录删除成功');
-                    loadScholarshipInfo();
-                })
-                .catch(err => {
-                    console.error(err);
-                    alert('删除奖学金记录失败');
+function loadScholarshipInfo() {
+    apiRequest('/api/scholarships')
+        .then(resp => resp.json())
+        .then(data => {
+            let html = '<table class="data-table"><thead><tr>';
+            html += '<th>奖学金名称</th><th>学生姓名</th><th>学号</th><th>金额</th><th>奖学金类型</th><th>学期</th><th>状态</th><th>申请日期</th><th>操作</th></tr></thead><tbody>';
+            
+            if (data && data.length > 0) {
+                data.forEach(scholarship => {
+                    const statusClass = scholarship.statusDescription === '已批准' ? 'success' : scholarship.statusDescription === '已拒绝' ? 'error' : 'pending';
+                    const applicationDate = scholarship.createTime ? new Date(scholarship.createTime).toLocaleDateString('zh-CN') : '-';
+                    
+                    html += `<tr>
+                        <td>${scholarship.name || '-'}</td>
+                        <td>${scholarship.studentName || '-'}</td>
+                        <td>${scholarship.studentNumber || '-'}</td>
+                        <td>${scholarship.amount ? '¥' + scholarship.amount : '-'}</td>
+                        <td>${scholarship.type || '-'}</td>
+                        <td>${scholarship.semester || '-'}</td>
+                        <td><span class="status-badge status-${statusClass}">${scholarship.statusDescription || '-'}</span></td>
+                        <td>${applicationDate}</td>
+                        <td>
+                            <button class="action-btn edit" onclick="editScholarship(${scholarship.id})">编辑</button>
+                            <button class="action-btn delete" onclick="deleteScholarship(${scholarship.id})">删除</button>
+                        </td>
+                    </tr>`;
                 });
+            } else {
+                html += '<tr><td colspan="9" class="empty-state">暂无奖学金记录</td></tr>';
             }
-        }
+            
+            html += '</tbody></table>';
+            document.getElementById('scholarship-list').innerHTML = html;
+        })
+        .catch(err => {
+            console.error(err);
+            document.getElementById('scholarship-list').innerHTML = '<div class="empty-state" style="color: #f87171;">加载奖学金信息失败</div>';
+        });
+}
 
-        function goBack() {
-            window.location.href = 'finance-index.html';
-        }
-    </script>
+function getStatusCode(statusText) {
+    const statusMap = {
+        '待审批': 0,
+        '已批准': 1,
+        '已拒绝': 2
+    };
+    return statusMap[statusText] || 0;
+}
+
+function addScholarship() {
+    const studentId = document.getElementById('studentId').value;
+    const name = document.getElementById('name').value;
+    const amount = document.getElementById('amount').value;
+    const reason = document.getElementById('reason').value;
+    const status = getStatusCode(document.getElementById('status').value);
+    
+    if (!studentId || !name || !amount || !reason) {
+        showToast('请填写完整信息');
+        return;
+    }
+    
+    const scholarshipData = {
+        studentId: parseInt(studentId),
+        name: name,
+        amount: parseFloat(amount),
+        reason: reason,
+        status: status
+    };
+    
+    apiRequest('/api/scholarships', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(scholarshipData)
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        showToast('奖学金记录添加成功');
+        document.getElementById('studentId').value = '';
+        document.getElementById('name').value = '';
+        document.getElementById('amount').value = '';
+        document.getElementById('reason').value = '';
+        document.getElementById('status').value = '待审批';
+        loadScholarshipInfo();
+    })
+    .catch(err => {
+        console.error(err);
+        showToast('添加奖学金记录失败');
+    });
+}
+
+function editScholarship(id) {
+    apiRequest(`/api/scholarships/${id}`)
+        .then(resp => resp.json())
+        .then(scholarship => {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;z-index:1000;';
+            modal.innerHTML = `
+                <div style="background:rgba(30,41,59,0.95);border-radius:16px;padding:0;max-width:500px;width:90%;border:1px solid rgba(255,255,255,0.1);box-shadow:0 25px 50px -12px rgba(0,0,0,0.5);">
+                    <div style="padding:20px 24px;border-bottom:1px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:center;">
+                        <h3 style="margin:0;color:#f1f5f9;font-size:18px;font-weight:600;">编辑奖学金</h3>
+                        <button onclick="this.closest('.modal-overlay').remove()" style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:24px;line-height:1;">&times;</button>
+                    </div>
+                    <div style="padding:24px;">
+                        <div class="form-group">
+                            <label style="display:block;margin-bottom:8px;color:var(--text);font-weight:500;">奖学金名称</label>
+                            <input type="text" id="edit-name" class="input" value="${scholarship.name || ''}" style="width:100%;padding:12px 16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:var(--text);font-size:14px;">
+                        </div>
+                        <div class="form-row" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+                            <div class="form-group">
+                                <label style="display:block;margin-bottom:8px;color:var(--text);font-weight:500;">奖学金金额</label>
+                                <input type="number" id="edit-amount" class="input" value="${scholarship.amount || ''}" step="0.01" style="width:100%;padding:12px 16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:var(--text);font-size:14px;">
+                            </div>
+                            <div class="form-group">
+                                <label style="display:block;margin-bottom:8px;color:var(--text);font-weight:500;">申请状态</label>
+                                <select id="edit-status" class="input" style="width:100%;padding:12px 16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:var(--text);font-size:14px;cursor:pointer;appearance:none;background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23a7f3d0' d='M6 8L1 3h10z'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px;">
+                                    <option value="待审批" ${scholarship.statusDescription === '待审批' ? 'selected' : ''}>待审批</option>
+                                    <option value="已批准" ${scholarship.statusDescription === '已批准' ? 'selected' : ''}>已批准</option>
+                                    <option value="已拒绝" ${scholarship.statusDescription === '已拒绝' ? 'selected' : ''}>已拒绝</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label style="display:block;margin-bottom:8px;color:var(--text);font-weight:500;">申请原因</label>
+                            <textarea id="edit-reason" class="input textarea" style="width:100%;padding:12px 16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:12px;color:var(--text);font-size:14px;min-height:100px;resize:vertical;">${scholarship.reason || ''}</textarea>
+                        </div>
+                        <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;">
+                            <button onclick="this.closest('.modal-overlay').remove()" class="btn secondary" style="padding:12px 24px;border-radius:12px;border:none;cursor:pointer;font-size:14px;font-weight:500;background:rgba(255,255,255,0.1);color:var(--text);">取消</button>
+                            <button onclick="saveScholarship(${scholarship.id}, ${scholarship.studentId})" class="btn primary" style="padding:12px 24px;border-radius:12px;border:none;cursor:pointer;font-size:14px;font-weight:500;background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(5,150,105,0.2));color:#6ee7b7;border:1px solid rgba(16,185,129,0.3);">保存</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            modal.addEventListener('click', (e) => { if (e.target === modal) modal.remove(); });
+        })
+        .catch(err => {
+            console.error(err);
+            showToast('获取奖学金信息失败');
+        });
+}
+
+function saveScholarship(id, studentId) {
+    const name = document.getElementById('edit-name').value;
+    const amount = document.getElementById('edit-amount').value;
+    const status = getStatusCode(document.getElementById('edit-status').value);
+    const reason = document.getElementById('edit-reason').value;
+    
+    if (!name || !amount || !reason) {
+        showToast('请填写完整信息');
+        return;
+    }
+    
+    const scholarshipData = {
+        studentId: studentId,
+        name: name,
+        amount: parseFloat(amount),
+        reason: reason,
+        status: status
+    };
+    
+    apiRequest(`/api/scholarships/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(scholarshipData)
+    })
+    .then(resp => resp.json())
+    .then(data => {
+        showToast('奖学金记录更新成功');
+        document.querySelector('.modal-overlay')?.remove();
+        loadScholarshipInfo();
+    })
+    .catch(err => {
+        console.error(err);
+        showToast('更新奖学金记录失败');
+    });
+}
+
+function deleteScholarship(id) {
+    if (!confirm('确定要删除这条奖学金记录吗？')) return;
+    apiRequest(`/api/scholarships/${id}`, {
+        method: 'DELETE'
+    })
+    .then(resp => resp.text())
+    .then(msg => {
+        showToast('奖学金记录删除成功');
+        loadScholarshipInfo();
+    })
+    .catch(err => {
+        console.error(err);
+        showToast('删除奖学金记录失败');
+    });
+}
+
+function goBack() {
+    window.location.href = 'finance-index.html';
+}
+
+function showToast(msg) {
+    const toast = document.getElementById("toast");
+    toast.textContent = msg;
+    toast.classList.add("show");
+    setTimeout(() => toast.classList.remove("show"), 2500);
+}
+</script>
 </body>
 </html>
