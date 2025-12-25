@@ -3,6 +3,7 @@ package com.example.smartcampus.service.impl;
 import com.example.smartcampus.dto.MakeupExamApprovalRequest;
 import com.example.smartcampus.dto.MakeupExamGradeRequest;
 import com.example.smartcampus.dto.MakeupExamRequest;
+import com.example.smartcampus.dto.MakeupExamScheduleRequest;
 import com.example.smartcampus.entity.Grade;
 import com.example.smartcampus.entity.MakeupExam;
 import com.example.smartcampus.entity.User;
@@ -31,6 +32,49 @@ public class MakeupExamServiceImpl implements MakeupExamService {
         this.makeupExamRepository = makeupExamRepository;
         this.gradeRepository = gradeRepository;
         this.userRepository = userRepository;
+    }
+
+    @Override
+    public MakeupExam scheduleMakeupExam(MakeupExamScheduleRequest request) {
+        // 获取学生信息
+        User student = userRepository.findByStudentId(request.getStudentId())
+                .orElseThrow(() -> new RuntimeException("学生不存在，学号: " + request.getStudentId()));
+        
+        // 创建补考记录
+        MakeupExam makeupExam = new MakeupExam();
+        makeupExam.setStudent(student);
+        makeupExam.setCourseCode(request.getCourseCode());
+        makeupExam.setCourseName(request.getCourseName());
+        makeupExam.setMakeupDate(request.getMakeupDate());
+        makeupExam.setMakeupLocation(request.getMakeupLocation());
+        makeupExam.setOriginalScore(request.getOriginalScore());
+        makeupExam.setSemester(request.getSemester());
+        makeupExam.setStatus("待考");
+        makeupExam.setApplyTime(LocalDateTime.now());
+        
+        if (request.getExamDate() != null) {
+            makeupExam.setExamDate(request.getExamDate());
+        }
+        
+        if (request.getExamLocation() != null) {
+            makeupExam.setExamLocation(request.getExamLocation());
+        }
+        
+        if (request.getOriginalGrade() != null) {
+            makeupExam.setOriginalGrade(request.getOriginalGrade());
+        }
+        
+        if (request.getOriginalGradeId() != null) {
+            makeupExam.setOriginalGradeId(request.getOriginalGradeId());
+        }
+        
+        if (request.getTeacherId() != null) {
+            User teacher = userRepository.findById(request.getTeacherId())
+                    .orElseThrow(() -> new RuntimeException("教师不存在，ID: " + request.getTeacherId()));
+            makeupExam.setTeacher(teacher);
+        }
+        
+        return makeupExamRepository.save(makeupExam);
     }
 
     @Override
@@ -192,5 +236,52 @@ public class MakeupExamServiceImpl implements MakeupExamService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    @Override
+    public MakeupExam updateMakeupExam(Long makeupExamId, MakeupExamScheduleRequest request) {
+        MakeupExam makeupExam = makeupExamRepository.findById(makeupExamId)
+                .orElseThrow(() -> new RuntimeException("补考记录不存在"));
+
+        if (request.getCourseCode() != null) {
+            makeupExam.setCourseCode(request.getCourseCode());
+        }
+        if (request.getCourseName() != null) {
+            makeupExam.setCourseName(request.getCourseName());
+        }
+        if (request.getSemester() != null) {
+            makeupExam.setSemester(request.getSemester());
+        }
+        if (request.getMakeupDate() != null) {
+            makeupExam.setMakeupDate(request.getMakeupDate());
+        }
+        if (request.getMakeupLocation() != null) {
+            makeupExam.setMakeupLocation(request.getMakeupLocation());
+        }
+        if (request.getExamDate() != null) {
+            makeupExam.setExamDate(request.getExamDate());
+        }
+        if (request.getExamLocation() != null) {
+            makeupExam.setExamLocation(request.getExamLocation());
+        }
+        if (request.getOriginalGrade() != null) {
+            makeupExam.setOriginalGrade(request.getOriginalGrade());
+        }
+        if (request.getOriginalScore() != null) {
+            makeupExam.setOriginalScore(request.getOriginalScore());
+        }
+        if (request.getStudentId() != null) {
+            User student = userRepository.findByStudentId(request.getStudentId())
+                    .orElseThrow(() -> new RuntimeException("学生不存在，学号: " + request.getStudentId()));
+            makeupExam.setStudent(student);
+        }
+        if (request.getTeacherId() != null) {
+            User teacher = userRepository.findById(request.getTeacherId())
+                    .orElseThrow(() -> new RuntimeException("教师不存在，ID: " + request.getTeacherId()));
+            makeupExam.setTeacher(teacher);
+        }
+
+        makeupExam.setUpdateTime(LocalDateTime.now());
+        return makeupExamRepository.save(makeupExam);
     }
 }

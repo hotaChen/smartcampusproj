@@ -63,8 +63,15 @@ const API_ENDPOINTS = {
   GRADES_COURSE_AVERAGE: (courseCode, semester) => `${API_BASE_URL}/api/grades/course/${courseCode}/average/${semester}`,
   GRADES_REPORT: (id) => `${API_BASE_URL}/api/grades/report/${id}`,
   GRADES_REPORT_BY_STUDENT_NUMBER: (studentNumber) => `${API_BASE_URL}/api/grades/report/student/number/${studentNumber}`,
-  GRADES_MY_REPORT: `${API_BASE_URL}/api/grades/report/my`,  
+  GRADES_MY_REPORT: `${API_BASE_URL}/api/grades/report/my`,
+  MY_GRADES_REPORT: `${API_BASE_URL}/api/grades/report/my`,
+  GRADES_BY_STUDENT_NUMBER_COURSE: (studentNumber, courseCode) => 
+    `${API_BASE_URL}/api/grades/student/number/${studentNumber}/course/${courseCode}`,
+  GRADES_BY_STUDENT_NUMBER_COURSE_SEMESTER: (studentNumber, courseCode, semester) => 
+    `${API_BASE_URL}/api/grades/student/number/${studentNumber}/course/${courseCode}?semester=${semester}`,
   // Makeup Exams
+  MAKEUP_EXAMS: `${API_BASE_URL}/api/makeup-exams`,
+  MY_MAKEUP_EXAMS: `${API_BASE_URL}/api/makeup-exams/my`,
   MAKEUP_APPLY: `${API_BASE_URL}/api/makeup-exams/apply`,
   MAKEUP_APPROVE: (id) => `${API_BASE_URL}/api/makeup-exams/${id}/approve`,
   MAKEUP_GRADE: (id) => `${API_BASE_URL}/api/makeup-exams/${id}/grade`,

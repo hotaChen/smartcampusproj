@@ -279,9 +279,9 @@ function generateGradeReport() {
         return;
     }
     
-    let url = `${API_ENDPOINTS.GRADES}/report?studentId=${studentId}`;
+    let url = API_ENDPOINTS.GRADES_REPORT_BY_STUDENT_NUMBER(studentId);
     if (semester) {
-        url += `&semester=${semester}`;
+        url += `?semester=${semester}`;
     }
     
     apiRequest(url)
@@ -318,15 +318,19 @@ function displayGradeReport(data) {
     const reportDiv = document.getElementById('gradeReportContent');
     reportDiv.style.display = 'block';
     
-    if (data.code === 200 && data.data) {
-        const report = data.data;
+    const report = data.data || data;
+    
+    if (report && (report.courseGrades || report.courses) && report.courseGrades?.length > 0) {
         const html = `
             <div class="report-header">
                 <h2>成绩单</h2>
             </div>
             <div class="report-info">
-                <p><strong>学号:</strong> <span>${report.studentId}</span></p>
+                <p><strong>学号:</strong> <span>${report.studentIdNumber || report.studentId}</span></p>
                 <p><strong>姓名:</strong> <span>${report.studentName || '未知'}</span></p>
+                <p><strong>院系:</strong> <span>${report.department || '-'}</span></p>
+                <p><strong>专业:</strong> <span>${report.major || '-'}</span></p>
+                <p><strong>班级:</strong> <span>${report.className || '-'}</span></p>
                 <p><strong>学期:</strong> <span>${report.semester || '所有学期'}</span></p>
                 <p><strong>生成时间:</strong> <span>${new Date().toLocaleString()}</span></p>
             </div>
@@ -342,14 +346,14 @@ function displayGradeReport(data) {
                     </tr>
                 </thead>
                 <tbody>
-                    ${report.courses.map(course => `
+                    ${(report.courseGrades || report.courses || []).map(course => `
                         <tr>
                             <td>${course.courseCode}</td>
                             <td>${course.courseName}</td>
                             <td>${course.credit}</td>
                             <td>${course.score}</td>
                             <td>${course.gradeLevel}</td>
-                            <td>${course.semester}</td>
+                            <td>${report.semester}</td>
                         </tr>
                     `).join('')}
                 </tbody>
@@ -366,6 +370,10 @@ function displayGradeReport(data) {
                 <div class="summary-item">
                     <div class="label">已通过学分</div>
                     <div class="value">${report.passedCredits || 0}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">通过率</div>
+                    <div class="value">${report.passRate ? report.passRate.toFixed(1) + '%' : '-'}</div>
                 </div>
             </div>
             <div class="report-actions">

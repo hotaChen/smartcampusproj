@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/grades")
@@ -372,6 +373,42 @@ public class GradeController {
             
             GradeReportDTO report = gradeService.generateGradeReport(student.getId(), semester);
             return ResponseEntity.ok(report);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * 根据学号和课程代码查询成绩
+     */
+    @GetMapping("/student/number/{studentNumber}/course/{courseCode}")
+    @PreAuthorize("hasAnyRole('STUDENT', 'TEACHER', 'ADMIN')")
+    @Operation(summary = "根据学号和课程代码查询成绩", description = "根据学号和课程代码查询原始成绩，用于补考安排")
+    public ResponseEntity<?> getGradeByStudentNumberAndCourseCode(@PathVariable String studentNumber,
+                                                                  @PathVariable String courseCode,
+                                                                  @RequestParam(required = false) String semester) {
+        try {
+            User currentUser = getCurrentUser();
+            
+            // 学生只能查看自己的成绩
+            if ("STUDENT".equals(currentUser.getUserType()) && !currentUser.getStudentId().equals(studentNumber)) {
+                return ResponseEntity.status(403).body("无权限查看其他学生的成绩");
+            }
+            
+            List<Grade> grades;
+            if (semester != null && !semester.isEmpty()) {
+                grades = gradeService.getStudentGradesByStudentIdAndSemester(studentNumber, semester);
+                grades = grades.stream()
+                        .filter(g -> g.getCourseCode().equals(courseCode))
+                        .collect(Collectors.toList());
+            } else {
+                grades = gradeService.getGradesByStudentStudentId(studentNumber);
+                grades = grades.stream()
+                        .filter(g -> g.getCourseCode().equals(courseCode))
+                        .collect(Collectors.toList());
+            }
+            
+            return ResponseEntity.ok(grades);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

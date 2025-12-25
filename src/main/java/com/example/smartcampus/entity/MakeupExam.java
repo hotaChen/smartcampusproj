@@ -30,6 +30,12 @@ public class MakeupExam {
     @Column(nullable = false)
     private String examLocation;    // 考试地点
 
+    private LocalDateTime makeupDate;  // 补考日期
+
+    private String makeupLocation;    // 补考地点
+
+    private Double originalScore;   // 原始成绩分数
+
     @Column(nullable = false)
     private String originalGrade;   // 原始成绩等级
 
@@ -47,7 +53,7 @@ public class MakeupExam {
     private User student;          // 学生
 
     @ManyToOne
-    @JoinColumn(name = "teacher_id", nullable = false)
+    @JoinColumn(name = "teacher_id", nullable = true)
     private User teacher;          // 教师
 
     @Column(length = 1000)

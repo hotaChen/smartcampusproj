@@ -85,22 +85,27 @@ function calculateStudentAverage() {
         return;
     }
     
-    apiRequest(`${API_ENDPOINTS.GRADES}/average?studentId=${studentId}&semester=${semester}`)
+    apiRequest(`${API_ENDPOINTS.GRADES}/student/number/${studentId}/average/${semester}`)
     .then(resp => resp.json())
     .then(data => {
         const resultDiv = document.getElementById('statsResult');
         resultDiv.style.display = 'block';
         
-        if (data.code === 200 && data.data) {
+        let averageScore = data;
+        if (data && data.code === 200 && data.data) {
+            averageScore = data.data;
+        }
+        
+        if (averageScore !== null && averageScore !== undefined) {
             resultDiv.innerHTML = `
                 <div class="stats-card">
                     <h3>学生成绩统计</h3>
                     <p><strong>学号:</strong> <span class="stat-value">${studentId}</span></p>
                     <p><strong>学期:</strong> <span class="stat-value">${semester}</span></p>
-                    <p><strong>平均分:</strong> <span class="stat-highlight">${data.data.averageScore.toFixed(2)}</span></p>
-                    <p><strong>最高分:</strong> <span class="stat-value">${data.data.maxScore}</span></p>
-                    <p><strong>最低分:</strong> <span class="stat-value">${data.data.minScore}</span></p>
-                    <p><strong>课程数:</strong> <span class="stat-value">${data.data.courseCount}</span></p>
+                    <p><strong>平均分:</strong> <span class="stat-highlight">${Number(averageScore).toFixed(2)}</span></p>
+                    <p><strong>最高分:</strong> <span class="stat-value">-</span></p>
+                    <p><strong>最低分:</strong> <span class="stat-value">-</span></p>
+                    <p><strong>课程数:</strong> <span class="stat-value">-</span></p>
                 </div>
             `;
         } else {
@@ -123,7 +128,7 @@ function calculateCourseAverage() {
         return;
     }
     
-    apiRequest(`${API_ENDPOINTS.GRADES}/courseAverage?courseCode=${courseCode}&semester=${semester}`)
+    apiRequest(`${API_ENDPOINTS.GRADES}/course/${courseCode}/average/${semester}`)
     .then(resp => resp.json())
     .then(data => {
         const resultDiv = document.getElementById('statsResult');

@@ -3,12 +3,20 @@ package com.example.smartcampus.service;
 import com.example.smartcampus.dto.MakeupExamApprovalRequest;
 import com.example.smartcampus.dto.MakeupExamGradeRequest;
 import com.example.smartcampus.dto.MakeupExamRequest;
+import com.example.smartcampus.dto.MakeupExamScheduleRequest;
 import com.example.smartcampus.entity.MakeupExam;
 
 import java.util.List;
 import java.util.Optional;
 
 public interface MakeupExamService {
+
+    /**
+     * 教师/管理员直接安排补考
+     * @param request 补考安排请求
+     * @return 创建的补考记录
+     */
+    MakeupExam scheduleMakeupExam(MakeupExamScheduleRequest request);
 
     /**
      * 学生申请补考
@@ -116,4 +124,12 @@ public interface MakeupExamService {
      * @return 是否删除成功
      */
     boolean deleteMakeupExam(Long makeupExamId, Long teacherId);
+
+    /**
+     * 更新补考记录
+     * @param makeupExamId 补考记录ID
+     * @param request 更新请求
+     * @return 更新后的补考记录
+     */
+    MakeupExam updateMakeupExam(Long makeupExamId, MakeupExamScheduleRequest request);
 }

@@ -115,7 +115,7 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
      * @param semester 学期
      * @return 平均分
      */
-    @Query("SELECT AVG(g.score) FROM Grade g WHERE g.student.studentId = :studentNumber AND g.semester = :semester")
+    @Query("SELECT AVG(g.score) FROM Grade g WHERE g.student.studentId = :studentNumber AND g.semester = :semester AND g.status = 1")
     Float calculateAverageScoreByStudentNumberAndSemester(@Param("studentNumber") String studentNumber, @Param("semester") String semester);
 
     /**
@@ -124,7 +124,7 @@ public interface GradeRepository extends JpaRepository<Grade, Long> {
      * @param semester 学期
      * @return 课程数量
      */
-    @Query("SELECT COUNT(g) FROM Grade g WHERE g.student.studentId = :studentNumber AND g.semester = :semester")
+    @Query("SELECT COUNT(g) FROM Grade g WHERE g.student.studentId = :studentNumber AND g.semester = :semester AND g.status = 1")
     Long countCoursesByStudentNumberAndSemester(@Param("studentNumber") String studentNumber, @Param("semester") String semester);
 
     /**

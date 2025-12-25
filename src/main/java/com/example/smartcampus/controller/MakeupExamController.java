@@ -3,6 +3,7 @@ package com.example.smartcampus.controller;
 import com.example.smartcampus.dto.MakeupExamApprovalRequest;
 import com.example.smartcampus.dto.MakeupExamGradeRequest;
 import com.example.smartcampus.dto.MakeupExamRequest;
+import com.example.smartcampus.dto.MakeupExamScheduleRequest;
 import com.example.smartcampus.entity.MakeupExam;
 import com.example.smartcampus.entity.User;
 import com.example.smartcampus.service.MakeupExamService;
@@ -40,6 +41,37 @@ public class MakeupExamController {
         String username = authentication.getName();
         return userService.getUserByUsername(username)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
+    }
+
+    /**
+     * 教师/管理员直接安排补考
+     */
+    @PostMapping
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @Operation(summary = "安排补考", description = "教师或管理员直接安排补考")
+    public ResponseEntity<?> scheduleMakeupExam(@Valid @RequestBody MakeupExamScheduleRequest request) {
+        try {
+            MakeupExam makeupExam = makeupExamService.scheduleMakeupExam(request);
+            return ResponseEntity.ok(makeupExam);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * 教师/管理员更新补考记录
+     */
+    @PutMapping("/{makeupExamId}")
+    @PreAuthorize("hasAnyRole('TEACHER', 'ADMIN')")
+    @Operation(summary = "更新补考记录", description = "教师或管理员更新补考记录")
+    public ResponseEntity<?> updateMakeupExam(@PathVariable Long makeupExamId,
+                                               @Valid @RequestBody MakeupExamScheduleRequest request) {
+        try {
+            MakeupExam makeupExam = makeupExamService.updateMakeupExam(makeupExamId, request);
+            return ResponseEntity.ok(makeupExam);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     /**
