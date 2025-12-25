@@ -10,46 +10,256 @@
     <link rel="stylesheet" href="/css/sidebar.css?v=egg-final">
     
     <style>
-        .user-info-header {
-            position: fixed;
-            top: 20px;
-            right: 80px;
+        .user-profile-modal .modal-content {
+            width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .user-profile-header {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 8px 16px;
-            background: rgba(255,255,255,0.08);
-            border-radius: 30px;
-            backdrop-filter: blur(10px);
+            gap: 20px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 15px;
         }
-        .user-info-header[data-hidden="true"] {
-            display: none !important;
-        }
-        .user-avatar {
-            width: 40px;
-            height: 40px;
+        .user-profile-avatar {
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             background: linear-gradient(135deg, #fde68a, #f59e0b);
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 28px;
             color: #3a2a14;
         }
-        .user-details {
+        .user-profile-info h3 {
+            margin: 0 0 5px 0;
+            font-size: 20px;
+        }
+        .user-profile-info .user-type {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(245,158,11,0.3);
+            border-radius: 20px;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+        .user-profile-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .detail-item {
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        .detail-item label {
+            display: block;
+            font-size: 11px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 4px;
+        }
+        .detail-item span {
+            font-size: 14px;
+        }
+        .user-profile-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        .user-profile-actions button {
+            flex: 1;
+            min-width: 120px;
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: inherit;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .user-profile-actions button:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .close-modal-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.1);
+            color: inherit;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .close-modal-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .main-dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            width: calc(100% - 340px);
+            max-width: none;
+            padding: 20px 40px 20px 20px;
+            position: absolute;
+            left: 330px;
+            top: 120px;
+        }
+        .dashboard-card {
+            background: var(--card);
+            border-radius: 22px;
+            padding: 24px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .dashboard-card h3 {
+            margin: 0 0 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 18px;
+        }
+        .dashboard-card h3 .icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+        }
+        .notification-item {
+            padding: 15px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid #f59e0b;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .notification-item:hover {
+            background: rgba(255,255,255,0.08);
+            transform: translateX(5px);
+        }
+        .notification-item:last-child {
+            margin-bottom: 0;
+        }
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 14px;
+        }
+        .notification-content {
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+        .notification-time {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+        }
+        .notification-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background: rgba(239,68,68,0.3);
+            border-radius: 10px;
+            font-size: 10px;
+            margin-left: 8px;
+        }
+        .timetable-preview {
+            overflow-x: auto;
+        }
+        .timetable-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+        .timetable-table th {
+            padding: 8px 4px;
+            background: rgba(245,158,11,0.2);
+            border-radius: 8px;
+            font-weight: 600;
+        }
+        .timetable-table td {
+            padding: 8px 4px;
+            text-align: center;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.03);
+            margin: 2px;
+        }
+        .timetable-table .course-cell {
+            background: linear-gradient(135deg, rgba(245,158,11,0.3), rgba(245,158,11,0.1));
+            font-weight: 500;
+            font-size: 11px;
+            padding: 6px 4px;
+        }
+        .quick-actions {
+            grid-column: 1 / -1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+        .quick-action-btn {
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            align-items: center;
+            gap: 10px;
+            padding: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: inherit;
         }
-        .user-name {
-            font-weight: 600;
+        .quick-action-btn:hover {
+            background: rgba(255,255,255,0.1);
+            transform: translateY(-5px);
+            border-color: rgba(245,158,11,0.5);
+        }
+        .quick-action-btn .icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        .quick-action-btn .icon svg {
+            width: 100%;
+            height: 100%;
+        }
+        .quick-action-btn span {
             font-size: 14px;
-            color: #fff7ed;
+            font-weight: 500;
         }
-        .user-dept {
-            font-size: 12px;
-            color: rgba(255,255,255,0.6);
+        .empty-state {
+            text-align: center;
+            padding: 30px;
+            color: rgba(255,255,255,0.4);
+        }
+        .login-box {
+            display: none;
         }
     </style>
 </head>
@@ -66,16 +276,37 @@
 
 <div id="header-container"></div>
 
-<div class="login-box card">
-    <div class="user-info" id="user-info" style="width: 100%;">
-        <p>正在加载用户信息...</p>
+<div class="user-info-header" id="user-info-header" data-hidden="true" onclick="openUserProfile()">
+    <div class="user-avatar" id="avatar-text">?</div>
+    <div class="user-details">
+        <div class="user-name" id="user-name">加载中...</div>
+        <div class="user-dept" id="user-dept">...</div>
     </div>
 </div>
 
-<div id="toast" class="toast"></div>
+<!-- 用户信息弹窗 -->
+<div class="modal user-profile-modal" id="userProfileModal" onclick="closeUserProfile(event)">
+    <div class="modal-content card" style="position: relative;">
+        <button class="close-modal-btn" onclick="closeUserProfileModal()">&times;</button>
+        <div class="user-profile-header">
+            <div class="user-profile-avatar" id="profile-avatar">?</div>
+            <div class="user-profile-info">
+                <h3 id="profile-name">用户名</h3>
+                <span class="user-type" id="profile-userType">学生</span>
+            </div>
+        </div>
+        <div class="user-profile-details" id="profile-details">
+            <!-- 用户详细信息将通过JS填充 -->
+        </div>
+        <div class="user-profile-actions">
+            <button onclick="openChangePassword()">修改密码</button>
+            <button onclick="logout()">退出登录</button>
+        </div>
+    </div>
+</div>
 
 <!-- 修改密码弹窗 -->
-<div class="modal" id="changePasswordModal">
+<div class="modal" id="changePasswordModal" onclick="closeChangePasswordModal(event)">
     <div class="modal-content card">
         <h3>修改密码</h3>
         <input type="password" id="oldPassword" placeholder="旧密码" class="input"><br>
@@ -87,7 +318,7 @@
 </div>
 
 <!-- 管理员重置密码弹窗 -->
-<div class="modal" id="resetPasswordModal">
+<div class="modal" id="resetPasswordModal" onclick="closeResetPasswordModal(event)">
     <div class="modal-content card">
         <h3>重置用户密码（管理员）</h3>
         <input type="text" id="resetUsername" placeholder="用户名" class="input"><br>
@@ -97,6 +328,66 @@
         <p id="resetPasswordMsg"></p>
     </div>
 </div>
+
+<!-- 主仪表盘 -->
+<div class="main-dashboard" id="mainDashboard">
+    <!-- 通知区域 -->
+    <div class="dashboard-card">
+        <h3><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><path d="M22 17H2a3 3 0 0 0 3-3V9a7 7 0 0 1 14 0v5a3 3 0 0 0 3 3zm-8.27 4a2 2 0 0 1-3.46 0"/></svg></span> 系统通知</h3>
+        <div id="notificationList">
+            <div class="empty-state">暂无通知</div>
+        </div>
+    </div>
+    
+    <!-- 课表预览 -->
+    <div class="dashboard-card">
+        <h3><span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:20px;height:20px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span> 今日课表</h3>
+        <div class="timetable-preview" id="timetablePreview">
+            <div class="empty-state">加载课表中...</div>
+        </div>
+    </div>
+    
+    <!-- 快捷功能 -->
+    <div class="dashboard-card quick-actions">
+        <a href="../classroom/appointment.html" class="quick-action-btn">
+            <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+            <span>教室预约</span>
+        </a>
+        <a href="../timetable/studenttimetable.html" class="quick-action-btn" id="studentTimetableBtn" style="display: none;">
+            <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+            <span>我的课表</span>
+        </a>
+        <a href="../timetable/teachertimetable.html" class="quick-action-btn" id="teacherTimetableBtn" style="display: none;">
+            <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></span>
+            <span>教师课表</span>
+        </a>
+        <a href="../course/courseselection.html" class="quick-action-btn" id="courseSelectionBtn" style="display: none;">
+            <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></span>
+            <span>学生选课</span>
+        </a>
+        <a href="../grade/grade-index.html" class="quick-action-btn">
+            <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+            <span>成绩管理</span>
+        </a>
+        <a href="../finance/finance-index.html" class="quick-action-btn">
+            <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span>
+            <span>财务管理</span>
+        </a>
+        <a href="../course/course.html" class="quick-action-btn">
+            <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
+            <span>课程管理</span>
+        </a>
+    </div>
+</div>
+
+<div class="login-box card" id="loginBox">
+    <div style="text-align: center; padding: 40px;">
+        <p style="color: #ef4444; font-size: 18px; margin-bottom: 20px;">未检测到登录信息，请先登录</p>
+        <button class="btn" onclick="window.location.href='../auth/login.html'">前往登录</button>
+    </div>
+</div>
+
+<div id="toast" class="toast"></div>
 
 <script>
     const font = new FontFace('Maobi', 'url(/fonts/Maobi.ttf)');
@@ -116,87 +407,325 @@
     
     const token = localStorage.getItem('token');
     let currentUser = null;
+    let userTimetable = [];
 
     if (!token) {
-        document.getElementById('user-info').innerHTML = '<p style="color: #ef4444;">未检测到登录信息，请重新登录</p>';
+        document.getElementById('mainDashboard').style.display = 'none';
+        document.getElementById('loginBox').style.display = 'block';
     } else {
         apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
             .then(resp => resp.json())
             .then(user => {
                 currentUser = user;
-                const div = document.getElementById('user-info');
-                let html = `<h2>用户信息</h2>
-                        <p><strong>用户名：</strong>${user.username}</p>
-                        <p><strong>真实姓名：</strong>${user.realName}</p>
-                        <p><strong>邮箱：</strong>${user.email || '-'}</p>
-                        <p><strong>电话：</strong>${user.phone || '-'}</p>
-                        <p><strong>身份：</strong>${user.userType}</p>`;
-
-                if (user.userType === 'STUDENT') {
-                    html += `<hr>
-                     <p><strong>学号：</strong>${user.studentId || '-'}</p>
-                     <p><strong>院系：</strong>${user.department || '-'}</p>
-                     <p><strong>专业：</strong>${user.major || '-'}</p>
-                     <p><strong>年级：</strong>${user.grade || '-'}</p>
-                     <p><strong>班级：</strong>${user.className || '-'}</p>`;
-                } else if (user.userType === 'TEACHER') {
-                    html += `<hr>
-                     <p><strong>工号：</strong>${user.teacherId || '-'}</p>
-                     <p><strong>职称：</strong>${user.title || '-'}</p>`;
-                } else if (user.userType === 'ADMIN') {
-                    html += `<hr><p>管理员用户，无额外信息</p>`;
-                }
-
-                html += `<div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;">
-                         <button onclick="goToAppointment()">进入预约模块</button>
-                         <button onclick="goToClassroom()">教室系统</button>
-                         <button onclick="goToCourse()">课程管理</button>
-                         <button onclick="openChangePassword()">修改密码</button>
-                         <button onclick="goTotimetable()">排课系统</button>
-                         <button onclick="goToSyllabus()">课程大纲</button>
-                         <button onclick="goToGrade()">成绩管理</button>
-                         <button onclick="goToFinance()">财务管理</button>`;
-
-                if (user.userType === 'ADMIN') {
-                    html += `<button onclick="goToRegister()">注册新用户</button>
-                             <button onclick="openResetPassword()">重置用户密码</button>`;
-                }
-
-                if (user.userType === 'STUDENT') {
-                    html += `<button onclick="goToCourseSelection()">学生选课系统</button>
-                             <button onclick="goToStimetable()">学生课表</button>`;
-                }
-                if (user.userType === 'TEACHER') {
-                    html += `<button onclick="goToTtimetable()">教师课表</button>`;
-                }
-
-                html += `</div>`;
-
-                div.innerHTML = html;
+                loadHeaderUserInfo();
+                loadUserProfile();
+                loadNotifications();
+                loadTimetablePreview();
+                setupQuickActions();
             })
             .catch(err => {
                 console.error(err);
-                document.getElementById('user-info').innerHTML = `<p style="color: #ef4444;">获取用户信息失败</p>`;
+                document.getElementById('mainDashboard').innerHTML = '<div class="empty-state">获取用户信息失败</div>';
             });
     }
 
-    function goToAppointment() { window.location.href = '../classroom/appointment.html'; }
-    function goToRegister() { window.location.href = '../auth/register.html'; }
-    function goToClassroom() { window.location.href = '../classroom/classroom.html'; }
-    function goToCourse() {window.location.href = '../course/course.html';}
-    function goToCourseSelection() {window.location.href = '../course/courseselection.html';}
-    function goTotimetable() {window.location.href = '../timetable/timetable.html';}
-    function goToTtimetable() {window.location.href = '../timetable/teachertimetable.html';}
-    function goToStimetable() {window.location.href = '../timetable/studenttimetable.html';}
-    function goToSyllabus() {window.location.href = '../course/syllabus.html';}
-    function goToGrade() {window.location.href = '../grade/grade-index.html';}
-    function goToFinance() {window.location.href = '../finance/finance-index.html';}
+    function setupQuickActions() {
+        if (!currentUser) return;
+        
+        const studentTimetableBtn = document.getElementById('studentTimetableBtn');
+        const teacherTimetableBtn = document.getElementById('teacherTimetableBtn');
+        const courseSelectionBtn = document.getElementById('courseSelectionBtn');
+        
+        if (currentUser.userType === 'STUDENT') {
+            studentTimetableBtn.style.display = 'flex';
+            courseSelectionBtn.style.display = 'flex';
+        } else if (currentUser.userType === 'TEACHER') {
+            teacherTimetableBtn.style.display = 'flex';
+        }
+    }
 
-    function openChangePassword() { document.getElementById('changePasswordModal').style.display = 'flex'; }
+    function loadHeaderUserInfo() {
+        const userInfoHeader = document.getElementById('user-info-header');
+        if (!userInfoHeader) return;
+        
+        userInfoHeader.removeAttribute('data-hidden');
+        
+        const avatarText = document.getElementById('avatar-text');
+        const userName = document.getElementById('user-name');
+        const userDept = document.getElementById('user-dept');
+        
+        const displayName = currentUser.realName || currentUser.username;
+        if (avatarText) avatarText.textContent = displayName.charAt(0).toUpperCase();
+        if (userName) userName.textContent = displayName;
+        
+        let deptText = '';
+        if (currentUser.userType === 'STUDENT') {
+            deptText = currentUser.department || '';
+        } else if (currentUser.userType === 'TEACHER') {
+            deptText = currentUser.department || '';
+        } else if (currentUser.userType === 'ADMIN') {
+            deptText = '管理员';
+        }
+        if (userDept) userDept.textContent = deptText;
+    }
+
+    function loadUserProfile() {
+        const profileAvatar = document.getElementById('profile-avatar');
+        const profileName = document.getElementById('profile-name');
+        const profileUserType = document.getElementById('profile-userType');
+        const profileDetails = document.getElementById('profile-details');
+        
+        const displayName = currentUser.realName || currentUser.username;
+        profileAvatar.textContent = displayName.charAt(0).toUpperCase();
+        profileName.textContent = displayName;
+        
+        const userTypeMap = {
+            'STUDENT': '学生',
+            'TEACHER': '教师',
+            'ADMIN': '管理员'
+        };
+        profileUserType.textContent = userTypeMap[currentUser.userType] || currentUser.userType;
+        
+        let detailsHTML = `
+            <div class="detail-item">
+                <label>用户名</label>
+                <span>${currentUser.username}</span>
+            </div>
+            <div class="detail-item">
+                <label>真实姓名</label>
+                <span>${currentUser.realName || '-'}</span>
+            </div>
+            <div class="detail-item">
+                <label>邮箱</label>
+                <span>${currentUser.email || '-'}</span>
+            </div>
+            <div class="detail-item">
+                <label>电话</label>
+                <span>${currentUser.phone || '-'}</span>
+            </div>
+        `;
+        
+        if (currentUser.userType === 'STUDENT') {
+            detailsHTML += `
+                <div class="detail-item">
+                    <label>学号</label>
+                    <span>${currentUser.studentId || '-'}</span>
+                </div>
+                <div class="detail-item">
+                    <label>院系</label>
+                    <span>${currentUser.department || '-'}</span>
+                </div>
+                <div class="detail-item">
+                    <label>专业</label>
+                    <span>${currentUser.major || '-'}</span>
+                </div>
+                <div class="detail-item">
+                    <label>年级</label>
+                    <span>${currentUser.grade || '-'}</span>
+                </div>
+                <div class="detail-item" style="grid-column: 1 / -1;">
+                    <label>班级</label>
+                    <span>${currentUser.className || '-'}</span>
+                </div>
+            `;
+        } else if (currentUser.userType === 'TEACHER') {
+            detailsHTML += `
+                <div class="detail-item">
+                    <label>工号</label>
+                    <span>${currentUser.teacherId || '-'}</span>
+                </div>
+                <div class="detail-item">
+                    <label>职称</label>
+                    <span>${currentUser.title || '-'}</span>
+                </div>
+                <div class="detail-item" style="grid-column: 1 / -1;">
+                    <label>院系</label>
+                    <span>${currentUser.department || '-'}</span>
+                </div>
+            `;
+        }
+        
+        profileDetails.innerHTML = detailsHTML;
+    }
+
+    function loadNotifications() {
+        const notificationList = document.getElementById('notificationList');
+        
+        const notifications = [
+            {
+                title: '欢迎使用教务系统',
+                content: '欢迎回到鸡蛋大学教务管理系统，祝您使用愉快！',
+                time: new Date(),
+                important: false
+            },
+            {
+                title: '系统维护通知',
+                content: '系统将于每周日凌晨2:00-4:00进行维护，届时可能短暂不可用。',
+                time: new Date(Date.now() - 86400000),
+                important: true
+            },
+            {
+                title: '期末考试安排',
+                content: '期末考试安排已发布，请及时查看各科目考试时间和地点。',
+                time: new Date(Date.now() - 172800000),
+                important: false
+            }
+        ];
+        
+        let html = '';
+        notifications.forEach((notif, index) => {
+            const timeStr = formatTime(notif.time);
+            html += `
+                <div class="notification-item" onclick="showNotificationDetail(${index})">
+                    <div class="notification-title">
+                        ${notif.title}
+                        ${notif.important ? '<span class="notification-badge">重要</span>' : ''}
+                    </div>
+                    <div class="notification-content">${notif.content}</div>
+                    <div class="notification-time">${timeStr}</div>
+                </div>
+            `;
+        });
+        
+        notificationList.innerHTML = html;
+    }
+
+    function formatTime(date) {
+        const now = new Date();
+        const diff = now - date;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        
+        if (days === 0) {
+            return '今天 ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+        } else if (days === 1) {
+            return '昨天 ' + date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+        } else if (days < 7) {
+            return days + '天前';
+        } else {
+            return date.toLocaleDateString('zh-CN');
+        }
+    }
+
+    function showNotificationDetail(index) {
+        const notifications = [
+            {
+                title: '欢迎使用教务系统',
+                content: '欢迎回到鸡蛋大学教务管理系统，祝您使用愉快！如有任何问题，请联系教务处。',
+                time: new Date()
+            },
+            {
+                title: '系统维护通知',
+                content: '为保证系统稳定运行，我们将于每周日凌晨2:00-4:00进行例行维护。维护期间系统将短暂不可用，请各位师生提前做好相关安排。给您带来的不便敬请谅解。',
+                time: new Date(Date.now() - 86400000)
+            },
+            {
+                title: '期末考试安排',
+                content: '本学期期末考试安排已发布，请各位同学及时登录系统查看各科目考试的具体时间、地点及相关要求。考试期间请携带学生证准时参加。祝各位同学考试顺利！',
+                time: new Date(Date.now() - 172800000)
+            }
+        ];
+        
+        const notif = notifications[index];
+        showToast(notif.title + ': ' + notif.content.substring(0, 50) + '...');
+    }
+
+    function loadTimetablePreview() {
+        const timetablePreview = document.getElementById('timetablePreview');
+        
+        if (currentUser.userType === 'ADMIN') {
+            timetablePreview.innerHTML = '<div class="empty-state">管理员账号无课表信息</div>';
+            return;
+        }
+        
+        const endpoint = currentUser.userType === 'STUDENT' ? API_ENDPOINTS.STUDENT_TIMETABLE : API_ENDPOINTS.TEACHER_TIMETABLE;
+        
+        apiRequest(endpoint)
+            .then(resp => resp.json())
+            .then(data => {
+                userTimetable = data;
+                renderTodayTimetable();
+            })
+            .catch(err => {
+                console.error('加载课表失败:', err);
+                timetablePreview.innerHTML = '<div class="empty-state">暂无课表信息</div>';
+            });
+    }
+
+    function renderTodayTimetable() {
+        const timetablePreview = document.getElementById('timetablePreview');
+        const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        const today = new Date().getDay();
+        
+        const todayCourses = userTimetable.filter(item => {
+            const itemDay = item.dayOfWeek !== undefined ? item.dayOfWeek : parseInt(item.day);
+            return itemDay === today;
+        });
+        
+        if (todayCourses.length === 0) {
+            timetablePreview.innerHTML = '<div class="empty-state">今日暂无课程</div>';
+            return;
+        }
+        
+        todayCourses.sort((a, b) => {
+            const timeA = parseInt(a.startTime || a.start_time || a.period?.split('-')[0] || '0');
+            const timeB = parseInt(b.startTime || b.start_time || b.period?.split('-')[0] || '0');
+            return timeA - timeB;
+        });
+        
+        let html = '<div style="margin-bottom: 10px; color: rgba(255,255,255,0.6); font-size: 12px;">' + days[today] + '课程</div>';
+        html += '<table class="timetable-table"><thead><tr><th>时间</th><th>课程</th><th>地点</th></tr></thead><tbody>';
+        
+        todayCourses.forEach(course => {
+            const time = course.startTime || course.start_time || course.period || '-';
+            const name = course.courseName || course.course_name || course.name || '未知课程';
+            const location = course.location || course.classroom || '-';
+            html += `<tr>
+                <td>${time}</td>
+                <td class="course-cell">${name}</td>
+                <td>${location}</td>
+            </tr>`;
+        });
+        
+        html += '</tbody></table>';
+        timetablePreview.innerHTML = html;
+    }
+
+    function openUserProfile() {
+        document.getElementById('userProfileModal').style.display = 'flex';
+    }
+
+    function closeUserProfile(event) {
+        if (event.target.id === 'userProfileModal') {
+            document.getElementById('userProfileModal').style.display = 'none';
+        }
+    }
+
+    function closeUserProfileModal() {
+        document.getElementById('userProfileModal').style.display = 'none';
+    }
+
+    function closeChangePasswordModal(event) {
+        if (event.target.id === 'changePasswordModal') {
+            closeChangePassword();
+        }
+    }
+
+    function closeResetPasswordModal(event) {
+        if (event.target.id === 'resetPasswordModal') {
+            closeResetPassword();
+        }
+    }
+
+    function openChangePassword() {
+        document.getElementById('userProfileModal').style.display = 'none';
+        document.getElementById('changePasswordModal').style.display = 'flex';
+    }
+
     function closeChangePassword() {
         document.getElementById('changePasswordModal').style.display = 'none';
         document.getElementById('changePasswordMsg').innerText = '';
     }
+
     function submitChangePassword() {
         const oldPwd = document.getElementById('oldPassword').value;
         const newPwd = document.getElementById('newPassword').value;
@@ -215,11 +744,16 @@
             });
     }
 
-    function openResetPassword() { document.getElementById('resetPasswordModal').style.display = 'flex'; }
+    function openResetPassword() {
+        document.getElementById('userProfileModal').style.display = 'none';
+        document.getElementById('resetPasswordModal').style.display = 'flex';
+    }
+
     function closeResetPassword() {
         document.getElementById('resetPasswordModal').style.display = 'none';
         document.getElementById('resetPasswordMsg').innerText = '';
     }
+
     function submitResetPassword() {
         const username = document.getElementById('resetUsername').value;
         const newPwd = document.getElementById('resetNewPassword').value;
@@ -236,6 +770,11 @@
                 showToast('重置失败');
                 console.error(err);
             });
+    }
+
+    function logout() {
+        localStorage.removeItem('token');
+        window.location.reload();
     }
 
     function showToast(msg) {
@@ -260,42 +799,7 @@
     document.addEventListener('DOMContentLoaded', function() {
         SidebarManager.init({ currentPage: 'home' });
         HeaderComponent.init();
-        loadHeaderUserInfo();
     });
-    
-    function loadHeaderUserInfo() {
-        const token = localStorage.getItem('token');
-        if (!token) return;
-        
-        const userInfoHeader = document.getElementById('user-info-header');
-        if (!userInfoHeader) {
-            setTimeout(loadHeaderUserInfo, 100);
-            return;
-        }
-        
-        apiRequest(API_ENDPOINTS.USER_INFO + `?token=${token}`)
-            .then(resp => resp.json())
-            .then(user => {
-                const avatarText = document.getElementById('avatar-text');
-                const userName = document.getElementById('user-name');
-                const userDept = document.getElementById('user-dept');
-                
-                const displayName = user.realName || user.username;
-                if (avatarText) avatarText.textContent = displayName.charAt(0).toUpperCase();
-                if (userName) userName.textContent = displayName;
-                
-                let deptText = '';
-                if (user.userType === 'STUDENT') {
-                    deptText = user.department || '';
-                } else if (user.userType === 'TEACHER') {
-                    deptText = user.department || '';
-                } else if (user.userType === 'ADMIN') {
-                    deptText = '管理员';
-                }
-                if (userDept) userDept.textContent = deptText;
-            })
-            .catch(err => console.error(err));
-    }
 </script>
 
 </body>

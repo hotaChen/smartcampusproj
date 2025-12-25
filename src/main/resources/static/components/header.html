@@ -1,24 +1,28 @@
 <!-- 顶部Logo栏 -->
-<div class="header-logo">
-    <canvas id="egg" width="80" height="100" style="width:80px;height:100px;"></canvas>
-    <canvas id="school-title" width="150" height="50" style="width:150px;height:50px;"></canvas>
-    <div class="school-info">
-        <span class="school-en">EGG UNIVERSITY</span>
-        <span class="school-sub">Since 2025</span>
+<div class="header-left">
+    <div class="header-logo">
+        <canvas id="egg" width="80" height="100" style="width:80px;height:100px;"></canvas>
+        <canvas id="school-title" width="150" height="50" style="width:150px;height:50px;"></canvas>
+        <div class="school-info">
+            <span class="school-en">EGG UNIVERSITY</span>
+            <span class="school-sub">Since 2025</span>
+        </div>
     </div>
 </div>
 
-<!-- 用户信息 -->
-<div class="user-info-header" id="user-info-header">
-    <div class="user-avatar" id="user-avatar">
-        <span id="avatar-text">?</span>
+<!-- 用户信息和主题切换 -->
+<div class="header-right">
+    <div class="user-info-header" id="user-info-header">
+        <div class="user-avatar" id="user-avatar">
+            <span id="avatar-text">?</span>
+        </div>
+        <div class="user-details">
+            <span class="user-name" id="user-name">加载中...</span>
+            <span class="user-dept" id="user-dept"></span>
+        </div>
     </div>
-    <div class="user-details">
-        <span class="user-name" id="user-name">加载中...</span>
-        <span class="user-dept" id="user-dept"></span>
-    </div>
-</div>
 
-<!-- 主题切换 -->
-<button class="theme-toggle" onclick="HeaderComponent.toggleTheme()">🌓</button>
+    <!-- 主题切换 -->
+    <button class="theme-toggle" onclick="HeaderComponent.toggleTheme()">🌓</button>
+</div>
 
