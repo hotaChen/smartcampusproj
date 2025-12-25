@@ -56,6 +56,18 @@ public class TimetableController {
     public List<TimetableDTO> courseTimetable(@PathVariable Long courseId) {
         return service.getCourseTimetable(courseId);
     }
+
+    /** 按课程名称查询课表 */
+    @GetMapping("/course/name")
+    public List<TimetableDTO> courseTimetableByName(@RequestParam String name) {
+        return service.getTimetableByCourseName(name);
+    }
+
+    /** 查询所有排课 */
+    @GetMapping
+    public List<TimetableDTO> getAllTimetables() {
+        return service.getAllTimetables();
+    }
 }
 
 

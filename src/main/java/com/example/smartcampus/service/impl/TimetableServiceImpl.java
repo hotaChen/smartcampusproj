@@ -94,7 +94,34 @@ public class TimetableServiceImpl implements TimetableService {
                 .toList();
     }
 
+    @Override
+    public List<TimetableDTO> getTimetableByCourseName(String courseName) {
+        Course course = courseRepo.findByName(courseName)
+                .orElseThrow(() -> new RuntimeException("课程不存在"));
+        return getCourseTimetable(course.getId());
+    }
 
+    @Override
+    public List<TimetableDTO> getAllTimetables() {
+        return timetableRepo.findAll()
+                .stream()
+                .map(t -> {
+                    TimetableDTO dto = new TimetableDTO();
+                    dto.setId(t.getId());
+                    dto.setCourseId(t.getCourse().getId());
+                    dto.setCourseName(t.getCourse().getName());
+                    dto.setTeacherName(t.getCourse().getTeacherName());
+                    dto.setClassroom(
+                            t.getClassroom().getBuilding() + "-" +
+                                    t.getClassroom().getRoomNumber()
+                    );
+                    dto.setDayOfWeek(t.getDayOfWeek());
+                    dto.setStartTime(t.getStartTime());
+                    dto.setEndTime(t.getEndTime());
+                    return dto;
+                })
+                .toList();
+    }
 
     @Override
     public void deleteTimetable(Long id) {

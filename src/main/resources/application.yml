@@ -22,7 +22,7 @@ spring:
   profiles:
     active: dev
   datasource:
-    url: jdbc:h2:~/smartcampus
+    url: jdbc:h2:tcp://172.28.96.1:9092/smartcampus;DB_CLOSE_DELAY=-1
     username: sa
     password:
     driver-class-name: org.h2.Driver

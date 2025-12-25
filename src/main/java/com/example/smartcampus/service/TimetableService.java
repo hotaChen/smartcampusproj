@@ -19,6 +19,10 @@ public interface TimetableService {
 
     List<TimetableDTO> getCourseTimetable(Long courseId);
 
+    List<TimetableDTO> getTimetableByCourseName(String courseName);
+
+    List<TimetableDTO> getAllTimetables();
+
     void deleteTimetable(Long id);
 }
 

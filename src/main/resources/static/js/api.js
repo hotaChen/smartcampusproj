@@ -33,8 +33,10 @@ const API_ENDPOINTS = {
   
   // Timetables
   TIMETABLES_BY_COURSE: (courseId) => `${API_BASE_URL}/api/timetables/course/${courseId}`,
+  TIMETABLES_BY_COURSE_NAME: (courseName) => `${API_BASE_URL}/api/timetables/course/name?name=${encodeURIComponent(courseName)}`,
   TIMETABLES: `${API_BASE_URL}/api/timetables`,
   TIMETABLE: (id) => `${API_BASE_URL}/api/timetables/${id}`,
+  ALL_TIMETABLES: `${API_BASE_URL}/api/timetables`,
   
   // Student Timetable
   STUDENT_TIMETABLE: `${API_BASE_URL}/api/student/timetable/me`,

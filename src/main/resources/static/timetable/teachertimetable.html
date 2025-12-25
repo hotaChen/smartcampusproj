@@ -3,56 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <title>教师课表</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        h1 { margin-bottom: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; }
-        th { background-color: #f4f4f4; }
-        button { padding: 5px 10px; margin: 2px; }
-    </style>
+    <link rel="stylesheet" href="../css/style.css?v=egg-final">
+    <link rel="stylesheet" href="../css/page.css?v=egg-final">
+    <link rel="stylesheet" href="../css/sidebar.css?v=egg-final">
 </head>
-<body>
-<h1>教师课表</h1>
-<button onclick="goBack()">返回首页</button>
-
-<table id="timetable">
-    <thead>
-    <tr>
-        <th>课程ID</th>
-        <th>课程名称</th>
-        <th>教师</th>
-        <th>教室</th>
-        <th>星期</th>
-        <th>开始时间</th>
-        <th>结束时间</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr><td colspan="7">正在加载课表...</td></tr>
-    </tbody>
-</table>
-
+<body class="with-sidebar">
+<canvas id="bg"></canvas>
 <script src="../js/api.js"></script>
+<script src="../js/particles.js?v=egg-final"></script>
+<script src="../js/egg.js"></script>
+<script src="../js/sidebar.js"></script>
+<script src="../js/header.js"></script>
+
+<div id="header-container"></div>
+<div id="toast" class="toast"></div>
+
+<div class="page-content">
+    <h1 class="page-title">教师课表</h1>
+    
+    <div class="toolbar">
+        <button class="btn secondary" onclick="goBack()">返回首页</button>
+    </div>
+
+    <table class="data-table">
+        <thead>
+            <tr>
+                <th>课程ID</th>
+                <th>课程名称</th>
+                <th>教师</th>
+                <th>教室</th>
+                <th>星期</th>
+                <th>开始时间</th>
+                <th>结束时间</th>
+            </tr>
+        </thead>
+        <tbody id="timetableBody">
+            <tr><td colspan="7" class="empty-state">正在加载课表...</td></tr>
+        </tbody>
+    </table>
+</div>
+
 <script>
     const token = localStorage.getItem('token');
 
+    function goBack() { window.location.href = '../index.html'; }
+
+    function showToast(msg) {
+        const toast = document.getElementById("toast");
+        toast.textContent = msg;
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 2500);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        SidebarManager.init({ currentPage: 'teacher-timetable' });
+        HeaderComponent.init();
+    });
+
     if (!token) {
-        alert('未检测到登录信息，请重新登录');
-        window.location.href = '../auth/login.html';
+        document.getElementById('timetableBody').innerHTML = '<tr><td colspan="7" class="empty-state">未检测到登录信息，请重新登录</td></tr>';
     } else {
         apiRequest(API_ENDPOINTS.TEACHER_TIMETABLE)
             .then(resp => resp.json())
             .then(data => renderTimetable(data))
-            .catch(err => console.error(err));
+            .catch(err => {
+                console.error(err);
+                document.getElementById('timetableBody').innerHTML = '<tr><td colspan="7" class="empty-state">加载失败，请检查接口或权限</td></tr>';
+            });
     }
 
-    function goBack() { window.location.href = '../index.html'; }
-
     function renderTimetable(list) {
-        const tbody = document.querySelector('#timetable tbody');
-        if (!list.length) {
-            tbody.innerHTML = '<tr><td colspan="7">暂无课程安排</td></tr>';
+        const tbody = document.getElementById('timetableBody');
+        if (!list || !list.length) {
+            tbody.innerHTML = '<tr><td colspan="7" class="empty-state">暂无课程安排</td></tr>';
             return;
         }
 
@@ -70,7 +93,7 @@
             const dayA = dayOrder[a.dayOfWeek] || 8;
             const dayB = dayOrder[b.dayOfWeek] || 8;
             if (dayA !== dayB) return dayA - dayB;
-            return a.startTime.localeCompare(b.startTime);
+            return (a.startTime || '').localeCompare(b.startTime || '');
         });
 
         tbody.innerHTML = '';
