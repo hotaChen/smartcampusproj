@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+
+doc/test.puml
+doc/报告任务清单.md
