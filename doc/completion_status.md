@@ -36,6 +36,11 @@
 
 ## 最近更新
 
+### 2025-12-26 - 选课系统500错误修复
+- 添加 GlobalExceptionHandler.java 全局异常处理器
+- 修复 CustomUserDetails.java 中 role 可能为 null 导致 NullPointerException 的问题
+- 选课接口现在能正确返回业务错误信息而不是500状态码
+
 ### 2025-12-26 - 学费与奖学金管理页面优化
 - 修改 tuition-manage.html，将表单中的学生ID改为学生学号
 - 修改 scholarship-manage.html，将表单中的学生ID改为学生学号

@@ -61,12 +61,16 @@
         </div>
         <input type="hidden" id="timetableId">
         <div class="form-group">
-            <label>课程ID</label>
-            <input type="number" id="modalCourseId" placeholder="请输入课程ID">
+            <label>课程</label>
+            <select id="modalCourseId">
+                <option value="">请选择课程</option>
+            </select>
         </div>
         <div class="form-group">
-            <label>教室ID</label>
-            <input type="number" id="modalClassroomId" placeholder="请输入教室ID">
+            <label>教室</label>
+            <select id="modalClassroomId">
+                <option value="">请选择教室</option>
+            </select>
         </div>
         <div class="form-group">
             <label>星期</label>
@@ -82,11 +86,11 @@
         </div>
         <div class="form-group">
             <label>开始时间</label>
-            <input type="time" id="modalStartTime" placeholder="请输入开始时间">
+            <input type="text" id="modalStartTime" placeholder="如：08:00" maxlength="5" onblur="validateTimeFormat(this)">
         </div>
         <div class="form-group">
             <label>结束时间</label>
-            <input type="time" id="modalEndTime" placeholder="请输入结束时间">
+            <input type="text" id="modalEndTime" placeholder="如：10:30" maxlength="5" onblur="validateTimeFormat(this)">
         </div>
         <p id="modalMsg" class="message error" style="display:none;"></p>
         <div class="form-actions">
@@ -100,6 +104,8 @@
     const token = localStorage.getItem('token');
     let currentUser = null;
     let timetables = [];
+    let courses = [];
+    let classrooms = [];
 
     function goBack() { window.location.href = '../index.html'; }
 
@@ -110,9 +116,59 @@
         setTimeout(() => toast.classList.remove("show"), 2500);
     }
 
+    function validateTimeFormat(input) {
+        const value = input.value.trim();
+        if (value && !/^([01]?\d|2[0-3]):[0-5]\d$/.test(value)) {
+            input.value = '';
+            showToast('时间格式应为 HH:mm，如 08:00');
+        }
+    }
+
+    function formatTimeForDisplay(value) {
+        if (!value) return '';
+        if (/^\d{2}:\d{2}$/.test(value)) return value;
+        if (/^\d:\d{2}$/.test(value)) return '0' + value;
+        if (/^\d{2}:\d$/.test(value)) return value.substring(0, 2) + ':0' + value.substring(2);
+        return value;
+    }
+
+    function loadCourses() {
+        apiRequest(API_ENDPOINTS.COURSES)
+            .then(resp => resp.json())
+            .then(data => {
+                courses = Array.isArray(data) ? data : [];
+                const select = document.getElementById('modalCourseId');
+                courses.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c.id;
+                    option.textContent = `${c.courseCode} - ${c.name}`;
+                    select.appendChild(option);
+                });
+            })
+            .catch(err => console.error('加载课程列表失败:', err));
+    }
+
+    function loadClassrooms() {
+        apiRequest(API_ENDPOINTS.CLASSROOMS)
+            .then(resp => resp.json())
+            .then(data => {
+                classrooms = Array.isArray(data) ? data : [];
+                const select = document.getElementById('modalClassroomId');
+                classrooms.forEach(c => {
+                    const option = document.createElement('option');
+                    option.value = c.id;
+                    option.textContent = `${c.building} - ${c.roomNumber}`;
+                    select.appendChild(option);
+                });
+            })
+            .catch(err => console.error('加载教室列表失败:', err));
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         SidebarManager.init({ currentPage: 'timetable' });
         HeaderComponent.init();
+        loadCourses();
+        loadClassrooms();
     });
 
     if (!token) {
@@ -243,7 +299,7 @@
                 if (!resp.ok) throw new Error('新增失败');
                 closeModal();
                 showToast('新增成功');
-                loadTimetable();
+                loadAllTimetables();
             })
             .catch(err => {
                 console.error(err);
@@ -259,7 +315,7 @@
             .then(resp => {
                 if (!resp.ok) throw new Error('删除失败');
                 showToast('删除成功');
-                loadTimetable();
+                loadAllTimetables();
             })
             .catch(err => {
                 console.error(err);

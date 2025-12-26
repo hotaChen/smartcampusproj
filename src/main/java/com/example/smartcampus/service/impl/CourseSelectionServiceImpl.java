@@ -107,7 +107,9 @@ public class CourseSelectionServiceImpl implements CourseSelectionService {
                 .map(selection -> {
                     Course c = selection.getCourse();
                     Long teacherId = c.getTeacher() != null ? c.getTeacher().getId() : null;
-                    String teacherName = c.getTeacher() != null ? c.getTeacher().getRealName() : "-";
+                    String teacherName = c.getTeacherName() != null && !c.getTeacherName().isEmpty() 
+                            ? c.getTeacherName() 
+                            : "-";
                     Long classroomId = c.getClassroom() != null ? c.getClassroom().getId() : null;
                     String classroomName = c.getClassroom() != null ? c.getClassroom().getBuilding() + "-" + c.getClassroom().getRoomNumber() : "-";
 

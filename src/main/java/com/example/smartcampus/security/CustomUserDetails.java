@@ -18,9 +18,9 @@ public class CustomUserDetails implements UserDetails {
 
     public CustomUserDetails(User user) {
         this.user = user;
-        // 将用户角色转换为Spring Security的权限
+        String roleName = user.getRole() != null ? user.getRole().getName() : "ROLE_STUDENT";
         this.authorities = Collections.singletonList(
-                new SimpleGrantedAuthority(user.getRole().getName())
+                new SimpleGrantedAuthority(roleName)
         );
     }
 

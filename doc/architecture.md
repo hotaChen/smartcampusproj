@@ -25,6 +25,7 @@ src/main/java/com/example/smartcampus/
 ├── config/           # 配置类
 │   ├── SecurityConfig.java       # Spring Security 配置
 │   ├── SwaggerConfig.java        # Swagger/OpenAPI 配置
+│   ├── GlobalExceptionHandler.java  # 全局异常处理器
 │   └── ...                       # 其他配置
 ├── controller/       # REST API 控制器
 │   ├── AuthController.java       # 认证接口
