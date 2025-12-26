@@ -4,8 +4,10 @@ import com.example.smartcampus.dto.BatchTuitionRequest;
 import com.example.smartcampus.dto.TuitionPaymentRequest;
 import com.example.smartcampus.dto.TuitionRequest;
 import com.example.smartcampus.dto.TuitionResponse;
+import com.example.smartcampus.entity.PaymentRecord;
 import com.example.smartcampus.entity.Tuition;
 import com.example.smartcampus.entity.User;
+import com.example.smartcampus.service.PaymentRecordService;
 import com.example.smartcampus.service.TuitionService;
 import com.example.smartcampus.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,10 +38,12 @@ public class TuitionController {
 
     private final TuitionService tuitionService;
     private final UserService userService;
+    private final PaymentRecordService paymentRecordService;
 
-    public TuitionController(TuitionService tuitionService, UserService userService) {
+    public TuitionController(TuitionService tuitionService, UserService userService, PaymentRecordService paymentRecordService) {
         this.tuitionService = tuitionService;
         this.userService = userService;
+        this.paymentRecordService = paymentRecordService;
     }
 
     @PostMapping
@@ -393,12 +397,27 @@ public class TuitionController {
     @Operation(summary = "学费缴费", description = "为学生缴纳学费")
     public ResponseEntity<TuitionResponse> makePayment(@RequestBody TuitionPaymentRequest request) {
         logger.info("=== TuitionController.makePayment() 被调用 ===");
-        logger.info("学费缴费: 学费ID={}, 缴费金额={}", request.getTuitionId(), request.getPaymentAmount());
+        logger.info("学费缴费: 学费ID={}, 缴费金额={}, 缴费方式={}", 
+                request.getTuitionId(), request.getPaymentAmount(), request.getPaymentMethod());
 
         try {
             Tuition tuition = tuitionService.makePayment(request.getTuitionId(), request.getPaymentAmount());
             
-            // 转换为响应DTO
+            PaymentRecord paymentRecord = new PaymentRecord();
+            paymentRecord.setStudent(tuition.getStudent());
+            paymentRecord.setAmount(request.getPaymentAmount());
+            paymentRecord.setPaymentType("学费");
+            paymentRecord.setPaymentMethod(request.getPaymentMethod() != null ? request.getPaymentMethod() : "银行卡");
+            paymentRecord.setPaymentDate(LocalDateTime.now());
+            paymentRecord.setSemester(tuition.getSemester());
+            paymentRecord.setTransactionId(generateTransactionId());
+            paymentRecord.setDescription(request.getDescription());
+            paymentRecord.setStatus(1); // 1-已完成
+            paymentRecordService.createPaymentRecord(paymentRecord);
+            
+            logger.info("✅ 成功创建缴费记录: 学号={}, 金额={}", 
+                    tuition.getStudent().getStudentId(), request.getPaymentAmount());
+            
             TuitionResponse response = convertToResponse(tuition);
             
             logger.info("✅ 成功缴费: 学费ID={}, 缴费金额={}", tuition.getId(), request.getPaymentAmount());
@@ -408,6 +427,10 @@ public class TuitionController {
             logger.error("学费缴费失败: {}", e.getMessage(), e);
             return ResponseEntity.badRequest().build();
         }
+    }
+    
+    private String generateTransactionId() {
+        return "TXN" + System.currentTimeMillis() + String.format("%04d", (int)(Math.random() * 10000));
     }
 
     @GetMapping("/statistics/{semester}")

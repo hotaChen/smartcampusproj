@@ -371,7 +371,7 @@ function loadTuitionInfo(user) {
         .then(resp => resp.json())
         .then(data => {
             let html = '<table class="data-table"><thead><tr>';
-            html += '<th>学生姓名</th><th>学号</th><th>学期</th><th>学费金额</th><th>缴费状态</th><th>缴费截止日期</th>';
+            html += '<th>学生姓名</th><th>学号</th><th>学期</th><th>待缴学费</th><th>缴费状态</th><th>缴费截止日期</th>';
             
             html += '<th>操作</th>';
             
@@ -379,17 +379,18 @@ function loadTuitionInfo(user) {
             
             if (data && data.length > 0) {
                 data.forEach(tuition => {
+                    const unpaidAmount = tuition.unpaidAmount !== undefined ? tuition.unpaidAmount : (tuition.amount - (tuition.paidAmount || 0));
                     html += `<tr>
                         <td>${tuition.studentName || '-'}</td>
                         <td>${tuition.studentNumber || '-'}</td>
                         <td>${tuition.semester || '-'}</td>
-                        <td>${tuition.amount ? '¥' + tuition.amount : '-'}</td>
+                        <td>¥${unpaidAmount}</td>
                         <td>${getStatusBadge(tuition.paymentStatus || '未缴费')}</td>
                         <td>${tuition.dueDate ? tuition.dueDate.split('T')[0] : '-'}</td>
                         <td>`;
                     
                     if (tuition.paymentStatus !== '已缴费') {
-                        html += `<button class="action-btn" onclick="openPaymentModal(${tuition.id}, '${tuition.studentName || ''}', '${tuition.studentNumber || ''}', '${tuition.semester || ''}', ${tuition.amount || 0})">缴费</button>`;
+                        html += `<button class="action-btn" onclick="openPaymentModal(${tuition.id}, '${tuition.studentName || ''}', '${tuition.studentNumber || ''}', '${tuition.semester || ''}', ${tuition.amount || 0}, ${unpaidAmount})">缴费</button>`;
                     } else {
                         html += `<button class="action-btn" onclick="viewPaymentRecords(${tuition.id})">查看记录</button>`;
                     }
@@ -409,13 +410,13 @@ function loadTuitionInfo(user) {
         });
 }
 
-function openPaymentModal(tuitionId, studentName, studentNumber, semester, amount) {
+function openPaymentModal(tuitionId, studentName, studentNumber, semester, amount, unpaidAmount) {
     document.getElementById('payment-tuition-id').value = tuitionId;
     document.getElementById('payment-student-name').value = studentName;
     document.getElementById('payment-student-number').value = studentNumber;
     document.getElementById('payment-semester').value = semester;
     document.getElementById('payment-amount').value = '¥' + amount;
-    document.getElementById('payment-paid-amount').value = amount;
+    document.getElementById('payment-paid-amount').value = unpaidAmount;
     document.getElementById('payment-method').value = '银行卡';
     document.getElementById('payment-description').value = '';
     
@@ -439,12 +440,12 @@ function submitPayment() {
     
     const paymentData = {
         tuitionId: parseInt(tuitionId),
-        amount: parseFloat(paidAmount),
+        paymentAmount: parseFloat(paidAmount),
         paymentMethod: paymentMethod,
         description: description || null
     };
     
-    apiRequest('/api/payment-records/tuition', {
+    apiRequest('/api/tuitions/payment', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
