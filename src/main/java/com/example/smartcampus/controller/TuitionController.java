@@ -47,12 +47,22 @@ public class TuitionController {
     @Operation(summary = "创建学费记录", description = "为学生创建学费记录")
     public ResponseEntity<TuitionResponse> createTuition(@RequestBody TuitionRequest request) {
         logger.info("=== TuitionController.createTuition() 被调用 ===");
-        logger.info("创建学费记录: 学生ID={}, 学期={}, 金额={}", 
-                request.getStudentId(), request.getSemester(), request.getAmount());
+        logger.info("创建学费记录: 学号={}, 学期={}, 金额={}", 
+                request.getStudentNumber(), request.getSemester(), request.getAmount());
 
         try {
-            // 获取学生信息
-            User student = userService.getUserById(request.getStudentId());
+            // 获取学生信息（优先使用studentNumber）
+            Optional<User> studentOpt = userService.getUserByStudentId(request.getStudentNumber());
+            if (!studentOpt.isPresent() && request.getStudentId() != null) {
+                // 兼容旧接口，使用studentId获取
+                studentOpt = Optional.ofNullable(userService.getUserById(request.getStudentId()));
+            }
+            
+            if (!studentOpt.isPresent()) {
+                logger.warn("未找到学生: 学号={}", request.getStudentNumber());
+                return ResponseEntity.badRequest().build();
+            }
+            User student = studentOpt.get();
             
             // 创建学费记录
             Tuition tuition = new Tuition();

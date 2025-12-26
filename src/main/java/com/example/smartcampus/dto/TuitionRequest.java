@@ -11,9 +11,11 @@ import java.time.LocalDateTime;
 @Schema(description = "学费创建请求")
 public class TuitionRequest {
 
-    @NotNull(message = "学生ID不能为空")
-    @Schema(description = "学生ID", example = "1")
+    @Schema(description = "学生ID（已废弃，请使用studentNumber）", example = "1", hidden = true)
     private Long studentId;
+
+    @Schema(description = "学生学号（推荐使用此字段）", example = "20230001")
+    private String studentNumber;
 
     @NotNull(message = "学费金额不能为空")
     @DecimalMin(value = "0.01", message = "学费金额必须大于0")
@@ -49,6 +51,14 @@ public class TuitionRequest {
 
     public void setStudentId(Long studentId) {
         this.studentId = studentId;
+    }
+
+    public String getStudentNumber() {
+        return studentNumber;
+    }
+
+    public void setStudentNumber(String studentNumber) {
+        this.studentNumber = studentNumber;
     }
 
     public BigDecimal getAmount() {

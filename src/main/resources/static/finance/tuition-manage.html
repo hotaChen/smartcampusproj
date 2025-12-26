@@ -82,8 +82,8 @@
         <div class="form-card-body">
             <div class="form-grid">
                 <div class="form-group">
-                    <label>学生ID</label>
-                    <input type="number" id="studentId" class="input" placeholder="请输入学生ID">
+                    <label>学生学号</label>
+                    <input type="text" id="studentNumber" class="input" placeholder="请输入学生学号">
                 </div>
                 <div class="form-group">
                     <label>学费金额</label>
@@ -487,21 +487,21 @@ function loadTuitionInfo() {
 }
 
 function addTuition() {
-    const studentId = document.getElementById('studentId').value;
+    const studentNumber = document.getElementById('studentNumber').value;
     const amount = document.getElementById('amount').value;
     const semester = document.getElementById('semester').value;
     const dueDate = document.getElementById('dueDate').value;
     
-    if (!studentId || !amount || !semester || !dueDate) {
+    if (!studentNumber || !amount || !semester || !dueDate) {
         showToast('请填写完整信息');
         return;
     }
     
     const tuitionData = {
-        studentId: parseInt(studentId),
+        studentNumber: studentNumber,
         amount: parseFloat(amount),
         semester: semester,
-        dueDate: dueDate
+        dueDate: dueDate ? dueDate + 'T00:00:00' : null
     };
     
     apiRequest('/api/tuitions', {
@@ -514,7 +514,7 @@ function addTuition() {
     .then(resp => resp.json())
     .then(data => {
         showToast('学费记录添加成功');
-        document.getElementById('studentId').value = '';
+        document.getElementById('studentNumber').value = '';
         document.getElementById('amount').value = '';
         document.getElementById('semester').value = '';
         document.getElementById('dueDate').value = '';

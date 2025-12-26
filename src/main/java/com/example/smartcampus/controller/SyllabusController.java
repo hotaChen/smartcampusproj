@@ -8,6 +8,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/syllabus")
 public class SyllabusController {
@@ -21,11 +23,17 @@ public class SyllabusController {
     /**
      * 创建或更新教学大纲（教师 / 管理员）
      */
+    @PutMapping("/{courseId}")
+    @PreAuthorize("hasAnyRole('TEACHER','ADMIN')")
     public SyllabusDTO createOrUpdate(
             @PathVariable Long courseId,
-            @RequestBody String content,
+            @RequestBody Map<String, String> request,
             @AuthenticationPrincipal CustomUserDetails userDetails
     ) {
+        String content = request.get("content");
+        if (content == null) {
+            throw new RuntimeException("大纲内容不能为空");
+        }
         // 如果是教师
         if ("TEACHER".equals(userDetails.getUserType())) {
             boolean isTeacherOfCourse = syllabusService.isTeacherOfCourse(userDetails.getUserId(), courseId);

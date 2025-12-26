@@ -69,7 +69,31 @@ docker-compose up -d
 docker-compose down
 ```
 
+## 财务模块详情
+
+### 学费管理模块
+- **前端页面**: `src/main/resources/static/finance/tuition-manage.html`
+  - 功能: 学费记录管理，包括添加、查询、删除学费记录
+  - 依赖: Thymeleaf模板引擎，finance.css样式
+
+### 奖学金管理模块
+- **前端页面**: `src/main/resources/static/finance/scholarship-manage.html`
+  - 功能: 奖学金信息管理，包括添加、编辑、删除奖学金记录
+  - 依赖: Thymeleaf模板引擎，finance.css样式
+
+### 助学金管理模块
+- **前端页面**: `src/main/resources/static/finance/financialaid-manage.html`
+  - 功能: 助学金申请与管理，支持根据学生学号查询和添加记录
+  - 依赖: Thymeleaf模板引擎，finance.css样式
+
+### 缴费记录模块
+- **前端页面**: `src/main/resources/static/finance/payment-records.html`
+  - 功能: 缴费记录查询与管理
+  - 依赖: Thymeleaf模板引擎，finance.css样式
+
 ## API 文档
 
 - Swagger UI: http://localhost:8081/swagger-ui.html
 - API Docs: http://localhost:8081/v3/api-docs
+
+```

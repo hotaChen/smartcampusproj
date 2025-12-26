@@ -139,5 +139,41 @@ function apiRequest(endpoint, options = {}) {
   return fetch(endpoint, {
     ...options,
     ...defaultOptions
+  }).then(response => {
+    if (response.status === 401 || response.status === 400) {
+      localStorage.removeItem('token');
+      localStorage.removeItem('userInfo');
+      redirectToLogin('登录已过期，请重新登录');
+      return Promise.reject(new Error('TOKEN_INVALID'));
+    }
+    return response;
   });
+}
+
+function redirectToLogin(message) {
+  if (typeof showToast === 'function') {
+    showToast(message || '登录已过期，请重新登录');
+  } else {
+    alert(message || '登录已过期，请重新登录');
+  }
+  const currentPath = window.location.pathname;
+  if (currentPath.includes('/auth/')) {
+    return;
+  }
+  setTimeout(() => {
+    window.location.href = '../auth/login.html';
+  }, 1500);
+}
+
+function showToast(msg) {
+  let toast = document.getElementById("toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.id = "toast";
+    toast.className = "toast";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.classList.add("show");
+  setTimeout(() => toast.classList.remove("show"), 2500);
 }

@@ -36,8 +36,8 @@
         <div class="form-card-body">
             <div class="form-row">
                 <div class="form-group">
-                    <label>学生ID</label>
-                    <input type="number" id="studentId" class="input" placeholder="请输入学生ID">
+                    <label>学生学号</label>
+                    <input type="text" id="studentNumber" class="input" placeholder="请输入学生学号">
                 </div>
                 <div class="form-group">
                     <label>奖学金名称</label>
@@ -384,19 +384,19 @@ function getStatusCode(statusText) {
 }
 
 function addScholarship() {
-    const studentId = document.getElementById('studentId').value;
+    const studentNumber = document.getElementById('studentNumber').value;
     const name = document.getElementById('name').value;
     const amount = document.getElementById('amount').value;
     const reason = document.getElementById('reason').value;
     const status = getStatusCode(document.getElementById('status').value);
     
-    if (!studentId || !name || !amount || !reason) {
+    if (!studentNumber || !name || !amount || !reason) {
         showToast('请填写完整信息');
         return;
     }
     
     const scholarshipData = {
-        studentId: parseInt(studentId),
+        studentNumber: studentNumber,
         name: name,
         amount: parseFloat(amount),
         reason: reason,
@@ -413,7 +413,7 @@ function addScholarship() {
     .then(resp => resp.json())
     .then(data => {
         showToast('奖学金记录添加成功');
-        document.getElementById('studentId').value = '';
+        document.getElementById('studentNumber').value = '';
         document.getElementById('name').value = '';
         document.getElementById('amount').value = '';
         document.getElementById('reason').value = '';
@@ -464,7 +464,7 @@ function editScholarship(id) {
                         </div>
                         <div style="display:flex;justify-content:flex-end;gap:12px;margin-top:20px;">
                             <button onclick="this.closest('.modal-overlay').remove()" class="btn secondary" style="padding:12px 24px;border-radius:12px;border:none;cursor:pointer;font-size:14px;font-weight:500;background:rgba(255,255,255,0.1);color:var(--text);">取消</button>
-                            <button onclick="saveScholarship(${scholarship.id}, ${scholarship.studentId})" class="btn primary" style="padding:12px 24px;border-radius:12px;border:none;cursor:pointer;font-size:14px;font-weight:500;background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(5,150,105,0.2));color:#6ee7b7;border:1px solid rgba(16,185,129,0.3);">保存</button>
+                            <button onclick="saveScholarship(${scholarship.id}, '${scholarship.studentNumber}')" class="btn primary" style="padding:12px 24px;border-radius:12px;border:none;cursor:pointer;font-size:14px;font-weight:500;background:linear-gradient(135deg,rgba(16,185,129,0.2),rgba(5,150,105,0.2));color:#6ee7b7;border:1px solid rgba(16,185,129,0.3);">保存</button>
                         </div>
                     </div>
                 </div>

@@ -36,6 +36,13 @@
 
 ## 最近更新
 
+### 2025-12-26 - 学费与奖学金管理页面优化
+- 修改 tuition-manage.html，将表单中的学生ID改为学生学号
+- 修改 scholarship-manage.html，将表单中的学生ID改为学生学号
+- 修复 tuition-manage.html addTuition() 函数变量引用问题
+- 修复 scholarship-manage.html saveScholarship() 函数API提交格式问题
+- 更新代码以保持与 financialaid-manage.html 一致的逻辑
+
 ### 2025-12-26 - 容器化部署
 - 添加 Dockerfile
 - 添加 docker-compose.yml

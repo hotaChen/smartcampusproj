@@ -371,15 +371,15 @@ const SidebarManager = {
         
         if (userType === 'ADMIN') {
             document.querySelectorAll('.admin-only').forEach(item => {
-                item.style.display = 'block';
+                item.style.display = 'flex';
             });
         } else if (userType === 'STUDENT') {
             document.querySelectorAll('.student-only').forEach(item => {
-                item.style.display = 'block';
+                item.style.display = 'flex';
             });
         } else if (userType === 'TEACHER') {
             document.querySelectorAll('.teacher-only').forEach(item => {
-                item.style.display = 'block';
+                item.style.display = 'flex';
             });
         }
     },
