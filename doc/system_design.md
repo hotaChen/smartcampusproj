@@ -11,6 +11,17 @@
    - [预约管理模块](#预约管理模块)
    - [成绩单生成模块](#成绩单生成模块)
    - [补考管理模块](#补考管理模块)
+   - [选课管理模块](#选课管理模块)
+   - [教学大纲模块](#教学大纲模块)
+   - [课表管理模块](#课表管理模块)
+   - [教室管理模块](#教室管理模块)
+   - [学费管理模块](#学费管理模块)
+   - [奖学金管理模块](#奖学金管理模块)
+   - [助学金管理模块](#助学金管理模块)
+   - [缴费记录模块](#缴费记录模块)
+   - [通知公告模块](#通知公告模块)
+   - [错误日志模块](#错误日志模块)
+   - [系统报表模块](#系统报表模块)
 5. [配置说明](#配置说明)
 6. [API文档与测试](#api文档与测试)
 7. [部署指南](#部署指南)
@@ -184,6 +195,91 @@ erDiagram
         varchar STATUS
     }
 
+    NOTIFICATIONS {
+        bigint ID PK
+        varchar TITLE
+        varchar CONTENT
+        varchar TYPE
+        bigint USER_ID FK
+        varchar IS_READ
+        timestamp CREATE_TIME
+    }
+
+    ERROR_LOGS {
+        bigint ID PK
+        varchar METHOD
+        varchar PATH
+        varchar PARAMETERS
+        varchar ERROR_MESSAGE
+        varchar STACK_TRACE
+        varchar USER_ID
+        timestamp CREATE_TIME
+    }
+
+    SYSTEM_REPORTS {
+        bigint ID PK
+        varchar TITLE
+        varchar CONTENT
+        varchar TYPE
+        varchar STATUS
+        bigint CREATED_BY FK
+        timestamp CREATE_TIME
+        timestamp UPDATE_TIME
+    }
+
+    TUITION {
+        bigint ID PK
+        bigint STUDENT_ID FK
+        varchar ACADEMIC_YEAR
+        varchar SEMESTER
+        decimal AMOUNT
+        varchar STATUS
+        varchar PAYMENT_METHOD
+        timestamp DUE_DATE
+        timestamp PAYMENT_DATE
+        timestamp CREATE_TIME
+        timestamp UPDATE_TIME
+    }
+
+    SCHOLARSHIPS {
+        bigint ID PK
+        varchar NAME
+        varchar DESCRIPTION
+        decimal AMOUNT
+        varchar TYPE
+        varchar ACADEMIC_YEAR
+        varchar SEMESTER
+        bigint STUDENT_ID FK
+        varchar STATUS
+        timestamp CREATE_TIME
+        timestamp UPDATE_TIME
+    }
+
+    FINANCIAL_AID {
+        bigint ID PK
+        bigint STUDENT_ID FK
+        varchar TYPE
+        decimal AMOUNT
+        varchar REASON
+        varchar STATUS
+        varchar ACADEMIC_YEAR
+        varchar SEMESTER
+        timestamp CREATE_TIME
+        timestamp UPDATE_TIME
+    }
+
+    PAYMENT_RECORDS {
+        bigint ID PK
+        bigint STUDENT_ID FK
+        bigint TUITION_ID FK
+        decimal AMOUNT
+        varchar PAYMENT_METHOD
+        varchar TRANSACTION_ID
+        varchar STATUS
+        timestamp PAYMENT_TIME
+        timestamp CREATE_TIME
+    }
+
     USERS ||--o{ GRADES : "学生拥有"
     USERS ||--o{ GRADES : "教师录入"
     USERS ||--o{ MAKEUP_EXAMS : "学生申请"
@@ -193,6 +289,12 @@ erDiagram
     USERS ||--o{ TIMETABLES : "教师安排"
     USERS ||--o{ SYLLABI : "教师编写"
     USERS ||--o{ COURSE_SELECTIONS : "学生选择"
+    USERS ||--o{ NOTIFICATIONS : "接收通知"
+    USERS ||--o{ SYSTEM_REPORTS : "创建报表"
+    USERS ||--o{ TUITION : "缴纳学费"
+    USERS ||--o{ SCHOLARSHIPS : "获得奖学金"
+    USERS ||--o{ FINANCIAL_AID : "申请助学金"
+    USERS ||--o{ PAYMENT_RECORDS : "缴费记录"
     USERS }o--|| ROLES : "拥有角色"
     ROLES }o--o{ PERMISSIONS : "通过ROLE_PERMISSIONS关联"
     COURSES ||--o{ GRADES : "课程成绩"
@@ -201,6 +303,8 @@ erDiagram
     COURSES ||--o{ COURSE_SELECTIONS : "学生选课"
     COURSES }o--|| CLASSROOMS : "使用教室"
     MAKEUP_EXAMS }o--|| GRADES : "基于原成绩"
+    TUITION ||--o{ PAYMENT_RECORDS : "缴费记录"
+    SCHOLARSHIPS }o--|| USERS : "获奖学生"
 ```
 
 ### 数据表说明
@@ -240,6 +344,27 @@ erDiagram
 
 #### 选课表 (COURSE_SELECTIONS)
 存储学生选课信息。
+
+#### 通知表 (NOTIFICATIONS)
+存储系统通知和公告信息，支持按用户推送和消息类型分类。
+
+#### 错误日志表 (ERROR_LOGS)
+记录系统运行时的错误信息，包括请求方法、路径、参数、错误信息和堆栈跟踪，便于问题排查。
+
+#### 系统报表表 (SYSTEM_REPORTS)
+存储系统生成的各类报表数据，包括报表标题、内容、类型和状态。
+
+#### 学费表 (TUITION)
+存储学生的学费缴纳信息，包括学费金额、缴费状态、截止日期和缴费方式。
+
+#### 奖学金表 (SCHOLARSHIPS)
+存储学生奖学金信息，包括奖学金名称、金额、类型、申请学年学期和发放状态。
+
+#### 助学金表 (FINANCIAL_AID)
+存储学生助学金申请信息，包括助学金类型、金额、申请原因和审批状态。
+
+#### 缴费记录表 (PAYMENT_RECORDS)
+存储学生的缴费记录，包括缴费金额、支付方式、交易ID和缴费时间。
 
 ## 系统架构
 
@@ -506,6 +631,444 @@ sequenceDiagram
     S->>S: 更新原成绩状态
     S-->>C: 返回操作结果
     C-->>T: 返回成功响应
+```
+
+### 选课管理模块
+
+#### 选课流程活动图
+
+```mermaid
+flowchart TD
+    A[开始] --> B[学生登录系统]
+    B --> C[查看可选课程列表]
+    C --> D[选择感兴趣的课程]
+    D --> E[检查选课条件]
+    E --> F{满足选课条件?}
+    F -->|是| G[提交选课申请]
+    G --> H[系统记录选课信息]
+    H --> I[更新课程已选人数]
+    I --> J[返回选课成功]
+    J --> K[结束]
+    F -->|否| L[提示不满足条件]
+    L --> M[结束]
+```
+
+#### 选课查询序列图
+
+```mermaid
+sequenceDiagram
+    participant S as 学生
+    participant C as CourseSelectionController
+    participant CS as CourseSelectionService
+    participant R as CourseSelectionRepository
+    participant DB as 数据库
+
+    S->>C: GET /api/course-selections/student/{studentId}
+    C->>CS: 查询学生选课记录
+    CS->>R: 查询选课记录
+    R->>DB: SELECT * FROM course_selections WHERE student_id = ?
+    DB-->>R: 返回选课数据
+    R-->>CS: 返回选课列表
+    CS->>CS: 获取课程详细信息
+    CS-->>C: 返回选课详情
+    C-->>S: 返回选课结果
+```
+
+### 教学大纲模块
+
+#### 教学大纲创建序列图
+
+```mermaid
+sequenceDiagram
+    participant T as 教师
+    participant C as SyllabusController
+    participant S as SyllabusService
+    participant R as SyllabusRepository
+    participant DB as 数据库
+
+    T->>C: POST /api/syllabi
+    C->>S: 创建教学大纲请求
+    S->>S: 验证大纲信息
+    S->>R: 保存教学大纲
+    R->>DB: INSERT INTO syllabi
+    DB-->>R: 返回大纲ID
+    R-->>S: 返回大纲对象
+    S-->>C: 返回创建结果
+    C-->>T: 返回成功响应
+```
+
+### 课表管理模块
+
+#### 学生课表查询序列图
+
+```mermaid
+sequenceDiagram
+    participant S as 学生
+    participant C as StudentTimetableController
+    participant TS as StudentTimetableService
+    participant R as TimetableRepository
+    participant DB as 数据库
+
+    S->>C: GET /api/student-timetable/{studentId}/{semester}
+    C->>TS: 查询学生课表
+    TS->>R: 查询学生选课
+    R->>DB: 查询学生已选课程
+    DB-->>R: 返回选课数据
+    R-->>TS: 返回选课列表
+    TS->>R: 查询课程时间安排
+    R->>DB: SELECT * FROM timetables WHERE course_id IN (...)
+    DB-->>R: 返回时间安排
+    R-->>TS: 返回课表数据
+    TS-->>C: 返回整理后的课表
+    C-->>S: 返回课表响应
+```
+
+#### 教师课表查询序列图
+
+```mermaid
+sequenceDiagram
+    participant T as 教师
+    participant C as TeacherTimetableController
+    participant TS as TeacherTimetableService
+    participant R as TimetableRepository
+    participant DB as 数据库
+
+    T->>C: GET /api/teacher-timetable/{teacherId}/{semester}
+    C->>TS: 查询教师课表
+    TS->>R: 查询教师课程时间安排
+    R->>DB: SELECT * FROM timetables WHERE teacher_id = ? AND semester = ?
+    DB-->>R: 返回时间安排
+    R-->>TS: 返回课表数据
+    TS-->>C: 返回课表响应
+    C-->>T: 返回课表响应
+```
+
+### 教室管理模块
+
+#### 教室管理功能说明
+
+教室管理模块提供教室信息的CRUD操作，包括：
+- 教室基本信息管理（名称、位置、容量、设备）
+- 教室使用情况查询
+- 教室预约管理
+
+### 学费管理模块
+
+#### 学费缴纳流程图
+
+```mermaid
+flowchart TD
+    A[开始] --> B[管理员创建学费记录]
+    B --> C[设置学费金额和截止日期]
+    C --> D[系统生成学费账单]
+    D --> E[学生查看学费账单]
+    E --> F[学生提交缴费]
+    F --> G[系统验证缴费信息]
+    G --> H{缴费成功?}
+    H -->|是| I[更新缴费状态为已缴纳]
+    I --> J[生成缴费记录]
+    J --> K[发送缴费成功通知]
+    K --> L[结束]
+    H -->|否| M[提示缴费失败]
+    M --> N[重新提交缴费]
+    N --> F
+```
+
+#### 学费查询序列图
+
+```mermaid
+sequenceDiagram
+    participant S as 学生/管理员
+    participant C as TuitionController
+    participant TS as TuitionService
+    participant R as TuitionRepository
+    participant DB as 数据库
+
+    S->>C: GET /api/tuition/student/{studentId}
+    C->>TS: 查询学费记录
+    TS->>R: 查询学费信息
+    R->>DB: SELECT * FROM tuition WHERE student_id = ?
+    DB-->>R: 返回学费数据
+    R-->>TS: 返回学费列表
+    TS-->>C: 返回学费信息
+    C-->>S: 返回学费响应
+```
+
+### 奖学金管理模块
+
+#### 奖学金申请流程图
+
+```mermaid
+flowchart TD
+    A[开始] --> B[管理员发布奖学金]
+    B --> C[设置奖学金信息]
+    C --> D[学生查看奖学金列表]
+    D --> E[学生提交申请]
+    E --> F[系统验证申请条件]
+    F --> G{满足条件?}
+    G -->|是| H[提交申请材料]
+    H --> I[更新申请状态为待审批]
+    I --> J[通知评审委员会]
+    J --> K[评审并公示结果]
+    K --> L[发放奖学金]
+    L --> M[结束]
+    G -->|否| N[提示不满足条件]
+    N --> O[结束]
+```
+
+#### 奖学金管理序列图
+
+```mermaid
+sequenceDiagram
+    participant A as 管理员
+    participant C as ScholarshipController
+    participant SS as ScholarshipService
+    participant R as ScholarshipRepository
+    participant DB as 数据库
+
+    A->>C: POST /api/scholarships
+    C->>SS: 创建奖学金请求
+    SS->>R: 保存奖学金
+    R->>DB: INSERT INTO scholarships
+    DB-->>R: 返回奖学金ID
+    R-->>SS: 返回奖学金对象
+    SS-->>C: 返回创建结果
+    C-->>A: 返回成功响应
+
+    A->>C: GET /api/scholarships
+    C->>SS: 查询奖学金列表
+    SS->>R: 查询所有奖学金
+    R->>DB: SELECT * FROM scholarships
+    DB-->>R: 返回奖学金列表
+    R-->>SS: 返回列表
+    SS-->>C: 返回奖学金列表
+    C-->>A: 返回响应
+```
+
+### 助学金管理模块
+
+#### 助学金申请流程图
+
+```mermaid
+flowchart TD
+    A[开始] --> B[学生查看助学金类型]
+    B --> C[选择助学金类型]
+    C --> D[填写申请信息]
+    D --> E[提交申请材料]
+    E --> F[系统验证信息]
+    F --> G{验证通过?}
+    G -->|是| H[提交申请]
+    H --> I[更新状态为待审批]
+    I --> J[通知审批人]
+    J --> K[审批并公示]
+    K --> L[发放助学金]
+    L --> M[结束]
+    G -->|否| N[提示完善信息]
+    N --> O[重新填写]
+    O --> D
+```
+
+#### 助学金审批序列图
+
+```mermaid
+sequenceDiagram
+    participant A as 审批人
+    participant C as FinancialAidController
+    participant FS as FinancialAidService
+    participant R as FinancialAidRepository
+    participant DB as 数据库
+
+    A->>C: GET /api/financial-aid/pending
+    C->>FS: 查询待审批申请
+    FS->>R: 查询状态为待审批的申请
+    R->>DB: SELECT * FROM financial_aid WHERE status = '待审批'
+    DB-->>R: 返回申请列表
+    R-->>FS: 返回列表
+    FS-->>C: 返回待审批列表
+    C-->>A: 返回响应
+
+    A->>C: PUT /api/financial-aid/{id}/approve
+    C->>FS: 审批助学金请求
+    FS->>R: 更新申请状态
+    R->>DB: UPDATE financial_aid SET status = ?, update_time = NOW()
+    DB-->>R: 返回更新结果
+    R-->>FS: 返回更新后的记录
+    FS-->>C: 返回操作结果
+    C-->>A: 返回成功响应
+```
+
+### 缴费记录模块
+
+#### 缴费记录查询序列图
+
+```mermaid
+sequenceDiagram
+    participant U as 用户
+    participant C as PaymentRecordController
+    participant PS as PaymentRecordService
+    participant R as PaymentRecordRepository
+    participant DB as 数据库
+
+    U->>C: GET /api/payment-records/student/{studentId}
+    C->>PS: 查询缴费记录
+    PS->>R: 查询学生缴费记录
+    R->>DB: SELECT * FROM payment_records WHERE student_id = ?
+    DB-->>R: 返回缴费数据
+    R-->>PS: 返回缴费列表
+    PS-->>C: 返回缴费记录
+    C-->>U: 返回响应
+```
+
+#### 批量缴费处理序列图
+
+```mermaid
+sequenceDiagram
+    participant A as 管理员
+    participant C as PaymentRecordController
+    participant PS as PaymentRecordService
+    participant R as PaymentRecordRepository
+    participant DB as 数据库
+
+    A->>C: POST /api/payment-records/batch
+    C->>PS: 批量创建缴费记录请求
+    PS->>PS: 验证请求数据
+    PS->>R: 批量保存缴费记录
+    R->>DB: 批量INSERT
+    DB-->>R: 返回插入结果
+    R-->>PS: 返回保存结果
+    PS-->>C: 返回处理结果
+    C-->>A: 返回成功响应
+```
+
+### 通知公告模块
+
+#### 通知发送流程图
+
+```mermaid
+flowchart TD
+    A[开始] --> B[管理员创建通知]
+    B --> C[填写通知内容]
+    C --> D[选择通知类型]
+    D --> E[选择发送对象]
+    E --> F[设置发送时间]
+    F --> G[立即发送或定时发送]
+    G --> H[系统处理通知]
+    H --> I[用户接收通知]
+    I --> J[用户查看通知]
+    J --> K[更新阅读状态]
+    K --> L[结束]
+```
+
+#### 通知管理序列图
+
+```mermaid
+sequenceDiagram
+    participant A as 管理员
+    participant C as NotificationController
+    participant NS as NotificationService
+    participant R as NotificationRepository
+    participant DB as 数据库
+
+    A->>C: POST /api/notifications
+    C->>NS: 创建通知请求
+    NS->>R: 保存通知
+    R->>DB: INSERT INTO notifications
+    DB-->>R: 返回通知ID
+    R-->>NS: 返回通知对象
+    NS-->>C: 返回创建结果
+    C-->>A: 返回成功响应
+
+    A->>C: GET /api/notifications
+    C->>NS: 查询通知列表
+    NS->>R: 查询所有通知
+    R->>DB: SELECT * FROM notifications ORDER BY create_time DESC
+    DB-->>R: 返回通知列表
+    R-->>NS: 返回列表
+    NS-->>C: 返回通知列表
+    C-->>A: 返回响应
+```
+
+### 错误日志模块
+
+#### 错误日志记录流程图
+
+```mermaid
+flowchart TD
+    A[开始] --> B[系统发生错误]
+    B --> C[捕获异常信息]
+    C --> D[记录错误详情]
+    D --> E[记录请求信息]
+    E --> F[记录用户信息]
+    F --> G[保存到数据库]
+    G --> H[可选择发送告警]
+    H --> I[结束]
+```
+
+#### 错误日志查询序列图
+
+```mermaid
+sequenceDiagram
+    participant A as 管理员
+    participant C as ErrorLogController
+    participant ES as ErrorLogService
+    participant R as ErrorLogRepository
+    participant DB as 数据库
+
+    A->>C: GET /api/error-logs
+    C->>ES: 查询错误日志
+    ES->>R: 带条件查询日志
+    R->>DB: SELECT * FROM error_logs WHERE ...
+    DB-->>R: 返回日志数据
+    R-->>ES: 返回日志列表
+    ES-->>C: 返回错误日志
+    C-->>A: 返回响应
+```
+
+### 系统报表模块
+
+#### 报表生成流程图
+
+```mermaid
+flowchart TD
+    A[开始] --> B[管理员选择报表类型]
+    B --> C[设置报表参数]
+    C --> D[系统收集数据]
+    D --> E[数据聚合计算]
+    E --> F[生成报表内容]
+    F --> G[保存报表记录]
+    G --> H[返回报表结果]
+    H --> I[结束]
+```
+
+#### 系统报表序列图
+
+```mermaid
+sequenceDiagram
+    participant A as 管理员
+    participant C as SystemReportController
+    participant SS as SystemReportService
+    participant R as SystemReportRepository
+    participant DB as 数据库
+
+    A->>C: POST /api/system-reports/generate
+    C->>SS: 生成报表请求
+    SS->>SS: 根据类型收集数据
+    SS->>SS: 计算统计数据
+    SS->>R: 保存报表
+    R->>DB: INSERT INTO system_reports
+    DB-->>R: 返回报表ID
+    R-->>SS: 返回报表对象
+    SS-->>C: 返回报表数据
+    C-->>A: 返回报表响应
+
+    A->>C: GET /api/system-reports/{id}
+    C->>SS: 查询报表详情
+    SS->>R: 根据ID查询报表
+    R->>DB: SELECT * FROM system_reports WHERE id = ?
+    DB-->>R: 返回报表数据
+    R-->>SS: 返回报表
+    SS-->>C: 返回报表详情
+    C-->>A: 返回响应
 ```
 
 ## 配置说明
