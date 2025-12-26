@@ -18,7 +18,8 @@ const pageMappings = {
     'studenttimetable': '../timetable/studenttimetable.html',
     'syllabus': '../course/syllabus.html',
     'grade': '../grade/grade-index.html',
-    'finance': '../finance/finance-index.html'
+    'finance': '../finance/finance-index.html',
+    'user': '../system/user.html'
 };
 
 // SVG图标模板
@@ -113,6 +114,12 @@ function getSidebarHTML() {
                                 <a href="#" class="sidebar-menu-link" data-page="finance">
                                     <span class="sidebar-menu-icon">${icons.wallet}</span>
                                     <span class="sidebar-menu-text">财务管理</span>
+                                </a>
+                            </li>
+                            <li class="sidebar-menu-item admin-only">
+                                <a href="#" class="sidebar-menu-link" data-page="user">
+                                    <span class="sidebar-menu-icon">${icons.user}</span>
+                                    <span class="sidebar-menu-text">用户管理</span>
                                 </a>
                             </li>
                         </ul>

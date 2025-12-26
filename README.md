@@ -106,8 +106,9 @@ spring:
 项目启动后，可以通过以下方式访问数据库：
 
 1. **H2控制台**：
+   - Server模式
    - 访问 http://localhost:8081/h2-console
-   - JDBC URL: `jdbc:h2:~/smartcampus`
+   - JDBC URL: `jdbc:h2:tcp://DESKTOP-2QVAB5J:9092/smartcampus`
    - 用户名: `sa`
    - 密码: (留空)
 
@@ -125,7 +126,7 @@ spring:
 ```yaml
 spring:
   datasource:
-    url: jdbc:h2:tcp://172.28.96.1:9092/smartcampus;DB_CLOSE_DELAY=-1;MODE=MYSQL;DATABASE_TO_LOWER=TRUE
+    url: jjdbc:h2:tcp://DESKTOP-2QVAB5J:9092/smartcampus;DB_CLOSE_DELAY=-1;MODE=MYSQL;DATABASE_TO_LOWER=TRUE
     username: sa
     password:
     driver-class-name: org.h2.Driver
@@ -139,7 +140,7 @@ spring:
 
 连接配置:
 - Saved Settings: Generic H2(Server)
-- JDBC URL: `jdbc:h2:\\172.28.96.1\h2-shared\smartcampus`
+- JDBC URL: `jdbc:h2:tcp://DESKTOP-2QVAB5J:9092/smartcampus`
 - 用户名: `sa`
 - 密码: (空)
 

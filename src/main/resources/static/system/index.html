@@ -377,6 +377,10 @@
             <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></span>
             <span>课程管理</span>
         </a>
+        <a href="../system/user.html" class="quick-action-btn admin-only" id="userManagementBtn" style="display: none;">
+            <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>
+            <span>用户管理</span>
+        </a>
     </div>
 </div>
 
@@ -435,12 +439,15 @@
         const studentTimetableBtn = document.getElementById('studentTimetableBtn');
         const teacherTimetableBtn = document.getElementById('teacherTimetableBtn');
         const courseSelectionBtn = document.getElementById('courseSelectionBtn');
+        const userManagementBtn = document.getElementById('userManagementBtn');
         
         if (currentUser.userType === 'STUDENT') {
             studentTimetableBtn.style.display = 'flex';
             courseSelectionBtn.style.display = 'flex';
         } else if (currentUser.userType === 'TEACHER') {
             teacherTimetableBtn.style.display = 'flex';
+        } else if (currentUser.userType === 'ADMIN') {
+            userManagementBtn.style.display = 'flex';
         }
     }
 

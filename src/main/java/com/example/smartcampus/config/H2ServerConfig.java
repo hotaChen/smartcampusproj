@@ -16,7 +16,7 @@ public class H2ServerConfig {
 
     @EventListener(ApplicationReadyEvent.class)
     public void startServer() throws SQLException {
-        String sharedFolderPath = "\\\\172.28.96.1\\h2-shared";
+        String sharedFolderPath = "\\\\DESKTOP-2QVAB5J\\h2-shared";
         String dbFileName = "smartcampus";
         String fullPath = sharedFolderPath + "\\" + dbFileName;
 
