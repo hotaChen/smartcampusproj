@@ -77,6 +77,16 @@ docker-compose down
   - 功能: 学费记录管理，包括添加、查询、删除学费记录
   - 依赖: Thymeleaf模板引擎，finance.css样式
 
+- **学生学费页面**: `src/main/resources/static/finance/tuition-view.html`
+  - 功能: 学生查看个人学费记录并进行缴费
+  - 依赖: Thymeleaf模板引擎，finance.css样式，api.js工具
+  - 包含组件:
+    - 学费列表展示（已缴/未缴状态区分）
+    - 缴费弹窗表单
+    - 缴费金额自动填充与校验
+    - 支付方式选择（支付宝/微信/银行卡）
+    - 缴费成功状态更新与提示
+
 ### 奖学金管理模块
 - **前端页面**: `src/main/resources/static/finance/scholarship-manage.html`
   - 功能: 奖学金信息管理，包括添加、编辑、删除奖学金记录

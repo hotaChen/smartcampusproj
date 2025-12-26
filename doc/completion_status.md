@@ -36,6 +36,14 @@
 
 ## 最近更新
 
+### 2025-12-27 - 学生缴费功能实现
+- 新增学生学费查看页面 `tuition-view.html`
+- 实现缴费弹窗组件，包含完整的缴费表单
+- 添加缴费表单验证逻辑（金额校验、支付方式选择）
+- 实现与后端缴费API的集成（`/api/payment-records/tuition`）
+- 添加缴费成功后的状态更新和提示功能
+- 根据用户角色显示/隐藏缴费按钮（学生可缴，管理员查看）
+
 ### 2025-12-26 - 选课系统500错误修复
 - 添加 GlobalExceptionHandler.java 全局异常处理器
 - 修复 CustomUserDetails.java 中 role 可能为 null 导致 NullPointerException 的问题

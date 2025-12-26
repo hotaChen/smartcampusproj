@@ -16,6 +16,55 @@
 <script src="../js/header.js"></script>
 
 <div id="header-container"></div>
+<div id="payment-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>学费缴纳</h2>
+            <span class="close-btn" onclick="closePaymentModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+            <input type="hidden" id="payment-tuition-id">
+            <input type="hidden" id="payment-student-id">
+            <div class="form-group">
+                <label>学生姓名</label>
+                <input type="text" id="payment-student-name" class="input" readonly>
+            </div>
+            <div class="form-group">
+                <label>学号</label>
+                <input type="text" id="payment-student-number" class="input" readonly>
+            </div>
+            <div class="form-group">
+                <label>学期</label>
+                <input type="text" id="payment-semester" class="input" readonly>
+            </div>
+            <div class="form-group">
+                <label>应缴金额</label>
+                <input type="text" id="payment-amount" class="input" readonly>
+            </div>
+            <div class="form-group">
+                <label>缴费金额</label>
+                <input type="number" id="payment-paid-amount" class="input" placeholder="请输入缴费金额" step="0.01">
+            </div>
+            <div class="form-group">
+                <label>缴费方式</label>
+                <select id="payment-method" class="input">
+                    <option value="银行卡">银行卡</option>
+                    <option value="支付宝">支付宝</option>
+                    <option value="微信支付">微信支付</option>
+                    <option value="校园卡">校园卡</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>备注</label>
+                <input type="text" id="payment-description" class="input" placeholder="请输入备注（可选）">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn secondary" onclick="closePaymentModal()">取消</button>
+            <button class="btn primary" onclick="submitPayment()">确认缴费</button>
+        </div>
+    </div>
+</div>
 <div id="toast" class="toast"></div>
 
 <div class="page-content">
@@ -174,6 +223,119 @@
 .action-btn:active {
     transform: translateY(0);
 }
+
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(5px);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: rgba(30, 41, 59, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: modalSlideIn 0.3s ease;
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: #f1f5f9;
+    font-size: 20px;
+}
+
+.close-btn {
+    font-size: 28px;
+    color: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    transition: color 0.2s;
+    line-height: 1;
+}
+
+.close-btn:hover {
+    color: #f1f5f9;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 16px 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-footer .btn {
+    min-width: 80px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.input {
+    width: 100%;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    color: var(--text);
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.input:focus {
+    outline: none;
+    border-color: rgba(16, 185, 129, 0.5);
+    background: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
 </style>
 
 <script>
@@ -211,9 +373,7 @@ function loadTuitionInfo(user) {
             let html = '<table class="data-table"><thead><tr>';
             html += '<th>学生姓名</th><th>学号</th><th>学期</th><th>学费金额</th><th>缴费状态</th><th>缴费截止日期</th>';
             
-            if (user.userType === 'ADMIN' || user.userType === 'TEACHER') {
-                html += '<th>操作</th>';
-            }
+            html += '<th>操作</th>';
             
             html += '</tr></thead><tbody>';
             
@@ -225,15 +385,16 @@ function loadTuitionInfo(user) {
                         <td>${tuition.semester || '-'}</td>
                         <td>${tuition.amount ? '¥' + tuition.amount : '-'}</td>
                         <td>${getStatusBadge(tuition.paymentStatus || '未缴费')}</td>
-                        <td>${tuition.dueDate ? tuition.dueDate.split('T')[0] : '-'}</td>`;
+                        <td>${tuition.dueDate ? tuition.dueDate.split('T')[0] : '-'}</td>
+                        <td>`;
                     
-                    if (user.userType === 'ADMIN' || user.userType === 'TEACHER') {
-                        html += `<td>
-                            <button class="action-btn" onclick="viewPaymentRecords(${tuition.id})">查看缴费记录</button>
-                        </td>`;
+                    if (tuition.paymentStatus !== '已缴费') {
+                        html += `<button class="action-btn" onclick="openPaymentModal(${tuition.id}, '${tuition.studentName || ''}', '${tuition.studentNumber || ''}', '${tuition.semester || ''}', ${tuition.amount || 0})">缴费</button>`;
+                    } else {
+                        html += `<button class="action-btn" onclick="viewPaymentRecords(${tuition.id})">查看记录</button>`;
                     }
                     
-                    html += '</tr>';
+                    html += `</td></tr>`;
                 });
             } else {
                 html += '<tr><td colspan="7" class="empty-state">暂无学费记录</td></tr>';
@@ -246,6 +407,70 @@ function loadTuitionInfo(user) {
             console.error(err);
             document.getElementById('tuition-list').innerHTML = '<div class="empty-state" style="color: #f87171;">加载学费信息失败</div>';
         });
+}
+
+function openPaymentModal(tuitionId, studentName, studentNumber, semester, amount) {
+    document.getElementById('payment-tuition-id').value = tuitionId;
+    document.getElementById('payment-student-name').value = studentName;
+    document.getElementById('payment-student-number').value = studentNumber;
+    document.getElementById('payment-semester').value = semester;
+    document.getElementById('payment-amount').value = '¥' + amount;
+    document.getElementById('payment-paid-amount').value = amount;
+    document.getElementById('payment-method').value = '银行卡';
+    document.getElementById('payment-description').value = '';
+    
+    document.getElementById('payment-modal').classList.add('show');
+}
+
+function closePaymentModal() {
+    document.getElementById('payment-modal').classList.remove('show');
+}
+
+function submitPayment() {
+    const tuitionId = document.getElementById('payment-tuition-id').value;
+    const paidAmount = document.getElementById('payment-paid-amount').value;
+    const paymentMethod = document.getElementById('payment-method').value;
+    const description = document.getElementById('payment-description').value;
+    
+    if (!paidAmount || parseFloat(paidAmount) <= 0) {
+        showToast('请输入有效的缴费金额');
+        return;
+    }
+    
+    const paymentData = {
+        tuitionId: parseInt(tuitionId),
+        amount: parseFloat(paidAmount),
+        paymentMethod: paymentMethod,
+        description: description || null
+    };
+    
+    apiRequest('/api/payment-records/tuition', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(paymentData)
+    })
+    .then(resp => {
+        if (!resp.ok) {
+            return resp.json().then(err => Promise.reject(err));
+        }
+        return resp.json();
+    })
+    .then(data => {
+        showToast('缴费成功');
+        closePaymentModal();
+        SidebarManager.init({ 
+            currentPage: 'tuition-view',
+            onReady: function(user) {
+                loadTuitionInfo(user);
+            }
+        });
+    })
+    .catch(err => {
+        console.error(err);
+        showToast(err.message || '缴费失败，请稍后重试');
+    });
 }
 
 function viewPaymentRecords(tuitionId) {
