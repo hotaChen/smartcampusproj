@@ -36,7 +36,18 @@
 
 ## 最近更新
 
-### 2025-12-27 - H2 数据库外部访问配置
+### 2025-12-27 - 移除H2数据库外部TCP访问
+- 移除 docker-compose.yml 中的 9092 端口映射
+- 简化部署配置，避免宿主机IP变化导致的连接问题
+- 数据库仅支持容器内访问，更安全可靠
+- 更新用户手册和架构文档，移除9092端口相关说明
+
+### 2025-12-27 - Docker部署文档更新
+- 更新用户手册中的Docker部署配置，与实际 `docker-compose.yml` 保持一致
+- 移除已过时的MySQL数据库配置说明
+- 添加端口说明表格（8081应用端口、9092 H2数据库TCP端口）
+- 添加数据库访问方式说明（Web Console、JDBC连接、文件路径）
+- 更新 architecture.md，补充完整的 Docker Compose 配置示例
 - 启用 H2 Web Console (`/h2-console`)，允许外部机器通过浏览器访问数据库
 - 配置 `web-allow-others: true` 允许外部 TCP 连接
 - 在 `docker-compose.yml` 中暴露 9092 端口

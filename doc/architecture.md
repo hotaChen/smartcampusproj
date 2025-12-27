@@ -59,14 +59,39 @@ src/main/java/com/example/smartcampus/
 | 存储路径 | `/data/smartcampus` (Docker 卷) |
 | 连接参数 | `DB_CLOSE_DELAY=-1;MODE=MYSQL;DATABASE_TO_LOWER=TRUE` |
 | 数据持久化 | Docker 卷 `h2-data` |
-| H2 Console | `/h2-console` (Web UI + TCP 9092端口) |
+| H2 Console | `/h2-console` (Web UI) |
 
-### H2 数据库外部访问配置
-| 访问方式 | 地址 | 说明 |
-|---------|------|------|
-| Web Console | `http://<宿主机IP>:8081/h2-console` | 浏览器访问 |
-| JDBC TCP | `jdbc:h2:tcp://<宿主机IP>:9092/smartcampus` | 外部应用连接 |
-| JDBC 文件 | `jdbc:h2:file:/data/smartcampus` | 仅容器内访问 |
+### H2 数据库访问方式
+| 访问方式 | 连接字符串 | 说明 |
+|---------|-----------|------|
+| 文件路径 | `jdbc:h2:file:/data/smartcampus` | 仅容器内访问 |
+| Web Console | `http://<宿主机IP>:8081/h2-console` | 浏览器访问（仅限容器内） |
+
+### Docker Compose 配置
+```yaml
+version: '3.8'
+services:
+  smart-campus:
+    build: .
+    container_name: smart-campus-app
+    ports:
+      - "8081:8081"
+    volumes:
+      - h2-data:/data
+    environment:
+      - SPRING_PROFILES_ACTIVE=prod
+      - SPRING_DATASOURCE_URL=jdbc:h2:file:/data/smartcampus;DB_CLOSE_DELAY=-1;MODE=MYSQL;DATABASE_TO_LOWER=TRUE
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.h2.Driver
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=create-drop
+    restart: unless-stopped
+
+volumes:
+  h2-data:
+```
+
+> **说明**: 本部署方案不暴露H2数据库TCP端口（9092），数据库仅支持容器内访问。如需外部数据库工具访问，请参考用户手册中关于静态IP配置的说明。
 
 ## 容器化部署
 
