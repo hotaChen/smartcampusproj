@@ -63,9 +63,9 @@ public interface ErrorLogRepository extends JpaRepository<ErrorLog, Long> {
     List<Object[]> countByLevel();
 
     // 统计最近N天的错误趋势
-    @Query("SELECT FUNCTION('DATE', e.errorTime), COUNT(e) FROM ErrorLog e " +
-            "WHERE e.errorTime >= :startDate GROUP BY FUNCTION('DATE', e.errorTime) " +
-            "ORDER BY FUNCTION('DATE', e.errorTime) DESC")
+    @Query("SELECT CAST(e.errorTime AS date), COUNT(e) FROM ErrorLog e " +
+            "WHERE e.errorTime >= :startDate GROUP BY CAST(e.errorTime AS date) " +
+            "ORDER BY CAST(e.errorTime AS date) DESC")
     List<Object[]> countByDate(@Param("startDate") LocalDateTime startDate);
 
     // 获取最常见的错误类型

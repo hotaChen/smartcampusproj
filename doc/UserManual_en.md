@@ -59,6 +59,55 @@ To create a tuition record, select the student, set the amount, choose the semes
 
 ![](image-8.png)
 
+#### 3.2.5 System Report Management
+
+The system report management module provides administrators with comprehensive report generation, query, and statistics functions. Upon entering the system report management page, four main function tabs are visible: Query Reports, Generate Reports, Operation Records, and Statistics.
+
+![](报表管理-查询报表.png)
+
+**Query Reports Function** allows administrators to filter and view generated reports based on multiple conditions. Query criteria include report type (Academic Report, Financial Report, User Report, Course Report, Comprehensive Report), date range, and generation status (Pending, Generating, Completed, Failed). Query results are displayed in a table format, including report ID, report name, type, generation time, and status. Administrators can view report details or download report files.
+
+**Generate Reports Function** supports administrators in creating new reports. After filling in the report name, selecting the report type, setting the time range, and providing description information, the system will automatically generate the report. Report types include:
+- Academic Report: Contains teaching-related data such as student grade statistics and course completion rates
+- Financial Report: Contains financial data such as tuition payment statistics and revenue/expense status
+- User Report: Contains user analysis data such as user growth and activity
+- Course Report: Contains course operation data such as course selection rates and capacity utilization
+- Comprehensive Report: Integrated multi-dimensional comprehensive analysis report
+
+![](报表管理-生成报表.png)
+
+**Operation Records Function** records all report-related operation history, including report generation, viewing, and downloading. Each record contains operation ID, report ID, operation type, operator, operation time, and details, facilitating administrator tracing and auditing.
+
+**Statistics Function** provides real-time statistical data and trend charts for report generation. Statistical cards display total reports, today's generated count, weekly generated count, monthly generated count, generating count, and completed count. Trend charts display the time trend of report generation in line chart format, helping administrators understand report usage patterns.
+
+![](报表管理-更新报表.png)
+
+#### 3.2.6 Error Log Management
+
+The error log management module helps administrators monitor system running status and detect and handle system errors in a timely manner. Upon entering the error log management page, four main function tabs are visible: Log Query, Log Details, Error Statistics, and Log Operations.
+
+![](错误日志-查询页面.png)
+
+**Log Query Function** provides multiple query methods to help administrators locate error logs. General condition query supports combined queries by module name, error level, page number, and page size. Specialized queries include query by module, query by error level (INFO, WARN, ERROR, FATAL), and query by time range. Query results are displayed in a table format, including log ID, module, error level, error message summary, and creation time. Administrators can click operation buttons to view log details or delete individual logs.
+
+![](错误日志-可进行删除日志.png)
+
+**Log Details Function** allows administrators to view complete information for specific logs. After entering the log ID, the system displays detailed error information, including:
+- Basic Information: Log ID, module name, error level, error type, class name, method name
+- Error Content: Error message, error stack trace
+- Request Information: Request URL, request method, client IP, request parameters
+- Time Information: Error time, creation time, triggering user
+
+These detailed pieces of information help administrators quickly locate the root cause of problems and perform troubleshooting.
+
+![](错误日志-日志详情.png)
+
+**Error Statistics Function** provides multi-dimensional error analysis statistics. Administrators can obtain total statistics, error distribution by module, error distribution by error level, and error trends within a specified number of days. Statistical information is displayed in card and chart formats, helping administrators understand system health status and error occurrence patterns.
+
+![](错误日志-统计.png)
+
+**Log Operations Function** provides log cleanup and maintenance operations. Single deletion allows administrators to delete specified log records. Batch deletion supports deleting multiple log records at once through a comma-separated ID list. Cleanup by time can delete all expired logs before a specified time point. Cleanup by days can delete log records from a specified number of days ago. Trigger monthly cleanup task allows manual execution of periodic cleanup tasks to free up storage space.
+
 ### 3.3 Teacher Guide
 
 #### 3.3.1 Grade Entry
