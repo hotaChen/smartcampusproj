@@ -8,9 +8,11 @@ services:
     container_name: smart-campus-app
     ports:
       - "8081:8081"
+    volumes:
+      - h2-data:/data
     environment:
       - SPRING_PROFILES_ACTIVE=prod
-      - SPRING_DATASOURCE_URL=jdbc:h2:mem:smartcampus
+      - SPRING_DATASOURCE_URL=jdbc:h2:file:/data/smartcampus;DB_CLOSE_DELAY=-1;MODE=MYSQL;DATABASE_TO_LOWER=TRUE
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=org.h2.Driver
       - SPRING_DATASOURCE_USERNAME=sa
       - SPRING_DATASOURCE_PASSWORD=
@@ -28,3 +30,6 @@ services:
 networks:
   smart-campus-network:
     driver: bridge
+
+volumes:
+  h2-data:

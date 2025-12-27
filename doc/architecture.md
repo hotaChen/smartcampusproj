@@ -48,9 +48,17 @@ src/main/java/com/example/smartcampus/
 
 ### 生产环境
 - 使用 Docker 容器化部署
-- 使用 H2 数据库
+- 使用 H2 文件数据库（持久化存储）
 - 使用 docker-compose 管理
 - 配置文件: application-prod.yml
+
+### 生产环境数据库配置
+| 配置项 | 值 |
+|--------|-----|
+| 数据库类型 | H2 文件数据库 |
+| 存储路径 | `/data/smartcampus` (Docker 卷) |
+| 连接参数 | `DB_CLOSE_DELAY=-1;MODE=MYSQL;DATABASE_TO_LOWER=TRUE` |
+| 数据持久化 | Docker 卷 `h2-data` |
 
 ## 容器化部署
 

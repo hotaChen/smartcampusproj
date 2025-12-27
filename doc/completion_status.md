@@ -36,7 +36,11 @@
 
 ## 最近更新
 
-### 2025-12-27 - 学生缴费功能实现
+### 2025-12-27 - H2 数据库持久化配置
+- 修改 `application-prod.yml`，将 H2 从内存模式改为文件存储模式
+- 修改 `docker-compose.yml`，添加数据卷挂载 `h2-data:/data`
+- 更新数据库 URL: `jdbc:h2:file:/data/smartcampus;DB_CLOSE_DELAY=-1;MODE=MYSQL;DATABASE_TO_LOWER=TRUE`
+- 添加 Docker 卷定义，实现容器重启后数据不丢失
 - 新增学生学费查看页面 `tuition-view.html`
 - 实现缴费弹窗组件，包含完整的缴费表单
 - 添加缴费表单验证逻辑（金额校验、支付方式选择）
