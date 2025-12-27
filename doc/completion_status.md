@@ -36,7 +36,17 @@
 
 ## 最近更新
 
-### 2025-12-27 - 移除H2数据库外部TCP访问
+### 2025-12-27 - 报表系统数据聚合功能完善
+- **核心问题修复**: 报表不再只是管理员填写的描述，而是自动从各业务模块聚合真实业务数据
+- 修改 SystemReportServiceImpl.java，在创建报表时调用 ReportDataService 聚合学术、用户、财务等模块数据
+- 添加 ReportDataService 依赖注入，将业务数据序列化为 JSON 存储到 reportData 字段
+- 新增 API 接口 `/api/system-reports/generate-with-data` 支持指定报表类型和数据范围
+- 新增 API 接口 `/api/system-reports/quick-generate` 支持快速生成报表
+- 更新前端 generateReport() 函数使用新 API，显示"正在生成报表，整合各模块业务数据..."提示
+- 更新 viewReport() 函数，添加 formatReportData() 等函数解析并展示聚合的业务数据
+- 新增学术数据、财务数据、用户数据的格式化展示函数
+- 添加报表详情弹窗的样式支持，展示各类统计卡片和数据表格
+- 现在创建报表时会自动从 UserRepository、CourseRepository、GradeRepository、TuitionRepository、ScholarshipRepository、FinancialAidRepository、PaymentRecordRepository 聚合数据
 - 移除 docker-compose.yml 中的 9092 端口映射
 - 简化部署配置，避免宿主机IP变化导致的连接问题
 - 数据库仅支持容器内访问，更安全可靠

@@ -1,8 +1,11 @@
 package com.example.smartcampus.service.impl;
 
+import com.example.smartcampus.dto.ReportDataDTO;
 import com.example.smartcampus.entity.SystemReport;
 import com.example.smartcampus.repository.SystemReportRepository;
+import com.example.smartcampus.service.ReportDataService;
 import com.example.smartcampus.service.SystemReportService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -14,14 +17,26 @@ import java.util.List;
 public class SystemReportServiceImpl implements SystemReportService {
 
     private final SystemReportRepository systemReportRepository;
+    private final ReportDataService reportDataService;
+    private final ObjectMapper objectMapper;
 
-    public SystemReportServiceImpl(SystemReportRepository systemReportRepository) {
+    public SystemReportServiceImpl(SystemReportRepository systemReportRepository,
+                                   ReportDataService reportDataService,
+                                   ObjectMapper objectMapper) {
         this.systemReportRepository = systemReportRepository;
+        this.reportDataService = reportDataService;
+        this.objectMapper = objectMapper;
     }
 
     @Override
     public Page<SystemReport> getAllReports(Pageable pageable) {
         return systemReportRepository.findByOrderByGenerateTimeDesc(pageable);
+    }
+
+    @Override
+    public SystemReport getById(Long id) {
+        return systemReportRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("报表不存在，ID: " + id));
     }
 
     @Override
@@ -62,11 +77,27 @@ public class SystemReportServiceImpl implements SystemReportService {
             systemReport.setReportFormat("PDF");
         }
 
+        // 生成报表业务数据 - 从各业务模块聚合数据
+        LocalDateTime startDate = systemReport.getStartDate();
+        LocalDateTime endDate = systemReport.getEndDate();
+        String reportType = systemReport.getReportType();
+
+        ReportDataDTO reportData = reportDataService.generateReportData(reportType, startDate, endDate);
+
+        // 将报表数据转换为JSON存储
+        try {
+            String reportDataJson = objectMapper.writeValueAsString(reportData);
+            systemReport.setReportData(reportDataJson);
+        } catch (Exception e) {
+            throw new RuntimeException("报表数据序列化失败", e);
+        }
+
         // 保存报表
         SystemReport savedReport = systemReportRepository.save(systemReport);
 
-        // 这里可以添加报表生成的业务逻辑
-        // 比如调用报表生成服务，更新状态等
+        // 标记报表为已完成
+        savedReport.setStatus("COMPLETED");
+        savedReport = systemReportRepository.save(savedReport);
 
         return savedReport;
     }

@@ -1,3 +1,7 @@
+---
+output: word_document
+---
+
 ## 3. User Manual and Deployment Configuration
 
 ### 3.1 System Overview & Quick Start

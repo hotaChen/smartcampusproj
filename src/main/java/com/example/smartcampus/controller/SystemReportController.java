@@ -1,5 +1,6 @@
 package com.example.smartcampus.controller;
 
+import com.example.smartcampus.dto.ReportRequest;
 import com.example.smartcampus.entity.SystemReport;
 import com.example.smartcampus.service.SystemReportService;
 import org.springframework.data.domain.Page;
@@ -31,6 +32,13 @@ public class SystemReportController {
         Pageable pageable = PageRequest.of(page, size);
         Page<SystemReport> reports = systemReportService.getAllReports(pageable);
         return ResponseEntity.ok(reports);
+    }
+
+    // 根据ID获取报表详情
+    @GetMapping("/{id}")
+    public ResponseEntity<SystemReport> getReportById(@PathVariable Long id) {
+        SystemReport report = systemReportService.getById(id);
+        return ResponseEntity.ok(report);
     }
 
     // 根据报表类型获取
@@ -76,6 +84,40 @@ public class SystemReportController {
     // 生成新报表
     @PostMapping("/generate")
     public ResponseEntity<SystemReport> generateReport(@RequestBody SystemReport systemReport) {
+        SystemReport generatedReport = systemReportService.generateReport(systemReport);
+        return ResponseEntity.ok(generatedReport);
+    }
+
+    // 生成报表 - 支持指定报表类型和数据范围
+    @PostMapping("/generate-with-data")
+    public ResponseEntity<SystemReport> generateReportWithData(@RequestBody ReportRequest request) {
+        SystemReport systemReport = new SystemReport();
+        systemReport.setReportName(request.getReportName());
+        systemReport.setReportType(request.getReportType());
+        systemReport.setDescription(request.getDescription());
+        systemReport.setStartDate(request.getStartDate());
+        systemReport.setEndDate(request.getEndDate());
+        systemReport.setReportFormat(request.getReportFormat() != null ? request.getReportFormat() : "PDF");
+        
+        SystemReport generatedReport = systemReportService.generateReport(systemReport);
+        return ResponseEntity.ok(generatedReport);
+    }
+
+    // 快速生成报表 - 简化的接口
+    @PostMapping("/quick-generate")
+    public ResponseEntity<SystemReport> quickGenerateReport(
+            @RequestParam String reportType,
+            @RequestParam(required = false) String reportName,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+        
+        SystemReport systemReport = new SystemReport();
+        systemReport.setReportName(reportName != null ? reportName : "系统报表-" + reportType + "-" + LocalDateTime.now());
+        systemReport.setReportType(reportType);
+        systemReport.setStartDate(startDate != null ? startDate : LocalDateTime.now().minusMonths(1));
+        systemReport.setEndDate(endDate != null ? endDate : LocalDateTime.now());
+        systemReport.setReportFormat("PDF");
+        
         SystemReport generatedReport = systemReportService.generateReport(systemReport);
         return ResponseEntity.ok(generatedReport);
     }

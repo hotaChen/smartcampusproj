@@ -2,219 +2,1552 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>系统报表管理</title>
-    <link rel="stylesheet" href="../css/common.css">
-    <link rel="stylesheet" href="../css/systemreport.css">
+    <link rel="stylesheet" href="../css/style.css?v=egg-final">
+    <link rel="stylesheet" href="../css/page.css?v=egg-final">
+    <link rel="stylesheet" href="../css/sidebar.css?v=egg-final">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+            align-items: flex-end;
+        }
+
+        .search-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .search-group .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .search-group .form-field label {
+            font-size: 12px;
+            color: rgba(255,255,255,0.6);
+        }
+
+        .search-group .form-field input,
+        .search-group .form-field select {
+            height: 42px;
+            padding: 0 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
+            color: var(--text);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .search-group .form-field input:focus,
+        .search-group .form-field select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(245,158,11,0.2);
+        }
+
+        .search-group .form-field input::placeholder {
+            color: rgba(255,255,255,0.4);
+        }
+
+        .toolbar .btn {
+            height: 42px;
+            padding: 0 24px;
+            font-size: 14px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .toolbar .btn.primary {
+            background: linear-gradient(135deg, #fde68a, #f59e0b);
+            color: #1a1a1a;
+        }
+
+        .toolbar .btn.secondary {
+            background: rgba(255,255,255,0.15);
+            color: var(--text);
+        }
+
+        .toolbar .btn.secondary:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        .tabs-wrapper {
+            background: var(--card);
+            backdrop-filter: blur(18px);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            margin-top: 20px;
+        }
+
+        .page-tabs {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 16px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .page-tab {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .page-tab:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .page-tab.active {
+            background: linear-gradient(135deg, #fde68a, #f59e0b);
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .data-table-wrapper {
+            overflow-x: auto;
+            margin-top: 16px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .data-table th {
+            background: rgba(245,158,11,0.1);
+            font-weight: 600;
+            color: var(--primary);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            color: var(--text);
+        }
+
+        .data-table tbody tr:hover {
+            background: rgba(255,255,255,0.05);
+        }
+
+        .data-table .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .data-table .status-badge.completed {
+            background: rgba(34,197,94,0.2);
+            color: #22c55e;
+        }
+
+        .data-table .status-badge.generating {
+            background: rgba(245,158,11,0.2);
+            color: #f59e0b;
+        }
+
+        .data-table .status-badge.pending {
+            background: rgba(255,255,255,0.1);
+            color: rgba(255,255,255,0.6);
+        }
+
+        .data-table .status-badge.failed {
+            background: rgba(239,68,68,0.2);
+            color: #ef4444;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .table-actions .btn {
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .table-actions .btn.view {
+            background: rgba(245,158,11,0.2);
+            color: #f59e0b;
+        }
+
+        .table-actions .btn.delete {
+            background: rgba(239,68,68,0.2);
+            color: #ef4444;
+        }
+
+        .table-actions .btn:hover {
+            opacity: 0.8;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .pagination button {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
+            color: var(--text);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination span {
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .form-container {
+            max-width: 600px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-row .form-field {
+            flex: 1;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            margin-bottom: 16px;
+        }
+
+        .form-field label {
+            font-size: 14px;
+            color: rgba(255,255,255,0.8);
+            font-weight: 500;
+        }
+
+        .form-field input,
+        .form-field select,
+        .form-field textarea {
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            background: rgba(255,255,255,0.1);
+            color: var(--text);
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .form-field input:focus,
+        .form-field select:focus,
+        .form-field textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(245,158,11,0.2);
+        }
+
+        .form-field textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .form-actions .btn {
+            height: 42px;
+            padding: 0 24px;
+            font-size: 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .form-actions .btn.primary {
+            background: linear-gradient(135deg, #fde68a, #f59e0b);
+            color: #1a1a1a;
+        }
+
+        .form-actions .btn.secondary {
+            background: rgba(255,255,255,0.15);
+            color: var(--text);
+        }
+
+        .form-actions .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .stat-card h3 {
+            font-size: 13px;
+            color: rgba(255,255,255,0.6);
+            margin: 0 0 8px 0;
+            font-weight: 500;
+        }
+
+        .stat-card p {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0;
+        }
+
+        .chart-container {
+            background: rgba(255,255,255,0.03);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            height: 340px;
+            box-sizing: border-box;
+            overflow: hidden;
+        }
+
+        .chart-container h3 {
+            font-size: 16px;
+            color: var(--text);
+            margin: 0 0 12px 0;
+        }
+
+        .chart-wrapper {
+            height: calc(100% - 28px);
+            width: 100%;
+            overflow: hidden;
+        }
+
+        #reportTrendChart {
+            width: 100%;
+            height: 100%;
+            max-height: 100%;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        #message {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        #message.success {
+            display: block;
+            background: rgba(34,197,94,0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34,197,94,0.3);
+        }
+
+        #message.error {
+            display: block;
+            background: rgba(239,68,68,0.2);
+            color: #ef4444;
+            border: 1px solid rgba(239,68,68,0.3);
+        }
+    </style>
 </head>
-<body>
-    <header>
-        <div class="header-container">
-            <div class="header-title">
-                <h1>系统报表管理</h1>
+<body class="with-sidebar">
+<canvas id="bg"></canvas>
+<script src="../js/api.js"></script>
+<script src="../js/particles.js?v=egg-final"></script>
+<script src="../js/egg.js"></script>
+<script src="../js/sidebar.js"></script>
+<script src="../js/header.js"></script>
+
+<div id="header-container"></div>
+<div id="toast" class="toast"></div>
+
+<div class="page-content">
+    <h1 class="page-title">系统报表管理</h1>
+
+    <div class="tabs-wrapper">
+        <div class="page-tabs">
+            <button class="page-tab active" data-tab="query">查询报表</button>
+            <button class="page-tab" data-tab="generate">生成报表</button>
+            <button class="page-tab" data-tab="operations">操作记录</button>
+            <button class="page-tab" data-tab="statistics">统计信息</button>
+        </div>
+
+        <div id="message"></div>
+
+        <div class="tab-content active" id="tab-query">
+            <div class="toolbar">
+                <div class="search-group">
+                    <div class="form-field">
+                        <label>报表类型</label>
+                        <select id="report-type">
+                            <option value="">全部</option>
+                            <option value="ACADEMIC">学术报表</option>
+                            <option value="FINANCIAL">财务报表</option>
+                            <option value="USER">用户报表</option>
+                            <option value="COURSE">课程报表</option>
+                            <option value="COMPREHENSIVE">综合报表</option>
+                        </select>
+                    </div>
+                    <div class="form-field">
+                        <label>开始日期</label>
+                        <input type="date" id="start-date">
+                    </div>
+                    <div class="form-field">
+                        <label>结束日期</label>
+                        <input type="date" id="end-date">
+                    </div>
+                    <div class="form-field">
+                        <label>状态</label>
+                        <select id="status">
+                            <option value="">全部</option>
+                            <option value="PENDING">待生成</option>
+                            <option value="GENERATING">生成中</option>
+                            <option value="COMPLETED">已完成</option>
+                            <option value="FAILED">失败</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn primary" onclick="searchReports()">查询</button>
             </div>
-            <div class="header-actions">
-                <button id="logout-btn" class="btn-logout">退出登录</button>
+
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>报表ID</th>
+                            <th>报表名称</th>
+                            <th>类型</th>
+                            <th>生成时间</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reports-tbody">
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <div class="icon">📊</div>
+                                <div>暂无报表数据</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <button id="prev-page" onclick="changePage(-1)" disabled>上一页</button>
+                    <span id="page-info">第 1 页，共 1 页</span>
+                    <button id="next-page" onclick="changePage(1)" disabled>下一页</button>
+                </div>
             </div>
         </div>
-    </header>
 
-    <main>
-        <section class="tabs-section">
-            <div class="tabs-container">
-                <button class="tab-btn active" data-tab="query">查询报表</button>
-                <button class="tab-btn" data-tab="generate">生成报表</button>
-                <button class="tab-btn" data-tab="update">更新报表</button>
-                <button class="tab-btn" data-tab="operations">操作记录</button>
-                <button class="tab-btn" data-tab="statistics">统计信息</button>
-            </div>
-
-            <div class="tab-contents">
-                <!-- 查询报表 -->
-                <div id="query" class="tab-content active">
-                    <h2>查询报表</h2>
-                    <div class="search-form">
-                        <div class="form-group">
-                            <label for="report-type">报表类型</label>
-                            <select id="report-type">
-                                <option value="all">全部</option>
-                                <option value="daily">日报</option>
-                                <option value="weekly">周报</option>
-                                <option value="monthly">月报</option>
-                                <option value="custom">自定义</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="date-range">日期范围</label>
-                            <input type="date" id="start-date"> 至 <input type="date" id="end-date">
-                        </div>
-                        <div class="form-group">
-                            <label for="status">状态</label>
-                            <select id="status">
-                                <option value="all">全部</option>
-                                <option value="pending">待生成</option>
-                                <option value="generating">生成中</option>
-                                <option value="completed">已完成</option>
-                                <option value="failed">失败</option>
-                            </select>
-                        </div>
-                        <button id="search-reports" class="btn-primary">查询</button>
+        <div class="tab-content" id="tab-generate">
+            <form id="generate-form" class="form-container" onsubmit="generateReport(event)">
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>报表名称 *</label>
+                        <input type="text" id="new-report-name" placeholder="请输入报表名称" required>
                     </div>
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>报表ID</th>
-                                    <th>报表名称</th>
-                                    <th>类型</th>
-                                    <th>创建时间</th>
-                                    <th>状态</th>
-                                    <th>操作</th>
-                                </tr>
-                            </thead>
-                            <tbody id="reports-tbody">
-                                <!-- 报表数据将在这里动态加载 -->
-                            </tbody>
-                        </table>
-                        <div class="pagination">
-                            <button id="prev-page" class="btn-secondary">上一页</button>
-                            <span id="page-info">第 1 页，共 1 页</span>
-                            <button id="next-page" class="btn-secondary">下一页</button>
-                        </div>
+                    <div class="form-field">
+                        <label>报表类型 *</label>
+                        <select id="new-report-type" required>
+                            <option value="">请选择报表类型</option>
+                            <option value="ACADEMIC">学术报表</option>
+                            <option value="FINANCIAL">财务报表</option>
+                            <option value="USER">用户报表</option>
+                            <option value="COURSE">课程报表</option>
+                            <option value="COMPREHENSIVE">综合报表</option>
+                        </select>
                     </div>
                 </div>
-
-                <!-- 生成报表 -->
-                <div id="generate" class="tab-content hidden">
-                    <h2>生成报表</h2>
-                    <form id="generate-form" class="form-container">
-                        <div class="form-group">
-                            <label for="new-report-name">报表名称</label>
-                            <input type="text" id="new-report-name" placeholder="请输入报表名称" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="new-report-type">报表类型</label>
-                            <select id="new-report-type" required>
-                                <option value="">请选择报表类型</option>
-                                <option value="daily">日报</option>
-                                <option value="weekly">周报</option>
-                                <option value="monthly">月报</option>
-                                <option value="custom">自定义</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="report-start-date">开始日期</label>
-                            <input type="date" id="report-start-date" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="report-end-date">结束日期</label>
-                            <input type="date" id="report-end-date" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="report-description">描述</label>
-                            <textarea id="report-description" placeholder="请输入报表描述"></textarea>
-                        </div>
-                        <div class="form-actions">
-                            <button type="submit" class="btn-primary">生成报表</button>
-                            <button type="reset" class="btn-secondary">重置</button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- 更新报表 -->
-                <div id="update" class="tab-content hidden">
-                    <h2>更新报表</h2>
-                    <div class="update-container">
-                        <div class="form-group">
-                            <label for="update-report-id">报表ID</label>
-                            <input type="text" id="update-report-id" placeholder="请输入报表ID">
-                        </div>
-                        <div class="form-group">
-                            <label for="update-report-name">报表名称</label>
-                            <input type="text" id="update-report-name" placeholder="请输入报表名称">
-                        </div>
-                        <div class="form-group">
-                            <label for="update-report-description">描述</label>
-                            <textarea id="update-report-description" placeholder="请输入报表描述"></textarea>
-                        </div>
-                        <div class="form-actions">
-                            <button id="update-report-btn" class="btn-primary">更新报表</button>
-                        </div>
+                <div class="form-row">
+                    <div class="form-field">
+                        <label>开始日期 *</label>
+                        <input type="date" id="report-start-date" required>
+                    </div>
+                    <div class="form-field">
+                        <label>结束日期 *</label>
+                        <input type="date" id="report-end-date" required>
                     </div>
                 </div>
-
-                <!-- 操作记录 -->
-                <div id="operations" class="tab-content hidden">
-                    <h2>操作记录</h2>
-                    <div class="table-container">
-                        <table class="data-table">
-                            <thead>
-                                <tr>
-                                    <th>操作ID</th>
-                                    <th>报表ID</th>
-                                    <th>操作类型</th>
-                                    <th>操作人</th>
-                                    <th>操作时间</th>
-                                    <th>详情</th>
-                                </tr>
-                            </thead>
-                            <tbody id="operations-tbody">
-                                <!-- 操作记录将在这里动态加载 -->
-                            </tbody>
-                        </table>
-                        <div class="pagination">
-                            <button id="ops-prev-page" class="btn-secondary">上一页</button>
-                            <span id="ops-page-info">第 1 页，共 1 页</span>
-                            <button id="ops-next-page" class="btn-secondary">下一页</button>
-                        </div>
-                    </div>
+                <div class="form-field">
+                    <label>描述</label>
+                    <textarea id="report-description" placeholder="请输入报表描述"></textarea>
                 </div>
-
-                <!-- 统计信息 -->
-                <div id="statistics" class="tab-content hidden">
-                    <h2>统计信息</h2>
-                    <div class="stats-container">
-                        <div class="stat-card">
-                            <h3>总报表数</h3>
-                            <p id="total-reports">0</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>今日生成</h3>
-                            <p id="today-generated">0</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>本周生成</h3>
-                            <p id="week-generated">0</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>本月生成</h3>
-                            <p id="month-generated">0</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>生成中</h3>
-                            <p id="generating-count">0</p>
-                        </div>
-                        <div class="stat-card">
-                            <h3>已完成</h3>
-                            <p id="completed-count">0</p>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <h3>报表生成趋势</h3>
-                        <canvas id="report-trend-chart"></canvas>
-                    </div>
+                <div class="form-actions">
+                    <button type="submit" class="btn primary">生成报表</button>
+                    <button type="reset" class="btn secondary">重置</button>
                 </div>
-            </div>
-        </section>
-    </main>
-
-    <footer>
-        <div class="footer-container">
-            <p>&copy; 2023 智慧校园系统. 保留所有权利.</p>
+            </form>
         </div>
-    </footer>
 
-    <script src="../js/common.js"></script>
-    <script src="../js/systemreport.js"></script>
+        <div class="tab-content" id="tab-operations">
+            <div class="data-table-wrapper">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>操作ID</th>
+                            <th>报表ID</th>
+                            <th>操作类型</th>
+                            <th>操作人</th>
+                            <th>操作时间</th>
+                            <th>详情</th>
+                        </tr>
+                    </thead>
+                    <tbody id="operations-tbody">
+                        <tr>
+                            <td colspan="6" class="empty-state">
+                                <div class="icon">📝</div>
+                                <div>暂无操作记录</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    <button id="ops-prev-page" onclick="changeOpsPage(-1)" disabled>上一页</button>
+                    <span id="ops-page-info">第 1 页，共 1 页</span>
+                    <button id="ops-next-page" onclick="changeOpsPage(1)" disabled>下一页</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="tab-statistics">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3>总报表数</h3>
+                    <p id="total-reports">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>今日生成</h3>
+                    <p id="today-generated">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>本周生成</h3>
+                    <p id="week-generated">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>本月生成</h3>
+                    <p id="month-generated">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>生成中</h3>
+                    <p id="generating-count">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>已完成</h3>
+                    <p id="completed-count">0</p>
+                </div>
+            </div>
+            <div class="chart-container">
+                <h3>报表生成趋势</h3>
+                <div class="chart-wrapper">
+                    <canvas id="reportTrendChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="report-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>报表详情</h2>
+            <button class="close-btn" onclick="closeReportModal()">&times;</button>
+        </div>
+        <div class="modal-body" id="report-detail-content">
+            <div class="detail-loading">加载中...</div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn secondary" onclick="closeReportModal()">关闭</button>
+            <button class="btn primary" id="download-btn" onclick="downloadCurrentReport()">下载报表</button>
+        </div>
+    </div>
+</div>
+
+<style>
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal.show {
+    display: flex;
+}
+
+.modal-content {
+    background: var(--card);
+    backdrop-filter: blur(18px);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
+.modal-header h2 {
+    margin: 0;
+    color: var(--text);
+    font-size: 18px;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    color: var(--text);
+    font-size: 24px;
+    cursor: pointer;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+
+.close-btn:hover {
+    opacity: 1;
+}
+
+.modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 20px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.detail-item {
+    margin-bottom: 16px;
+}
+
+.detail-item label {
+    display: block;
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 4px;
+}
+
+.detail-item p {
+    margin: 0;
+    color: var(--text);
+    font-size: 14px;
+}
+
+.detail-loading {
+    text-align: center;
+    padding: 40px;
+    color: rgba(255,255,255,0.4);
+}
+
+.report-data-section {
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 16px;
+}
+
+.report-data-section h4 {
+    margin: 0 0 12px 0;
+    color: var(--primary);
+    font-size: 14px;
+}
+
+.report-data-section h5 {
+    margin: 16px 0 10px 0;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.report-data-section h6 {
+    margin: 12px 0 8px 0;
+    color: rgba(255,255,255,0.7);
+    font-size: 13px;
+}
+
+.data-summary, .academic-data, .financial-data, .user-data {
+    margin-top: 16px;
+}
+
+.summary-grid, .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.stat-item, .summary-item, .dist-item {
+    background: rgba(255,255,255,0.05);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.stat-item .label, .summary-item .label, .dist-item .type, .dist-item .dept {
+    font-size: 12px;
+    color: rgba(255,255,255,0.6);
+}
+
+.stat-item .value, .summary-item .value, .dist-item .count {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--primary);
+}
+
+.course-list, .payment-list, .user-type-list, .dept-list {
+    margin-top: 16px;
+}
+
+.distribution-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 8px;
+}
+</style>
+
+<script>
+let currentPage = 0;
+let pageSize = 10;
+let currentOpsPage = 0;
+let currentReportId = null;
+
+document.addEventListener('DOMContentLoaded', function() {
+    SidebarManager.init({ currentPage: 'systemreport' });
+    initTabs();
+    loadReports();
+    loadStatistics();
+    initModalEvents();
+});
+
+function initModalEvents() {
+    document.getElementById('report-modal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeReportModal();
+        }
+    });
+    
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeReportModal();
+        }
+    });
+}
+
+function closeReportModal() {
+    document.getElementById('report-modal').classList.remove('show');
+    currentReportId = null;
+}
+
+function openReportModal() {
+    document.getElementById('report-modal').classList.add('show');
+}
+
+async function viewReport(id) {
+    currentReportId = id;
+    openReportModal();
+    
+    const contentDiv = document.getElementById('report-detail-content');
+    contentDiv.innerHTML = '<div class="detail-loading">加载中...</div>';
+    
+    try {
+        const response = await apiRequest(`/api/system-reports/${id}`);
+        
+        if (!response.ok) {
+            throw new Error('获取报表详情失败');
+        }
+        
+        const report = await response.json();
+        
+        let reportDataHtml = '';
+        
+        // 解析并展示聚合的业务数据
+        if (report.reportData) {
+            try {
+                const reportData = JSON.parse(report.reportData);
+                reportDataHtml = formatReportData(reportData, report.reportType);
+            } catch (e) {
+                console.error('解析报表数据失败:', e);
+                reportDataHtml = `<pre style="white-space: pre-wrap; word-wrap: break-word; color: var(--text); font-size: 12px;">${report.reportData}</pre>`;
+            }
+        }
+        
+        contentDiv.innerHTML = `
+            <div class="detail-item">
+                <label>报表ID</label>
+                <p>${report.id}</p>
+            </div>
+            <div class="detail-item">
+                <label>报表名称</label>
+                <p>${report.reportName || '-'}</p>
+            </div>
+            <div class="detail-item">
+                <label>报表类型</label>
+                <p>${formatReportType(report.reportType)}</p>
+            </div>
+            <div class="detail-item">
+                <label>描述</label>
+                <p>${report.description || '-'}</p>
+            </div>
+            <div class="detail-item">
+                <label>开始日期</label>
+                <p>${formatDate(report.startDate)}</p>
+            </div>
+            <div class="detail-item">
+                <label>结束日期</label>
+                <p>${formatDate(report.endDate)}</p>
+            </div>
+            <div class="detail-item">
+                <label>生成时间</label>
+                <p>${formatDate(report.generateTime)}</p>
+            </div>
+            <div class="detail-item">
+                <label>状态</label>
+                <p><span class="status-badge ${report.status.toLowerCase()}">${formatStatus(report.status)}</span></p>
+            </div>
+            <div class="detail-item">
+                <label>文件格式</label>
+                <p>${report.reportFormat || 'HTML'}</p>
+            </div>
+            ${reportDataHtml}
+        `;
+        
+        document.getElementById('download-btn').style.display = report.status === 'COMPLETED' ? 'block' : 'none';
+        
+    } catch (error) {
+        console.error('获取报表详情失败:', error);
+        contentDiv.innerHTML = `<div class="detail-loading" style="color: #ef4444;">获取报表详情失败: ${error.message}</div>`;
+    }
+}
+
+function formatReportData(reportData, reportType) {
+    let html = '<div class="report-data-section"><h4>📊 聚合业务数据</h4>';
+    
+    // 显示摘要信息
+    if (reportData.summary) {
+        html += '<div class="data-summary">';
+        html += '<h5>数据摘要</h5>';
+        html += '<div class="summary-grid">';
+        
+        if (reportData.summary.academicSummary) {
+            html += `<div class="summary-item"><span class="label">课程总数</span><span class="value">${reportData.summary.academicSummary.totalCourses}</span></div>`;
+            html += `<div class="summary-item"><span class="label">平均成绩</span><span class="value">${reportData.summary.academicSummary.averageGrade}</span></div>`;
+            html += `<div class="summary-item"><span class="label">通过率</span><span class="value">${reportData.summary.academicSummary.passRate}</span></div>`;
+        }
+        
+        if (reportData.summary.financialSummary) {
+            html += `<div class="summary-item"><span class="label">总收入</span><span class="value">¥${formatMoney(reportData.summary.financialSummary.totalRevenue)}</span></div>`;
+            html += `<div class="summary-item"><span class="label">总支出</span><span class="value">¥${formatMoney(reportData.summary.financialSummary.totalExpenses)}</span></div>`;
+        }
+        
+        html += '</div></div>';
+    }
+    
+    // 根据报表类型显示详细数据
+    if (reportType === 'ACADEMIC' && reportData.academicData) {
+        html += formatAcademicData(reportData.academicData);
+    } else if (reportType === 'FINANCIAL' && reportData.financialData) {
+        html += formatFinancialData(reportData.financialData);
+    } else if (reportType === 'USER' && reportData.userData) {
+        html += formatUserData(reportData.userData);
+    } else if (reportType === 'COURSE' && reportData.academicData) {
+        html += formatAcademicData(reportData.academicData);
+    } else if (reportType === 'COMPREHENSIVE') {
+        if (reportData.academicData) html += formatAcademicData(reportData.academicData);
+        if (reportData.financialData) html += formatFinancialData(reportData.financialData);
+        if (reportData.userData) html += formatUserData(reportData.userData);
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+function formatAcademicData(academicData) {
+    let html = '<div class="academic-data"><h5>📚 学术数据</h5>';
+    html += '<div class="stats-grid">';
+    html += `<div class="stat-item"><span class="label">课程总数</span><span class="value">${academicData.totalCourses}</span></div>`;
+    html += `<div class="stat-item"><span class="label">学生总数</span><span class="value">${academicData.totalStudents}</span></div>`;
+    html += `<div class="stat-item"><span class="label">教师总数</span><span class="value">${academicData.totalTeachers}</span></div>`;
+    html += `<div class="stat-item"><span class="label">平均成绩</span><span class="value">${academicData.averageGrade}</span></div>`;
+    html += `<div class="stat-item"><span class="label">通过率</span><span class="value">${academicData.passRate}%</span></div>`;
+    html += '</div>';
+    
+    if (academicData.courseGrades && academicData.courseGrades.length > 0) {
+        html += '<div class="course-list"><h6>课程成绩明细</h6>';
+        html += '<table class="data-table"><thead><tr><th>课程名称</th><th>平均分</th><th>学生数</th><th>及格数</th></tr></thead><tbody>';
+        academicData.courseGrades.forEach(course => {
+            html += `<tr><td>${course.courseName}</td><td>${course.averageScore.toFixed(1)}</td><td>${course.totalStudents}</td><td>${course.passCount}</td></tr>`;
+        });
+        html += '</tbody></table></div>';
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+function formatFinancialData(financialData) {
+    let html = '<div class="financial-data"><h5>💰 财务数据</h5>';
+    html += '<div class="stats-grid">';
+    html += `<div class="stat-item"><span class="label">学费总额</span><span class="value">¥${formatMoney(financialData.totalTuition)}</span></div>`;
+    html += `<div class="stat-item"><span class="label">奖学金总额</span><span class="value">¥${formatMoney(financialData.totalScholarships)}</span></div>`;
+    html += `<div class="stat-item"><span class="label">助学金总额</span><span class="value">¥${formatMoney(financialData.totalFinancialAid)}</span></div>`;
+    html += `<div class="stat-item"><span class="label">支付总额</span><span class="value">¥${formatMoney(financialData.totalPayments)}</span></div>`;
+    html += '</div>';
+    
+    if (financialData.paymentSummary && financialData.paymentSummary.length > 0) {
+        html += '<div class="payment-list"><h6>支付类型明细</h6>';
+        html += '<table class="data-table"><thead><tr><th>支付类型</th><th>总金额</th><th>交易笔数</th></tr></thead><tbody>';
+        financialData.paymentSummary.forEach(payment => {
+            html += `<tr><td>${payment.paymentType}</td><td>¥${formatMoney(payment.totalAmount)}</td><td>${payment.transactionCount}</td></tr>`;
+        });
+        html += '</tbody></table></div>';
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+function formatUserData(userData) {
+    let html = '<div class="user-data"><h5>👥 用户数据</h5>';
+    html += '<div class="stats-grid">';
+    html += `<div class="stat-item"><span class="label">用户总数</span><span class="value">${userData.totalUsers}</span></div>`;
+    html += `<div class="stat-item"><span class="label">活跃用户</span><span class="value">${userData.activeUsers}</span></div>`;
+    html += '</div>';
+    
+    if (userData.userTypeDistribution && Object.keys(userData.userTypeDistribution).length > 0) {
+        html += '<div class="user-type-list"><h6>用户类型分布</h6>';
+        html += '<div class="distribution-grid">';
+        for (const [type, count] of Object.entries(userData.userTypeDistribution)) {
+            html += `<div class="dist-item"><span class="type">${formatUserType(type)}</span><span class="count">${count}</span></div>`;
+        }
+        html += '</div></div>';
+    }
+    
+    if (userData.departmentDistribution && Object.keys(userData.departmentDistribution).length > 0) {
+        html += '<div class="dept-list"><h6>院系分布</h6>';
+        html += '<div class="distribution-grid">';
+        for (const [dept, count] of Object.entries(userData.departmentDistribution)) {
+            html += `<div class="dist-item"><span class="dept">${dept}</span><span class="count">${count}</span></div>`;
+        }
+        html += '</div></div>';
+    }
+    
+    html += '</div>';
+    return html;
+}
+
+function formatMoney(amount) {
+    return amount ? amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00';
+}
+
+function formatUserType(type) {
+    const typeMap = {
+        'STUDENT': '学生',
+        'TEACHER': '教师',
+        'ADMIN': '管理员',
+        'STAFF': '职工'
+    };
+    return typeMap[type] || type;
+}
+
+async function downloadCurrentReport() {
+    if (!currentReportId) return;
+    
+    try {
+        const response = await apiRequest(`/api/system-reports/${currentReportId}/download`);
+        
+        if (response.ok) {
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `report_${currentReportId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+            showToast('报表下载成功');
+        } else if (response.status === 404) {
+            showToast('报表文件不存在', true);
+        } else {
+            throw new Error('下载失败');
+        }
+    } catch (error) {
+        console.error('下载报表失败:', error);
+        showToast('下载报表失败: ' + error.message, true);
+    }
+}
+
+function initTabs() {
+    document.querySelectorAll('.page-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabId = this.dataset.tab;
+            
+            document.querySelectorAll('.page-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            if (tabId === 'operations') {
+                loadOperations();
+            }
+        });
+    });
+}
+
+function showMessage(message, isError = false) {
+    const msgDiv = document.getElementById('message');
+    msgDiv.textContent = message;
+    msgDiv.className = isError ? 'error' : 'success';
+    
+    setTimeout(() => {
+        msgDiv.className = '';
+    }, 3000);
+}
+
+function showToast(message) {
+    const toast = document.getElementById('toast');
+    toast.textContent = message;
+    toast.classList.add('show');
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
+
+async function loadReports() {
+    try {
+        const type = document.getElementById('report-type').value;
+        const startDate = document.getElementById('start-date').value;
+        const endDate = document.getElementById('end-date').value;
+        const status = document.getElementById('status').value;
+        
+        let url = `/api/system-reports?page=${currentPage}&size=${pageSize}`;
+        if (type) url += `&reportType=${type}`;
+        if (startDate) url += `&start=${startDate}T00:00:00`;
+        if (endDate) url += `&end=${endDate}T23:59:59`;
+        if (status) url += `&status=${status}`;
+        
+        const response = await apiRequest(url);
+        const pageData = await response.json();
+        
+        const tbody = document.getElementById('reports-tbody');
+        
+        if (!pageData.content || pageData.content.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="empty-state">
+                        <div class="icon"></div>
+                        <div>暂无报表数据</div>
+                    </td>
+                </tr>
+            `;
+        } else {
+            tbody.innerHTML = pageData.content.map(report => `
+                <tr>
+                    <td>${report.id}</td>
+                    <td>${report.reportName}</td>
+                    <td>${formatReportType(report.reportType)}</td>
+                    <td>${formatDate(report.generateTime)}</td>
+                    <td><span class="status-badge ${report.status.toLowerCase()}">${formatStatus(report.status)}</span></td>
+                    <td>
+                        <div class="table-actions">
+                            <button class="btn view" onclick="viewReport(${report.id})">查看</button>
+                            <button class="btn delete" onclick="deleteReport(${report.id})">删除</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        updatePagination(pageData, 'prev-page', 'next-page', 'page-info');
+    } catch (error) {
+        console.error('加载报表失败:', error);
+        showMessage('加载报表失败', true);
+    }
+}
+
+function searchReports() {
+    currentPage = 0;
+    loadReports();
+}
+
+function changePage(delta) {
+    currentPage += delta;
+    loadReports();
+}
+
+async function generateReport(event) {
+    event.preventDefault();
+    
+    const reportName = document.getElementById('new-report-name').value;
+    const reportType = document.getElementById('new-report-type').value;
+    const startDate = document.getElementById('report-start-date').value;
+    const endDate = document.getElementById('report-end-date').value;
+    
+    if (!reportName || !reportType || !startDate || !endDate) {
+        showMessage('请填写完整的报表信息', true);
+        return;
+    }
+    
+    try {
+        const reportData = {
+            reportName: reportName,
+            reportType: reportType,
+            startDate: startDate + 'T00:00:00',
+            endDate: endDate + 'T23:59:59',
+            description: document.getElementById('report-description').value,
+            reportFormat: 'HTML'
+        };
+        
+        showMessage('正在生成报表，整合各模块业务数据...', false);
+        
+        const response = await apiRequest('/api/system-reports/generate-with-data', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(reportData)
+        });
+        
+        if (response.ok) {
+            const report = await response.json();
+            showMessage('报表生成成功！已整合学术、用户、财务等业务模块数据');
+            document.getElementById('generate-form').reset();
+            loadReports();
+            loadStatistics();
+            
+            // 自动显示新生成的报表详情
+            setTimeout(() => {
+                viewReport(report.id);
+            }, 500);
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            showMessage('报表生成失败: ' + (errorData.message || '未知错误'), true);
+        }
+    } catch (error) {
+        console.error('生成报表失败:', error);
+        showMessage('生成报表失败: ' + error.message, true);
+    }
+}
+
+async function deleteReport(id) {
+    if (!confirm('确定要删除该报表吗？')) return;
+    
+    try {
+        const response = await apiRequest(`/api/system-reports/${id}`, { method: 'DELETE' });
+        
+        if (response.ok) {
+            showMessage('报表删除成功');
+            loadReports();
+            loadStatistics();
+        } else {
+            showMessage('报表删除失败', true);
+        }
+    } catch (error) {
+        console.error('删除报表失败:', error);
+        showMessage('删除报表失败: ' + error.message, true);
+    }
+}
+
+async function loadStatistics() {
+    try {
+        const now = new Date();
+        const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const weekStart = new Date(todayStart);
+        weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+        let allReports = [];
+        let page = 0;
+        const pageSize = 100;
+        
+        while (true) {
+            const response = await apiRequest(`/api/system-reports?page=${page}&size=${pageSize}`);
+            const pageData = await response.json();
+            
+            if (pageData.content) {
+                allReports = allReports.concat(pageData.content);
+            }
+            
+            if (pageData.last || !pageData.content || pageData.content.length === 0) {
+                break;
+            }
+            page++;
+        }
+        
+        const totalCount = allReports.length;
+        const completedCount = allReports.filter(r => r.status === 'COMPLETED').length;
+        const generatingCount = allReports.filter(r => r.status === 'GENERATING').length;
+        
+        const todayGenerated = allReports.filter(r => {
+            if (!r.createTime) return false;
+            const createDate = new Date(r.createTime);
+            return createDate >= todayStart && r.status === 'COMPLETED';
+        }).length;
+        
+        const weekGenerated = allReports.filter(r => {
+            if (!r.createTime) return false;
+            const createDate = new Date(r.createTime);
+            return createDate >= weekStart && r.status === 'COMPLETED';
+        }).length;
+        
+        const monthGenerated = allReports.filter(r => {
+            if (!r.createTime) return false;
+            const createDate = new Date(r.createTime);
+            return createDate >= monthStart && r.status === 'COMPLETED';
+        }).length;
+        
+        document.getElementById('total-reports').textContent = totalCount;
+        document.getElementById('completed-count').textContent = completedCount;
+        document.getElementById('generating-count').textContent = generatingCount;
+        document.getElementById('today-generated').textContent = todayGenerated;
+        document.getElementById('week-generated').textContent = weekGenerated;
+        document.getElementById('month-generated').textContent = monthGenerated;
+        
+        renderReportTrendChart(allReports);
+        
+    } catch (error) {
+        console.error('加载统计信息失败:', error);
+        document.getElementById('total-reports').textContent = '-';
+        document.getElementById('completed-count').textContent = '-';
+        document.getElementById('generating-count').textContent = '-';
+        document.getElementById('today-generated').textContent = '-';
+        document.getElementById('week-generated').textContent = '-';
+        document.getElementById('month-generated').textContent = '-';
+        renderEmptyChart();
+    }
+}
+
+function renderReportTrendChart(reports) {
+    const ctx = document.getElementById('reportTrendChart');
+    if (!ctx) return;
+    
+    if (window.reportChartInstance) {
+        window.reportChartInstance.destroy();
+    }
+    
+    const last7Days = [];
+    const completedData = [];
+    const generatedData = [];
+    
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+        const dayEnd = new Date(dayStart);
+        dayEnd.setDate(dayEnd.getDate() + 1);
+        
+        last7Days.push(`${date.getMonth() + 1}/${date.getDate()}`);
+        
+        const completed = reports.filter(r => {
+            if (!r.createTime) return false;
+            const createDate = new Date(r.createTime);
+            return createDate >= dayStart && createDate < dayEnd && r.status === 'COMPLETED';
+        }).length;
+        
+        const generated = reports.filter(r => {
+            if (!r.createTime) return false;
+            const createDate = new Date(r.createTime);
+            return createDate >= dayStart && createDate < dayEnd;
+        }).length;
+        
+        completedData.push(completed);
+        generatedData.push(generated);
+    }
+    
+    if (typeof Chart !== 'undefined') {
+        window.reportChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: last7Days,
+                datasets: [
+                    {
+                        label: '已完成报表',
+                        data: completedData,
+                        borderColor: '#22c55e',
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    },
+                    {
+                        label: '生成报表总数',
+                        data: generatedData,
+                        borderColor: '#f59e0b',
+                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            color: 'rgba(255, 255, 255, 0.8)',
+                            font: { size: 12 },
+                            usePointStyle: true,
+                            padding: 20
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#f59e0b',
+                        bodyColor: '#fff',
+                        borderColor: 'rgba(245, 158, 11, 0.3)',
+                        borderWidth: 1,
+                        padding: 12,
+                        displayColors: true,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y + ' 份';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.6)',
+                            font: { size: 11 }
+                        }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(255, 255, 255, 0.1)',
+                            drawBorder: false
+                        },
+                        ticks: {
+                            color: 'rgba(255, 255, 255, 0.6)',
+                            font: { size: 11 },
+                            stepSize: 1
+                        }
+                    }
+                }
+            }
+        });
+    } else {
+        renderEmptyChart();
+    }
+}
+
+function renderEmptyChart() {
+    const ctx = document.getElementById('reportTrendChart');
+    if (!ctx) return;
+    
+    ctx.style.visibility = 'hidden';
+}
+
+async function loadOperations() {
+    try {
+        const response = await apiRequest(`/api/system-reports?page=${currentOpsPage}&size=${pageSize}`);
+        const pageData = await response.json();
+        
+        const tbody = document.getElementById('operations-tbody');
+        
+        if (!pageData.content || pageData.content.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="empty-state">
+                        <div class="icon">📝</div>
+                        <div>暂无操作记录</div>
+                    </td>
+                </tr>
+            `;
+        } else {
+            tbody.innerHTML = pageData.content.map((report, index) => {
+                const operationType = getOperationType(report);
+                return `
+                    <tr>
+                        <td>${report.id}-${index}</td>
+                        <td>${report.id}</td>
+                        <td><span class="status-badge ${operationType.class}">${operationType.text}</span></td>
+                        <td>系统</td>
+                        <td>${formatDate(report.createTime)}</td>
+                        <td>
+                            <div class="table-actions">
+                                <button class="btn view" onclick="viewReport(${report.id})">查看</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        updatePagination(pageData, 'ops-prev-page', 'ops-next-page', 'ops-page-info');
+    } catch (error) {
+        console.error('加载操作记录失败:', error);
+        const tbody = document.getElementById('operations-tbody');
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="6" class="empty-state">
+                    <div class="icon">⚠️</div>
+                    <div>加载操作记录失败</div>
+                </td>
+            </tr>
+        `;
+    }
+}
+
+function getOperationType(report) {
+    const status = report.status;
+    if (status === 'COMPLETED') {
+        return { text: '生成报表', class: 'completed' };
+    } else if (status === 'GENERATING') {
+        return { text: '生成中', class: 'generating' };
+    } else if (status === 'FAILED') {
+        return { text: '生成失败', class: 'failed' };
+    } else {
+        return { text: '待生成', class: 'pending' };
+    }
+}
+
+function changeOpsPage(delta) {
+    currentOpsPage += delta;
+    loadOperations();
+}
+
+function formatReportType(type) {
+    const typeMap = {
+        'ACADEMIC': '学术报表',
+        'FINANCIAL': '财务报表',
+        'USER': '用户报表',
+        'COURSE': '课程报表',
+        'COMPREHENSIVE': '综合报表'
+    };
+    return typeMap[type] || type;
+}
+
+function formatStatus(status) {
+    const statusMap = {
+        'PENDING': '待生成',
+        'GENERATING': '生成中',
+        'COMPLETED': '已完成',
+        'FAILED': '失败'
+    };
+    return statusMap[status] || status;
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    return date.toLocaleString('zh-CN');
+}
+
+function updatePagination(pageData, prevBtnId, nextBtnId, infoId) {
+    const prevBtn = document.getElementById(prevBtnId);
+    const nextBtn = document.getElementById(nextBtnId);
+    const infoSpan = document.getElementById(infoId);
+    
+    prevBtn.disabled = pageData.first;
+    nextBtn.disabled = pageData.last;
+    infoSpan.textContent = `第 ${pageData.number + 1} 页，共 ${pageData.totalPages} 页`;
+}
+</script>
 </body>
 </html>

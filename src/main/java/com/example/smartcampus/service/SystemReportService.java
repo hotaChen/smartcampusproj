@@ -12,6 +12,9 @@ public interface SystemReportService {
     // 获取所有报表（分页）
     Page<SystemReport> getAllReports(Pageable pageable);
 
+    // 根据ID获取报表
+    SystemReport getById(Long id);
+
     // 根据报表类型获取
     List<SystemReport> getByReportType(String reportType);
 
