@@ -38,7 +38,7 @@ public class H2ServerConfig {
             ).start();
 
             System.out.println("H2 TCP 服务器启动成功!");
-            System.out.println("TCP连接: jdbc:h2:tcp://172.28.96.1:9092/" + dbFileName);
+            System.out.println("TCP连接: jdbc:h2:tcp://DESKTOP-2QVAB5J:9092/smartcampus" + dbFileName);
             System.out.println("直接连接: jdbc:h2:" + fullPath);
             System.out.println("数据库文件路径: " + fullPath + ".mv.db");
 

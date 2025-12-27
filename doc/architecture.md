@@ -59,6 +59,14 @@ src/main/java/com/example/smartcampus/
 | 存储路径 | `/data/smartcampus` (Docker 卷) |
 | 连接参数 | `DB_CLOSE_DELAY=-1;MODE=MYSQL;DATABASE_TO_LOWER=TRUE` |
 | 数据持久化 | Docker 卷 `h2-data` |
+| H2 Console | `/h2-console` (Web UI + TCP 9092端口) |
+
+### H2 数据库外部访问配置
+| 访问方式 | 地址 | 说明 |
+|---------|------|------|
+| Web Console | `http://<宿主机IP>:8081/h2-console` | 浏览器访问 |
+| JDBC TCP | `jdbc:h2:tcp://<宿主机IP>:9092/smartcampus` | 外部应用连接 |
+| JDBC 文件 | `jdbc:h2:file:/data/smartcampus` | 仅容器内访问 |
 
 ## 容器化部署
 

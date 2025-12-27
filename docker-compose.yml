@@ -8,6 +8,7 @@ services:
     container_name: smart-campus-app
     ports:
       - "8081:8081"
+      - "9092:9092"
     volumes:
       - h2-data:/data
     environment:

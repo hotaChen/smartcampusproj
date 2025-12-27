@@ -36,6 +36,12 @@
 
 ## 最近更新
 
+### 2025-12-27 - H2 数据库外部访问配置
+- 启用 H2 Web Console (`/h2-console`)，允许外部机器通过浏览器访问数据库
+- 配置 `web-allow-others: true` 允许外部 TCP 连接
+- 在 `docker-compose.yml` 中暴露 9092 端口
+- 其他机器可通过 `jdbc:h2:tcp://<宿主机IP>:9092/smartcampus` 连接数据库
+
 ### 2025-12-27 - H2 数据库持久化配置
 - 修改 `application-prod.yml`，将 H2 从内存模式改为文件存储模式
 - 修改 `docker-compose.yml`，添加数据卷挂载 `h2-data:/data`
