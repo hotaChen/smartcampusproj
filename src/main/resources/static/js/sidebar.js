@@ -479,31 +479,39 @@ const SidebarManager = {
         document.getElementById('sidebarResetNewPassword').value = '';
     },
     
-    submitResetPassword: function() {
-        if (!this.currentUser || this.currentUser.userType !== 'ADMIN') {
-            this.showToast('无权限访问');
+    submitResetPassword: async function() {
+        const username = document.getElementById('sidebarResetUsername').value.trim();
+        const newPassword = document.getElementById('sidebarResetNewPassword').value;
+        const msgEl = document.getElementById('sidebarResetPasswordMsg');
+        
+        if (!username || !newPassword) {
+            msgEl.textContent = '用户名和新密码不能为空';
+            msgEl.style.color = 'var(--danger)';
             return;
         }
         
-        const username = document.getElementById('sidebarResetUsername').value;
-        const newPwd = document.getElementById('sidebarResetNewPassword').value;
-        
-        apiRequest(`${API_ENDPOINTS.RESET_PASSWORD}?username=${username}&newPassword=${newPwd}`, {
-            method: 'POST'
-        })
-            .then(resp => resp.text())
-            .then(msg => {
-                document.getElementById('sidebarResetPasswordMsg').innerText = msg;
-                this.showToast(msg);
-                if (msg.includes('成功')) {
-                    this.closeResetPassword();
-                }
-            })
-            .catch(err => {
-                document.getElementById('sidebarResetPasswordMsg').innerText = '重置失败';
-                this.showToast('重置失败');
-                console.error(err);
+        try {
+            const url = `${API_ENDPOINTS.RESET_PASSWORD}?username=${encodeURIComponent(username)}&newPassword=${encodeURIComponent(newPassword)}`;
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
             });
+            
+            const result = await response.text();
+            
+            if (response.ok) {
+                msgEl.textContent = '密码重置成功';
+                msgEl.style.color = 'var(--success)';
+                setTimeout(() => this.closeResetPassword(), 1500);
+            } else {
+                msgEl.textContent = result || '重置失败';
+                msgEl.style.color = 'var(--danger)';
+            }
+        } catch (error) {
+            console.error('重置密码失败', error);
+            msgEl.textContent = '重置失败: ' + error.message;
+            msgEl.style.color = 'var(--danger)';
+        }
     },
     
     openRegisterUser: function() {
