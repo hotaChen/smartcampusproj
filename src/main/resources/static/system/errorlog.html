@@ -2,888 +2,1250 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>Smart Campus 错误日志管理</title>
-    <style>
-        /* 简单样式，保持与登录页风格统一 */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
-        body {
-            background-color: #f5f5f5;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            background-color: #fff;
-            padding: 30px;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
-        }
-
-        h2 {
-            text-align: center;
-            margin-bottom: 30px;
-            color: #333;
-        }
-
-        .tab-area {
-            margin-bottom: 20px;
-            border-bottom: 1px solid #eee;
-            padding-bottom: 10px;
-        }
-
-        .tab-btn {
-            padding: 8px 16px;
-            border: none;
-            background-color: #e9e9e9;
-            border-radius: 4px;
-            cursor: pointer;
-            margin-right: 10px;
-        }
-
-        .tab-btn.active {
-            background-color: #409eff;
-            color: #fff;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-        }
-
-        .form-group label {
-            width: 120px;
-            text-align: right;
-            padding-right: 10px;
-            color: #666;
-        }
-
-        .form-group input,
-        .form-group select {
-            flex: 1;
-            max-width: 300px;
-            padding: 8px 12px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            outline: none;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            border-color: #409eff;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            color: #fff;
-            background-color: #409eff;
-            margin-right: 10px;
-            margin-bottom: 10px;
-        }
-
-        .btn-danger {
-            background-color: #f56c6c;
-        }
-
-        .btn-default {
-            background-color: #e9e9e9;
-            color: #333;
-        }
-
-        .table-area {
-            margin-top: 20px;
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        th, td {
-            border: 1px solid #eee;
-            padding: 12px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #f8f8f8;
-            color: #333;
-        }
-
-        .pagination {
-            margin-top: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .stats-area {
-            margin-top: 20px;
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 20px;
-        }
-
-        .stats-card {
-            padding: 20px;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            background-color: #f8f8f8;
-        }
-
-        .stats-card h4 {
-            margin-bottom: 15px;
-            color: #333;
-        }
-
-        .stats-item {
-            margin-bottom: 8px;
-            display: flex;
-            justify-content: space-between;
-            color: #666;
-        }
-
-        .detail-area {
-            margin-top: 20px;
-            padding: 20px;
-            border: 1px solid #eee;
-            border-radius: 8px;
-            background-color: #f8f8f8;
-        }
-
-        .hidden {
-            display: none;
-        }
-    </style>
+    <title>错误日志管理</title>
+    <link rel="stylesheet" href="../css/style.css?v=egg-final">
+    <link rel="stylesheet" href="../css/page.css?v=egg-final">
+    <link rel="stylesheet" href="../css/sidebar.css?v=egg-final">
 </head>
-<body>
-<div class="container">
-    <h2>Smart Campus 错误日志管理（管理员专属）</h2>
+<body class="with-sidebar">
+<canvas id="bg"></canvas>
+<script src="../js/api.js"></script>
+<script src="../js/particles.js?v=egg-final"></script>
+<script src="../js/egg.js"></script>
+<script src="../js/sidebar.js"></script>
+<script src="../js/header.js"></script>
 
-    <!-- 标签切换 -->
-    <div class="tab-area">
-        <button class="tab-btn active" onclick="switchTab('query-tab')">日志查询</button>
-        <button class="tab-btn" onclick="switchTab('detail-tab')">日志详情</button>
-        <button class="tab-btn" onclick="switchTab('stats-tab')">错误统计</button>
-        <button class="tab-btn" onclick="switchTab('operate-tab')">日志操作</button>
-    </div>
+<div id="header-container"></div>
+<div id="toast" class="toast"></div>
 
-    <!-- 1. 日志查询标签页 -->
-    <div id="query-tab" class="tab-content">
-        <h3>错误日志分页查询</h3>
-        <div class="form-group">
-            <label for="query-module">模块名称</label>
-            <input type="text" id="query-module" placeholder="请输入模块名称（可选）">
-        </div>
-        <div class="form-group">
-            <label for="query-level">错误级别</label>
-            <select id="query-level">
-                <option value="">全部级别</option>
-                <option value="INFO">INFO</option>
-                <option value="WARN">WARN</option>
-                <option value="ERROR">ERROR</option>
-                <option value="FATAL">FATAL</option>
-            </select>
-        </div>
-        <div class="form-group">
-            <label for="query-page">页码</label>
-            <input type="number" id="query-page" value="0" min="0" placeholder="页码（从0开始）">
-        </div>
-        <div class="form-group">
-            <label for="query-size">每页条数</label>
-            <input type="number" id="query-size" value="20" min="1" placeholder="每页显示条数">
-        </div>
-        <button class="btn" onclick="queryErrorLogs()">通用条件查询</button>
-        <button class="btn" onclick="queryByModule()">按模块查询</button>
-        <button class="btn" onclick="queryByLevel()">按错误级别查询</button>
-        <button class="btn" onclick="queryByTimeRange()">按时间范围查询</button>
-        <button class="btn" onclick="getErrorLogList()">获取默认列表</button>
-
-        <!-- 日志列表表格 -->
-        <div class="table-area">
-            <table id="error-log-table">
-                <thead>
-                <tr>
-                    <th>ID</th>
-                    <th>模块</th>
-                    <th>错误级别</th>
-                    <th>错误信息</th>
-                    <th>创建时间</th>
-                    <th>操作</th>
-                </tr>
-                </thead>
-                <tbody id="error-log-tbody">
-                <!-- 数据将通过JS动态填充 -->
-                </tbody>
-            </table>
-        </div>
-
-        <!-- 分页控件 -->
-        <div class="pagination">
-            <button class="btn btn-default" onclick="changePage(-1)">上一页</button>
-            <span id="page-info">当前页码：0，总页数：0</span>
-            <button class="btn btn-default" onclick="changePage(1)">下一页</button>
-        </div>
-    </div>
-
-    <!-- 2. 日志详情标签页 -->
-    <div id="detail-tab" class="tab-content hidden">
-        <h3>错误日志详情查询</h3>
-        <div class="form-group">
-            <label for="detail-id">日志ID</label>
-            <input type="number" id="detail-id" placeholder="请输入日志ID" min="1">
-        </div>
-        <button class="btn" onclick="getErrorLogDetail()">查询详情</button>
-
-        <!-- 详情展示区域 -->
-        <div class="detail-area" id="log-detail-content" style="display: none;">
-            <div class="stats-item">
-                <span>日志ID：</span>
-                <span id="detail-log-id"></span>
-            </div>
-            <div class="stats-item">
-                <span>模块名称：</span>
-                <span id="detail-module"></span>
-            </div>
-            <div class="stats-item">
-                <span>错误级别：</span>
-                <span id="detail-level"></span>
-            </div>
-            <div class="stats-item">
-                <span>错误信息：</span>
-                <span id="detail-message"></span>
-            </div>
-            <div class="stats-item">
-                <span>错误堆栈：</span>
-                <pre id="detail-stack" style="margin-top: 10px; white-space: pre-wrap; word-break: break-all;"></pre>
-            </div>
-            <div class="stats-item">
-                <span>创建时间：</span>
-                <span id="detail-create-time"></span>
+<div class="page-content">
+    <h1 class="page-title">错误日志管理</h1>
+    
+    <div class="macos-window">
+        <div class="macos-window-header">
+            <div class="macos-window-controls">
+                <div class="macos-control macos-close"></div>
+                <div class="macos-control macos-minimize"></div>
+                <div class="macos-control macos-maximize"></div>
             </div>
         </div>
-    </div>
+        
+        <div class="macos-window-body">
+            <div class="macos-sidebar">
+                <div class="macos-nav-item active" data-tab="query-tab">
+                    <div class="macos-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
+                    <span>日志查询</span>
+                </div>
+                <div class="macos-nav-item" data-tab="detail-tab">
+                    <div class="macos-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg></div>
+                    <span>日志详情</span>
+                </div>
+                <div class="macos-nav-item" data-tab="stats-tab">
+                    <div class="macos-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+                    <span>错误统计</span>
+                </div>
+                <div class="macos-nav-item" data-tab="operate-tab">
+                    <div class="macos-nav-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></div>
+                    <span>日志操作</span>
+                </div>
+            </div>
+            
+            <div class="macos-content">
+                <div id="query-tab" class="macos-tab-content">
+                    <div class="macos-section">
+                        <h2 class="macos-section-title">查询条件</h2>
+                        <div class="macos-form-grid">
+                            <div class="macos-form-item">
+                                <label>模块名称</label>
+                                <input type="text" id="query-module" class="macos-input" placeholder="请输入模块名称">
+                            </div>
+                            <div class="macos-form-item">
+                                <label>错误级别</label>
+                                <select id="query-level" class="macos-input">
+                                    <option value="">全部级别</option>
+                                    <option value="INFO">INFO</option>
+                                    <option value="WARN">WARN</option>
+                                    <option value="ERROR">ERROR</option>
+                                    <option value="FATAL">FATAL</option>
+                                </select>
+                            </div>
+                            <div class="macos-form-item">
+                                <label>页码</label>
+                                <input type="number" id="query-page" class="macos-input" value="0" min="0">
+                            </div>
+                            <div class="macos-form-item">
+                                <label>每页条数</label>
+                                <input type="number" id="query-size" class="macos-input" value="20" min="1">
+                            </div>
+                        </div>
+                        <div class="macos-actions">
+                            <button class="macos-btn macos-btn-primary" onclick="queryErrorLogs()">通用条件查询</button>
+                            <button class="macos-btn macos-btn-secondary" onclick="queryByModule()">按模块查询</button>
+                            <button class="macos-btn macos-btn-secondary" onclick="queryByLevel()">按错误级别查询</button>
+                            <button class="macos-btn macos-btn-secondary" onclick="queryByTimeRange()">按时间范围查询</button>
+                            <button class="macos-btn macos-btn-secondary" onclick="getErrorLogList()">获取默认列表</button>
+                        </div>
+                    </div>
+                    
+                    <div class="macos-section">
+                        <h2 class="macos-section-title">查询结果</h2>
+                        <div class="macos-table-wrapper">
+                            <table id="error-log-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>模块</th>
+                                        <th>错误级别</th>
+                                        <th>错误信息</th>
+                                        <th>创建时间</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="error-log-tbody">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="macos-pagination">
+                            <button class="macos-btn macos-btn-secondary" onclick="changePage(-1)">上一页</button>
+                            <span id="page-info">当前页码：0，总页数：0</span>
+                            <button class="macos-btn macos-btn-secondary" onclick="changePage(1)">下一页</button>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- 3. 错误统计标签页 -->
-    <div id="stats-tab" class="tab-content hidden">
-        <h3>错误统计信息</h3>
-        <button class="btn" onclick="getErrorStatistics()">获取总统计</button>
-        <button class="btn" onclick="getModuleErrorStats()">获取模块统计</button>
-        <button class="btn" onclick="getLevelErrorStats()">获取级别统计</button>
-        <button class="btn" onclick="getErrorTrend()">获取错误趋势（7天）</button>
-        <div class="form-group">
-            <label for="trend-days">趋势天数</label>
-            <input type="number" id="trend-days" value="7" min="1" placeholder="查询N天内的错误趋势">
-        </div>
+                <div id="detail-tab" class="macos-tab-content hidden">
+                    <div class="macos-section">
+                        <h2 class="macos-section-title">日志详情查询</h2>
+                        <div class="macos-form-grid">
+                            <div class="macos-form-item">
+                                <label>日志ID</label>
+                                <input type="number" id="detail-id" class="macos-input" placeholder="请输入日志ID" min="1">
+                            </div>
+                        </div>
+                        <div class="macos-actions">
+                            <button class="macos-btn macos-btn-primary" onclick="getErrorLogDetail()">查询详情</button>
+                        </div>
+                    </div>
+                    
+                    <div class="macos-section" id="log-detail-content" style="display: none;">
+                        <h2 class="macos-section-title">详细信息</h2>
+                        <div class="macos-detail-grid">
+                            <div class="macos-detail-item">
+                                <label>日志ID</label>
+                                <span id="detail-log-id">-</span>
+                            </div>
+                            <div class="macos-detail-item">
+                                <label>模块名称</label>
+                                <span id="detail-module">-</span>
+                            </div>
+                            <div class="macos-detail-item">
+                                <label>错误级别</label>
+                                <span id="detail-level">-</span>
+                            </div>
+                            <div class="macos-detail-item">
+                                <label>错误类型</label>
+                                <span id="detail-error-type">-</span>
+                            </div>
+                            <div class="macos-detail-item">
+                                <label>类名</label>
+                                <span id="detail-class-name">-</span>
+                            </div>
+                            <div class="macos-detail-item">
+                                <label>方法名</label>
+                                <span id="detail-method-name">-</span>
+                            </div>
+                            <div class="macos-detail-item full-width">
+                                <label>错误信息</label>
+                                <div id="detail-message">-</div>
+                            </div>
+                            <div class="macos-detail-item full-width">
+                                <label>错误堆栈</label>
+                                <pre id="detail-stack"></pre>
+                            </div>
+                            <div class="macos-detail-item">
+                                <label>请求URL</label>
+                                <span id="detail-request-url">-</span>
+                            </div>
+                            <div class="macos-detail-item">
+                                <label>请求方法</label>
+                                <span id="detail-request-method">-</span>
+                            </div>
+                            <div class="macos-detail-item">
+                                <label>客户端IP</label>
+                                <span id="detail-client-ip">-</span>
+                            </div>
+                            <div class="macos-detail-item full-width">
+                                <label>请求参数</label>
+                                <pre id="detail-request-params"></pre>
+                            </div>
+                            <div class="macos-detail-item">
+                                <label>错误时间</label>
+                                <span id="detail-error-time">-</span>
+                            </div>
+                            <div class="macos-detail-item">
+                                <label>触发用户</label>
+                                <span id="detail-username">-</span>
+                            </div>
+                            <div class="macos-detail-item">
+                                <label>创建时间</label>
+                                <span id="detail-create-time">-</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- 统计卡片区域 -->
-        <div class="stats-area" id="stats-container">
-            <!-- 统计数据将动态填充 -->
-        </div>
-    </div>
+                <div id="stats-tab" class="macos-tab-content hidden">
+                    <div class="macos-section">
+                        <h2 class="macos-section-title">错误统计信息</h2>
+                        <div class="macos-actions">
+                            <button class="macos-btn macos-btn-primary" onclick="getErrorStatistics()">获取总统计</button>
+                            <button class="macos-btn macos-btn-secondary" onclick="getModuleErrorStats()">获取模块统计</button>
+                            <button class="macos-btn macos-btn-secondary" onclick="getLevelErrorStats()">获取级别统计</button>
+                            <button class="macos-btn macos-btn-secondary" onclick="getErrorTrend()">获取错误趋势</button>
+                        </div>
+                        <div class="macos-form-grid">
+                            <div class="macos-form-item">
+                                <label>趋势天数</label>
+                                <input type="number" id="trend-days" class="macos-input" value="7" min="1">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="macos-section">
+                        <div class="macos-stats-grid" id="stats-container">
+                        </div>
+                    </div>
+                </div>
 
-    <!-- 4. 日志操作标签页 -->
-    <div id="operate-tab" class="tab-content hidden">
-        <h3>错误日志操作</h3>
-        <div class="form-group">
-            <label for="delete-id">单条删除ID</label>
-            <input type="number" id="delete-id" placeholder="请输入要删除的日志ID" min="1">
+                <div id="operate-tab" class="macos-tab-content hidden">
+                    <div class="macos-section">
+                        <h2 class="macos-section-title">单条删除</h2>
+                        <div class="macos-form-grid">
+                            <div class="macos-form-item">
+                                <label>日志ID</label>
+                                <input type="number" id="delete-id" class="macos-input" placeholder="请输入要删除的日志ID" min="1">
+                            </div>
+                        </div>
+                        <div class="macos-actions">
+                            <button class="macos-btn macos-btn-danger" onclick="deleteErrorLog()">单条删除</button>
+                        </div>
+                    </div>
+                    
+                    <div class="macos-section">
+                        <h2 class="macos-section-title">批量删除</h2>
+                        <div class="macos-form-grid">
+                            <div class="macos-form-item full-width">
+                                <label>批量删除ID</label>
+                                <input type="text" id="batch-ids" class="macos-input" placeholder="请输入多个ID，用英文逗号分隔（如1,2,3）">
+                            </div>
+                        </div>
+                        <div class="macos-actions">
+                            <button class="macos-btn macos-btn-danger" onclick="batchDeleteErrorLogs()">批量删除</button>
+                        </div>
+                    </div>
+                    
+                    <div class="macos-section">
+                        <h2 class="macos-section-title">按时间清理</h2>
+                        <div class="macos-form-grid">
+                            <div class="macos-form-item">
+                                <label>过期时间点</label>
+                                <input type="datetime-local" id="cleanup-time" class="macos-input">
+                            </div>
+                        </div>
+                        <div class="macos-actions">
+                            <button class="macos-btn macos-btn-danger" onclick="cleanupExpiredErrorLogs()">按时间清理过期日志</button>
+                        </div>
+                    </div>
+                    
+                    <div class="macos-section">
+                        <h2 class="macos-section-title">按天数清理</h2>
+                        <div class="macos-form-grid">
+                            <div class="macos-form-item">
+                                <label>天数</label>
+                                <input type="number" id="cleanup-days" class="macos-input" value="30" min="1">
+                            </div>
+                        </div>
+                        <div class="macos-actions">
+                            <button class="macos-btn macos-btn-danger" onclick="cleanupByDays()">按天数清理日志</button>
+                            <button class="macos-btn macos-btn-danger" onclick="triggerMonthlyCleanup()">触发每月清理任务</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <button class="btn btn-danger" onclick="deleteErrorLog()">单条删除</button>
-
-        <div class="form-group" style="margin-top: 20px;">
-            <label for="batch-ids">批量删除ID</label>
-            <input type="text" id="batch-ids" placeholder="请输入多个ID，用英文逗号分隔（如1,2,3）">
-        </div>
-        <button class="btn btn-danger" onclick="batchDeleteErrorLogs()">批量删除</button>
-
-        <div class="form-group" style="margin-top: 20px;">
-            <label for="cleanup-time">清理过期日志（时间）</label>
-            <input type="datetime-local" id="cleanup-time" placeholder="选择过期时间点">
-        </div>
-        <button class="btn btn-danger" onclick="cleanupExpiredErrorLogs()">按时间清理过期日志</button>
-
-        <div class="form-group" style="margin-top: 20px;">
-            <label for="cleanup-days">按天数清理</label>
-            <input type="number" id="cleanup-days" value="30" min="1" placeholder="清理N天前的日志">
-        </div>
-        <button class="btn btn-danger" onclick="cleanupByDays()">按天数清理日志</button>
-        <button class="btn btn-danger" onclick="triggerMonthlyCleanup()">触发每月清理任务</button>
     </div>
 </div>
 
+<style>
+.macos-window {
+    background: rgba(30, 30, 30, 0.85);
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.macos-window-header {
+    background: rgba(40, 40, 40, 0.95);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.macos-window-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.macos-control {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.macos-control:hover {
+    opacity: 0.8;
+}
+
+.macos-close {
+    background: #ff5f57;
+}
+
+.macos-minimize {
+    background: #febc2e;
+}
+
+.macos-maximize {
+    background: #28c840;
+}
+
+.macos-window-body {
+    display: flex;
+    min-height: 600px;
+}
+
+.macos-sidebar {
+    width: 220px;
+    background: rgba(35, 35, 35, 0.8);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 16px 12px;
+}
+
+.macos-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text);
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s ease;
+    margin-bottom: 4px;
+}
+
+.macos-nav-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.macos-nav-item.active {
+    background: linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(245, 158, 11, 0.2));
+    color: #fde68a;
+}
+
+.macos-nav-icon {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.macos-nav-icon svg {
+    width: 100%;
+    height: 100%;
+    stroke: currentColor;
+}
+
+.macos-content {
+    flex: 1;
+    padding: 32px;
+    overflow-y: auto;
+}
+
+.macos-tab-content {
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.macos-section {
+    margin-bottom: 32px;
+}
+
+.macos-section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.macos-form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.macos-form-item {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.macos-form-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.macos-form-item label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text);
+    opacity: 0.8;
+}
+
+.macos-input {
+    height: 44px;
+    padding: 0 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.08);
+    color: var(--text);
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.macos-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.macos-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.macos-btn {
+    height: 44px;
+    padding: 0 24px;
+    border-radius: 10px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.macos-btn-primary {
+    background: linear-gradient(135deg, #fde68a, #f59e0b);
+    color: #1a1a1a;
+}
+
+.macos-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(245, 158, 11, 0.3);
+}
+
+.macos-btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--text);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.macos-btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.18);
+    transform: translateY(-2px);
+}
+
+.macos-btn-danger {
+    background: linear-gradient(135deg, #f87171, #ef4444);
+    color: #ffffff;
+}
+
+.macos-btn-danger:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3);
+}
+
+.macos-table-wrapper {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 24px;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0;
+}
+
+th, td {
+    padding: 16px 20px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+th {
+    background: rgba(245, 158, 11, 0.15);
+    font-weight: 700;
+    color: #fde68a;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+td {
+    font-size: 14px;
+    color: var(--text);
+}
+
+tbody tr:hover td {
+    background: rgba(245, 158, 11, 0.08);
+}
+
+tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.macos-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+.macos-pagination span {
+    color: var(--text);
+    font-size: 14px;
+}
+
+.macos-detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.macos-detail-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.macos-detail-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.macos-detail-item label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    opacity: 0.6;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.macos-detail-item > span,
+.macos-detail-item > div {
+    font-size: 14px;
+    color: var(--text);
+    word-break: break-word;
+}
+
+.macos-detail-item pre {
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 8px;
+    padding: 16px;
+    margin: 0;
+    color: #94a3b8;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    max-height: 300px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+.macos-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+}
+
+.macos-stats-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.macos-stats-card h4 {
+    margin: 0 0 20px 0;
+    color: #fde68a;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.macos-stats-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    font-size: 14px;
+    color: var(--text);
+}
+
+.macos-stats-item:last-child {
+    margin-bottom: 0;
+}
+
+.macos-stats-item-group {
+    margin-bottom: 16px;
+}
+
+.macos-stats-item-group:last-child {
+    margin-bottom: 0;
+}
+
+.macos-stats-group-title {
+    color: #fde68a;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    background: rgba(245, 158, 11, 0.15);
+    border-radius: 6px;
+}
+
+.macos-stats-item-group .macos-stats-item {
+    margin-bottom: 8px;
+}
+
+.hidden {
+    display: none;
+}
+
+@media (max-width: 1024px) {
+    .macos-window-body {
+        flex-direction: column;
+    }
+    
+    .macos-sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        overflow-x: auto;
+        padding: 12px;
+    }
+    
+    .macos-nav-item {
+        flex-shrink: 0;
+        margin-bottom: 0;
+        margin-right: 8px;
+    }
+    
+    .macos-content {
+        padding: 20px;
+    }
+}
+</style>
+
 <script>
-    // 全局变量：存储当前页码、总页数、当前查询条件
-    let currentPage = 0;
-    let totalPages = 0;
-    const API_BASE_URL = "/api/error-logs"; // 接口基础路径，与后端保持一致
+let currentPage = 0;
+let totalPages = 0;
+const ERROR_LOGS_API = `${API_BASE_URL}/api/error-logs`;
 
-    // 1. 标签切换功能
-    function switchTab(tabId) {
-        // 隐藏所有标签内容
-        document.querySelectorAll('.tab-content').forEach(item => {
-            item.classList.add('hidden');
+document.addEventListener('DOMContentLoaded', function() {
+    SidebarManager.init({ currentPage: 'errorlog' });
+    initMacosNav();
+    getErrorLogList();
+});
+
+function initMacosNav() {
+    document.querySelectorAll('.macos-nav-item').forEach(item => {
+        item.addEventListener('click', function() {
+            const tabId = this.dataset.tab;
+            switchTab(tabId);
         });
-        // 移除所有标签激活状态
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        // 显示目标标签，激活目标按钮
-        document.getElementById(tabId).classList.remove('hidden');
-        event.target.classList.add('active');
-    }
-
-    // 2. 获取请求头（携带token，与登录页保持一致）
-    function getRequestHeaders() {
-        const token = localStorage.getItem("token");
-        return {
-            "Content-Type": "application/json",
-            "Authorization": token ? `Bearer ${token}` : "" // 适配JWT认证
-        };
-    }
-
-    // 3. 日志查询相关方法
-    // 通用条件查询
-    function queryErrorLogs() {
-        const module = document.getElementById("query-module").value.trim();
-        const level = document.getElementById("query-level").value;
-        const page = parseInt(document.getElementById("query-page").value);
-        const size = parseInt(document.getElementById("query-size").value);
-        currentPage = page;
-
-        // 构造查询DTO
-        const queryDTO = {
-            module: module || undefined,
-            level: level || undefined,
-            page: page,
-            size: size
-        };
-
-        fetch(`${API_BASE_URL}/query`, {
-            method: "POST",
-            headers: getRequestHeaders(),
-            body: JSON.stringify(queryDTO)
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("查询失败：" + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                renderErrorLogTable(data);
-                updatePageInfo(data);
-            })
-            .catch(err => {
-                alert(err.message);
-            });
-    }
-
-    // 按模块查询
-    function queryByModule() {
-        const module = document.getElementById("query-module").value.trim();
-        if (!module) {
-            alert("请输入模块名称！");
-            return;
-        }
-        const page = parseInt(document.getElementById("query-page").value);
-        const size = parseInt(document.getElementById("query-size").value);
-        currentPage = page;
-
-        fetch(`${API_BASE_URL}/module/${module}?page=${page}&size=${size}`, {
-            method: "GET",
-            headers: getRequestHeaders()
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("按模块查询失败：" + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                renderErrorLogTable(data);
-                updatePageInfo(data);
-            })
-            .catch(err => {
-                alert(err.message);
-            });
-    }
-
-    // 按错误级别查询
-    function queryByLevel() {
-        const level = document.getElementById("query-level").value;
-        if (!level) {
-            alert("请选择错误级别！");
-            return;
-        }
-        const page = parseInt(document.getElementById("query-page").value);
-        const size = parseInt(document.getElementById("query-size").value);
-        currentPage = page;
-
-        fetch(`${API_BASE_URL}/level/${level}?page=${page}&size=${size}`, {
-            method: "GET",
-            headers: getRequestHeaders()
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("按级别查询失败：" + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                renderErrorLogTable(data);
-                updatePageInfo(data);
-            })
-            .catch(err => {
-                alert(err.message);
-            });
-    }
-
-    // 按时间范围查询
-    function queryByTimeRange() {
-        const startTime = prompt("请输入开始时间（格式：yyyy-MM-dd'T'HH:mm:ss，如2025-12-01T00:00:00）");
-        const endTime = prompt("请输入结束时间（格式：yyyy-MM-dd'T'HH:mm:ss，如2025-12-22T23:59:59）");
-        if (!startTime || !endTime) {
-            alert("开始时间和结束时间不能为空！");
-            return;
-        }
-        const page = parseInt(document.getElementById("query-page").value);
-        const size = parseInt(document.getElementById("query-size").value);
-        currentPage = page;
-
-        fetch(`${API_BASE_URL}/time-range?startTime=${startTime}&endTime=${endTime}&page=${page}&size=${size}`, {
-            method: "GET",
-            headers: getRequestHeaders()
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("按时间范围查询失败：" + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                renderErrorLogTable(data);
-                updatePageInfo(data);
-            })
-            .catch(err => {
-                alert(err.message);
-            });
-    }
-
-    // 获取默认日志列表
-    function getErrorLogList() {
-        const page = parseInt(document.getElementById("query-page").value);
-        const size = parseInt(document.getElementById("query-size").value);
-        currentPage = page;
-
-        fetch(`${API_BASE_URL}/list?page=${page}&size=${size}`, {
-            method: "GET",
-            headers: getRequestHeaders()
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("获取日志列表失败：" + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                renderErrorLogTable(data);
-                updatePageInfo(data);
-            })
-            .catch(err => {
-                alert(err.message);
-            });
-    }
-
-    // 渲染日志表格
-    function renderErrorLogTable(pageData) {
-        const tbody = document.getElementById("error-log-tbody");
-        tbody.innerHTML = ""; // 清空原有数据
-
-        if (!pageData.content || pageData.content.length === 0) {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `<td colspan="6" style="text-align: center; color: #999;">暂无错误日志数据</td>`;
-            tbody.appendChild(tr);
-            return;
-        }
-
-        // 遍历数据渲染行
-        pageData.content.forEach(log => {
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                    <td>${log.id || ""}</td>
-                    <td>${log.module || ""}</td>
-                    <td>${log.level || ""}</td>
-                    <td title="${log.message || ""}">${(log.message || "").length > 50 ? (log.message.substring(0, 50) + "...") : log.message}</td>
-                    <td>${log.createTime || ""}</td>
-                    <td>
-                        <button class="btn btn-default" style="padding: 4px 8px;" onclick="fillDetailId(${log.id})">查看详情</button>
-                        <button class="btn btn-danger" style="padding: 4px 8px;" onclick="toDeleteSingle(${log.id})">删除</button>
-                    </td>
-                `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    // 更新分页信息
-    function updatePageInfo(pageData) {
-        totalPages = pageData.totalPages || 0;
-        document.getElementById("page-info").innerText = `当前页码：${currentPage}，总页数：${totalPages}，总条数：${pageData.totalElements || 0}`;
-    }
-
-    // 切换页码
-    function changePage(type) {
-        const newPage = currentPage + type;
-        if (newPage < 0 || newPage >= totalPages) {
-            alert(type === -1 ? "已经是第一页" : "已经是最后一页");
-            return;
-        }
-        document.getElementById("query-page").value = newPage;
-        queryErrorLogs(); // 重新查询
-    }
-
-    // 4. 日志详情相关方法
-    // 填充详情ID并切换标签
-    function fillDetailId(logId) {
-        document.getElementById("detail-id").value = logId;
-        switchTab("detail-tab");
-        getErrorLogDetail(); // 自动查询详情
-    }
-
-    // 查询日志详情
-    function getErrorLogDetail() {
-        const logId = document.getElementById("detail-id").value;
-        if (!logId) {
-            alert("请输入日志ID！");
-            return;
-        }
-
-        fetch(`${API_BASE_URL}/${logId}`, {
-            method: "GET",
-            headers: getRequestHeaders()
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("获取日志详情失败：" + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                const detailContent = document.getElementById("log-detail-content");
-                detailContent.style.display = "block";
-                // 填充详情数据
-                document.getElementById("detail-log-id").innerText = data.id || "";
-                document.getElementById("detail-module").innerText = data.module || "";
-                document.getElementById("detail-level").innerText = data.level || "";
-                document.getElementById("detail-message").innerText = data.message || "";
-                document.getElementById("detail-stack").innerText = data.stackTrace || "";
-                document.getElementById("detail-create-time").innerText = data.createTime || "";
-            })
-            .catch(err => {
-                alert(err.message);
-            });
-    }
-
-    // 5. 统计相关方法
-    // 获取总统计
-    function getErrorStatistics() {
-        fetch(`${API_BASE_URL}/statistics`, {
-            method: "GET",
-            headers: getRequestHeaders()
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("获取总统计失败：" + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                renderStatisticsCard(data, "总错误统计");
-            })
-            .catch(err => {
-                alert(err.message);
-            });
-    }
-
-    // 获取模块错误统计
-    function getModuleErrorStats() {
-        fetch(`${API_BASE_URL}/statistics/module`, {
-            method: "GET",
-            headers: getRequestHeaders()
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("获取模块统计失败：" + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                renderStatisticsCard(data, "模块错误统计");
-            })
-            .catch(err => {
-                alert(err.message);
-            });
-    }
-
-    // 获取级别错误统计
-    function getLevelErrorStats() {
-        fetch(`${API_BASE_URL}/statistics/level`, {
-            method: "GET",
-            headers: getRequestHeaders()
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("获取级别统计失败：" + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                renderStatisticsCard(data, "级别错误统计");
-            })
-            .catch(err => {
-                alert(err.message);
-            });
-    }
-
-    // 获取错误趋势
-    function getErrorTrend() {
-        const days = document.getElementById("trend-days").value || 7;
-        fetch(`${API_BASE_URL}/statistics/trend?days=${days}`, {
-            method: "GET",
-            headers: getRequestHeaders()
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("获取错误趋势失败：" + response.statusText);
-                }
-                return response.json();
-            })
-            .then(data => {
-                renderStatisticsCard(data, `最近${days}天错误趋势`);
-            })
-            .catch(err => {
-                alert(err.message);
-            });
-    }
-
-    // 渲染统计卡片
-    function renderStatisticsCard(data, title) {
-        const container = document.getElementById("stats-container");
-        container.innerHTML = ""; // 清空原有数据
-
-        const card = document.createElement("div");
-        card.className = "stats-card";
-
-        let html = `<h4>${title}</h4>`;
-
-        // 遍历数据渲染统计项
-        if (typeof data === 'object' && data !== null) {
-            for (const key in data) {
-                html += `<div class="stats-item">
-                        <span>${key}：</span>
-                        <span>${data[key]}</span>
-                    </div>`;
-            }
-        } else {
-            html += `<div class="stats-item">
-                    <span>统计结果：</span>
-                    <span>${data}</span>
-                </div>`;
-        }
-
-        card.innerHTML = html;
-        container.appendChild(card);
-    }
-
-    // 6. 日志操作相关方法
-    // 单条删除
-    function deleteErrorLog() {
-        const logId = document.getElementById("delete-id").value;
-        if (!logId) {
-            alert("请输入要删除的日志ID！");
-            return;
-        }
-
-        if (!confirm(`确定要删除ID为${logId}的错误日志吗？`)) {
-            return;
-        }
-
-        fetch(`${API_BASE_URL}/${logId}`, {
-            method: "DELETE",
-            headers: getRequestHeaders()
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("删除失败：" + response.statusText);
-                }
-                return response.text();
-            })
-            .then(message => {
-                alert(message || "删除成功");
-                document.getElementById("delete-id").value = "";
-                // 刷新列表
-                getErrorLogList();
-            })
-            .catch(err => {
-                alert(err.message);
-            });
-    }
-
-    // 批量删除
-    function batchDeleteErrorLogs() {
-        const ids = document.getElementById("batch-ids").value.trim();
-        if (!ids) {
-            alert("请输入要删除的日志ID，多个ID用英文逗号分隔！");
-            return;
-        }
-
-        if (!confirm(`确定要批量删除ID为${ids}的错误日志吗？`)) {
-            return;
-        }
-
-        const idArray = ids.split(',').map(id => parseInt(id.trim())).filter(id => !isNaN(id));
-        if (idArray.length === 0) {
-            alert("输入的ID格式不正确！");
-            return;
-        }
-
-        fetch(`${API_BASE_URL}/batch`, {
-            method: "DELETE",
-            headers: getRequestHeaders(),
-            body: JSON.stringify(idArray)
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("批量删除失败：" + response.statusText);
-                }
-                return response.text();
-            })
-            .then(message => {
-                alert(message || "批量删除成功");
-                document.getElementById("batch-ids").value = "";
-                // 刷新列表
-                getErrorLogList();
-            })
-            .catch(err => {
-                alert(err.message);
-            });
-    }
-
-    // 清理过期日志（按时间）
-    function cleanupExpiredErrorLogs() {
-        const cleanupTime = document.getElementById("cleanup-time").value;
-        if (!cleanupTime) {
-            alert("请选择过期时间点！");
-            return;
-        }
-
-        if (!confirm(`确定要清理${cleanupTime}之前的所有错误日志吗？`)) {
-            return;
-        }
-
-        fetch(`${API_BASE_URL}/cleanup/expired?expiredTime=${cleanupTime}`, {
-            method: "DELETE",
-            headers: getRequestHeaders()
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("清理过期日志失败：" + response.statusText);
-                }
-                return response.text();
-            })
-            .then(message => {
-                alert(message || "清理过期日志成功");
-                document.getElementById("cleanup-time").value = "";
-                // 刷新列表
-                getErrorLogList();
-            })
-            .catch(err => {
-                alert(err.message);
-            });
-    }
-
-    // 按天数清理日志
-    function cleanupByDays() {
-        const days = document.getElementById("cleanup-days").value;
-        if (!days || days <= 0) {
-            alert("请输入有效的天数！");
-            return;
-        }
-
-        if (!confirm(`确定要清理${days}天前的所有错误日志吗？`)) {
-            return;
-        }
-
-        fetch(`${API_BASE_URL}/cleanup/days?days=${days}`, {
-            method: "DELETE",
-            headers: getRequestHeaders()
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("按天数清理日志失败：" + response.statusText);
-                }
-                return response.text();
-            })
-            .then(message => {
-                alert(message || "按天数清理日志成功");
-                document.getElementById("cleanup-days").value = "30";
-                // 刷新列表
-                getErrorLogList();
-            })
-            .catch(err => {
-                alert(err.message);
-            });
-    }
-
-    // 触发每月清理任务
-    function triggerMonthlyCleanup() {
-        if (!confirm("确定要触发每月清理任务吗？这将清理30天前的所有错误日志。")) {
-            return;
-        }
-
-        fetch(`${API_BASE_URL}/cleanup/monthly`, {
-            method: "POST",
-            headers: getRequestHeaders()
-        })
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error("触发每月清理任务失败：" + response.statusText);
-                }
-                return response.text();
-            })
-            .then(message => {
-                alert(message || "每月清理任务触发成功");
-                // 刷新列表
-                getErrorLogList();
-            })
-            .catch(err => {
-                alert(err.message);
-            });
-    }
-
-    // 辅助方法：从表格跳转到删除
-    function toDeleteSingle(logId) {
-        document.getElementById("delete-id").value = logId;
-        switchTab("operate-tab");
-    }
-
-    // 页面加载完成后，初始化加载数据
-    document.addEventListener('DOMContentLoaded', function() {
-        // 默认加载第一页日志列表
-        getErrorLogList();
     });
+}
+
+function switchTab(tabId) {
+    document.querySelectorAll('.macos-tab-content').forEach(item => {
+        item.classList.add('hidden');
+    });
+    document.querySelectorAll('.macos-nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    
+    document.getElementById(tabId).classList.remove('hidden');
+    document.querySelector(`.macos-nav-item[data-tab="${tabId}"]`).classList.add('active');
+}
+
+function getRequestHeaders() {
+    const token = localStorage.getItem("token");
+    return {
+        "Content-Type": "application/json",
+        "Authorization": token ? `Bearer ${token}` : ""
+    };
+}
+
+function queryErrorLogs() {
+    const module = document.getElementById("query-module").value.trim();
+    const level = document.getElementById("query-level").value;
+    const page = parseInt(document.getElementById("query-page").value);
+    const size = parseInt(document.getElementById("query-size").value);
+    currentPage = page;
+
+    const queryDTO = {
+        module: module || undefined,
+        level: level || undefined,
+        page: page,
+        size: size
+    };
+
+    fetch(`${ERROR_LOGS_API}/query`, {
+        method: "POST",
+        headers: getRequestHeaders(),
+        body: JSON.stringify(queryDTO)
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("查询失败：" + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            renderErrorLogTable(data);
+            updatePageInfo(data);
+        })
+        .catch(err => {
+            showToast(err.message);
+        });
+}
+
+function queryByModule() {
+    const module = document.getElementById("query-module").value.trim();
+    if (!module) {
+        showToast("请输入模块名称！");
+        return;
+    }
+    const page = parseInt(document.getElementById("query-page").value);
+    const size = parseInt(document.getElementById("query-size").value);
+    currentPage = page;
+
+    fetch(`${ERROR_LOGS_API}/module/${module}?page=${page}&size=${size}`, {
+        method: "GET",
+        headers: getRequestHeaders()
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("按模块查询失败：" + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            renderErrorLogTable(data);
+            updatePageInfo(data);
+        })
+        .catch(err => {
+            showToast(err.message);
+        });
+}
+
+function queryByLevel() {
+    const level = document.getElementById("query-level").value;
+    if (!level) {
+        showToast("请选择错误级别！");
+        return;
+    }
+    const page = parseInt(document.getElementById("query-page").value);
+    const size = parseInt(document.getElementById("query-size").value);
+    currentPage = page;
+
+    fetch(`${ERROR_LOGS_API}/level/${level}?page=${page}&size=${size}`, {
+        method: "GET",
+        headers: getRequestHeaders()
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("按级别查询失败：" + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            renderErrorLogTable(data);
+            updatePageInfo(data);
+        })
+        .catch(err => {
+            showToast(err.message);
+        });
+}
+
+function queryByTimeRange() {
+    const startTime = prompt("请输入开始时间（格式：yyyy-MM-dd'T'HH:mm:ss，如2025-12-01T00:00:00）");
+    const endTime = prompt("请输入结束时间（格式：yyyy-MM-dd'T'HH:mm:ss，如2025-12-22T23:59:59）");
+    if (!startTime || !endTime) {
+        showToast("开始时间和结束时间不能为空！");
+        return;
+    }
+    const page = parseInt(document.getElementById("query-page").value);
+    const size = parseInt(document.getElementById("query-size").value);
+    currentPage = page;
+
+    fetch(`${ERROR_LOGS_API}/time-range?startTime=${startTime}&endTime=${endTime}&page=${page}&size=${size}`, {
+        method: "GET",
+        headers: getRequestHeaders()
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("按时间范围查询失败：" + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            renderErrorLogTable(data);
+            updatePageInfo(data);
+        })
+        .catch(err => {
+            showToast(err.message);
+        });
+}
+
+function getErrorLogList() {
+    const page = parseInt(document.getElementById("query-page").value);
+    const size = parseInt(document.getElementById("query-size").value);
+    currentPage = page;
+
+    fetch(`${ERROR_LOGS_API}/list?page=${page}&size=${size}`, {
+        method: "GET",
+        headers: getRequestHeaders()
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("获取日志列表失败：" + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            renderErrorLogTable(data);
+            updatePageInfo(data);
+        })
+        .catch(err => {
+            showToast(err.message);
+        });
+}
+
+function renderErrorLogTable(pageData) {
+    const tbody = document.getElementById("error-log-tbody");
+    tbody.innerHTML = "";
+
+    if (!pageData.content || pageData.content.length === 0) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="6" style="text-align: center; color: #94a3b8; padding: 60px 20px;">暂无错误日志数据</td>`;
+        tbody.appendChild(tr);
+        return;
+    }
+
+    pageData.content.forEach(log => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+            <td>${log.id || ""}</td>
+            <td>${log.module || ""}</td>
+            <td>${log.level || ""}</td>
+            <td title="${log.errorMessage || ""}">${(log.errorMessage || "").length > 50 ? (log.errorMessage.substring(0, 50) + "...") : log.errorMessage}</td>
+            <td>${log.createTime || ""}</td>
+            <td>
+                <button class="macos-btn macos-btn-secondary" style="height: 32px; padding: 0 16px; font-size: 12px;" onclick="fillDetailId(${log.id})">查看详情</button>
+                <button class="macos-btn macos-btn-danger" style="height: 32px; padding: 0 16px; font-size: 12px;" onclick="toDeleteSingle(${log.id})">删除</button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function updatePageInfo(pageData) {
+    totalPages = pageData.totalPages || 0;
+    document.getElementById("page-info").innerText = `当前页码：${currentPage}，总页数：${totalPages}，总条数：${pageData.totalElements || 0}`;
+}
+
+function changePage(type) {
+    const newPage = currentPage + type;
+    if (newPage < 0 || newPage >= totalPages) {
+        showToast("页码超出范围");
+        return;
+    }
+    document.getElementById("query-page").value = newPage;
+    getErrorLogList();
+}
+
+function fillDetailId(logId) {
+    document.getElementById("detail-id").value = logId;
+    document.querySelectorAll('.macos-nav-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    document.querySelector('.macos-nav-item[data-tab="detail-tab"]').classList.add('active');
+    document.querySelectorAll('.macos-tab-content').forEach(item => {
+        item.classList.add('hidden');
+    });
+    document.getElementById('detail-tab').classList.remove('hidden');
+    getErrorLogDetail();
+}
+
+function getErrorLogDetail() {
+    const id = document.getElementById("detail-id").value;
+    if (!id) {
+        showToast("请输入日志ID");
+        return;
+    }
+
+    fetch(`${ERROR_LOGS_API}/${id}`, {
+        method: "GET",
+        headers: getRequestHeaders()
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("查询详情失败：" + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            document.getElementById("detail-log-id").textContent = data.id || "-";
+            document.getElementById("detail-module").textContent = data.module || "-";
+            document.getElementById("detail-level").textContent = data.level || "-";
+            document.getElementById("detail-error-type").textContent = data.errorType || "-";
+            document.getElementById("detail-class-name").textContent = data.className || "-";
+            document.getElementById("detail-method-name").textContent = data.methodName || "-";
+            document.getElementById("detail-message").textContent = data.errorMessage || "-";
+            document.getElementById("detail-stack").textContent = data.stackTrace || "";
+            document.getElementById("detail-request-url").textContent = data.requestUrl || "-";
+            document.getElementById("detail-request-method").textContent = data.requestMethod || "-";
+            document.getElementById("detail-client-ip").textContent = data.clientIp || "-";
+            document.getElementById("detail-request-params").textContent = data.requestParams || "";
+            document.getElementById("detail-error-time").textContent = data.errorTime || "-";
+            document.getElementById("detail-username").textContent = data.username || "-";
+            document.getElementById("detail-create-time").textContent = data.createTime || "-";
+            document.getElementById("log-detail-content").style.display = "block";
+        })
+        .catch(err => {
+            showToast(err.message);
+        });
+}
+
+function getErrorStatistics() {
+    fetch(`${ERROR_LOGS_API}/statistics`, {
+        method: "GET",
+        headers: getRequestHeaders()
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("获取统计失败：" + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            renderStatisticsCard(data, "总统计");
+        })
+        .catch(err => {
+            showToast(err.message);
+        });
+}
+
+function getModuleErrorStats() {
+    fetch(`${ERROR_LOGS_API}/statistics/module`, {
+        method: "GET",
+        headers: getRequestHeaders()
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("获取模块统计失败：" + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            renderStatisticsCard(data, "模块统计");
+        })
+        .catch(err => {
+            showToast(err.message);
+        });
+}
+
+function getLevelErrorStats() {
+    fetch(`${ERROR_LOGS_API}/statistics/level`, {
+        method: "GET",
+        headers: getRequestHeaders()
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("获取级别统计失败：" + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            renderStatisticsCard(data, "级别统计");
+        })
+        .catch(err => {
+            showToast(err.message);
+        });
+}
+
+function getErrorTrend() {
+    const days = document.getElementById("trend-days").value || 7;
+    fetch(`${ERROR_LOGS_API}/statistics/trend?days=${days}`, {
+        method: "GET",
+        headers: getRequestHeaders()
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("获取趋势失败：" + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            renderStatisticsCard(data, `错误趋势（${days}天）`);
+        })
+        .catch(err => {
+            showToast(err.message);
+        });
+}
+
+function renderStatisticsCard(data, title) {
+    const container = document.getElementById("stats-container");
+    let html = `<div class="macos-stats-card"><h4>${title}</h4>`;
+    
+    if (typeof data === 'object' && data !== null) {
+        for (const [key, value] of Object.entries(data)) {
+            if (typeof value === 'object' && value !== null) {
+                html += `<div class="macos-stats-item-group"><div class="macos-stats-group-title">${key}</div>`;
+                for (const [subKey, subValue] of Object.entries(value)) {
+                    html += `<div class="macos-stats-item"><span>${subKey}</span><span>${subValue}</span></div>`;
+                }
+                html += `</div>`;
+            } else {
+                html += `<div class="macos-stats-item"><span>${key}</span><span>${value}</span></div>`;
+            }
+        }
+    } else {
+        html += `<div class="macos-stats-item"><span>数据：</span><span>${JSON.stringify(data)}</span></div>`;
+    }
+    
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+function deleteErrorLog() {
+    const id = document.getElementById("delete-id").value;
+    if (!id) {
+        showToast("请输入要删除的日志ID");
+        return;
+    }
+    
+    if (!confirm("确定要删除这条日志吗？")) {
+        return;
+    }
+
+    fetch(`${ERROR_LOGS_API}/${id}`, {
+        method: "DELETE",
+        headers: getRequestHeaders()
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("删除失败：" + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            showToast("删除成功");
+            document.getElementById("delete-id").value = "";
+            getErrorLogList();
+        })
+        .catch(err => {
+            showToast(err.message);
+        });
+}
+
+function batchDeleteErrorLogs() {
+    const ids = document.getElementById("batch-ids").value.trim();
+    if (!ids) {
+        showToast("请输入要删除的日志ID");
+        return;
+    }
+    
+    if (!confirm("确定要批量删除这些日志吗？")) {
+        return;
+    }
+
+    fetch(`${ERROR_LOGS_API}/batch`, {
+        method: "DELETE",
+        headers: getRequestHeaders(),
+        body: JSON.stringify(ids.split(',').map(id => id.trim()))
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("批量删除失败：" + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            showToast("批量删除成功");
+            document.getElementById("batch-ids").value = "";
+            getErrorLogList();
+        })
+        .catch(err => {
+            showToast(err.message);
+        });
+}
+
+function cleanupExpiredErrorLogs() {
+    const time = document.getElementById("cleanup-time").value;
+    if (!time) {
+        showToast("请选择过期时间点");
+        return;
+    }
+    
+    if (!confirm("确定要清理过期日志吗？")) {
+        return;
+    }
+
+    fetch(`${ERROR_LOGS_API}/cleanup/expired?time=${time}`, {
+        method: "DELETE",
+        headers: getRequestHeaders()
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("清理失败：" + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            showToast("清理成功，共删除 " + (data.deletedCount || 0) + " 条日志");
+            getErrorLogList();
+        })
+        .catch(err => {
+            showToast(err.message);
+        });
+}
+
+function cleanupByDays() {
+    const days = document.getElementById("cleanup-days").value;
+    if (!days) {
+        showToast("请输入天数");
+        return;
+    }
+    
+    if (!confirm(`确定要清理 ${days} 天前的日志吗？`)) {
+        return;
+    }
+
+    fetch(`${ERROR_LOGS_API}/cleanup/days?days=${days}`, {
+        method: "DELETE",
+        headers: getRequestHeaders()
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("清理失败：" + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            showToast("清理成功，共删除 " + (data.deletedCount || 0) + " 条日志");
+            getErrorLogList();
+        })
+        .catch(err => {
+            showToast(err.message);
+        });
+}
+
+function triggerMonthlyCleanup() {
+    if (!confirm("确定要触发每月清理任务吗？")) {
+        return;
+    }
+
+    fetch(`${ERROR_LOGS_API}/cleanup/monthly`, {
+        method: "POST",
+        headers: getRequestHeaders()
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("触发清理任务失败：" + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            showToast("清理任务执行成功，共删除 " + (data.deletedCount || 0) + " 条日志");
+            getErrorLogList();
+        })
+        .catch(err => {
+            showToast(err.message);
+        });
+}
+
+function toDeleteSingle(logId) {
+    if (!confirm("确定要删除这条日志吗？")) {
+        return;
+    }
+
+    fetch(`${ERROR_LOGS_API}/${logId}`, {
+        method: "DELETE",
+        headers: getRequestHeaders()
+    })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error("删除失败：" + response.statusText);
+            }
+            return response.json();
+        })
+        .then(data => {
+            showToast("删除成功");
+            getErrorLogList();
+        })
+        .catch(err => {
+            showToast(err.message);
+        });
+}
 </script>
 </body>
 </html>

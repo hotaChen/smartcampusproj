@@ -195,4 +195,30 @@ public class UserController {
             return ResponseEntity.internalServerError().body(errorResponse);
         }
     }
+
+    @GetMapping("/student-number/{studentNumber}")
+    @Operation(summary = "根据学号获取用户", description = "根据学生学号获取用户信息")
+    public ResponseEntity<User> getUserByStudentNumber(@PathVariable String studentNumber) {
+        logger.info("=== UserController.getUserByStudentNumber() 被调用 ===");
+        logger.info("请求的学生学号: {}", studentNumber);
+
+        try {
+            Optional<User> userOpt = userService.getUserByStudentId(studentNumber);
+
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                logger.info("找到用户: 学号={}, 用户名={}, 真实姓名={}",
+                        studentNumber, user.getUsername(), user.getRealName());
+                user.setPassword("[PROTECTED]");
+                return ResponseEntity.ok(user);
+            } else {
+                logger.warn("未找到用户: 学号={}", studentNumber);
+                return ResponseEntity.notFound().build();
+            }
+
+        } catch (Exception e) {
+            logger.error("根据学号获取用户时发生错误: 学号={}, 错误: {}", studentNumber, e.getMessage());
+            return ResponseEntity.internalServerError().build();
+        }
+    }
 }

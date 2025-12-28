@@ -5,6 +5,7 @@ const API_ENDPOINTS = {
   // Authentication
   LOGIN: `${API_BASE_URL}/api/auth/login`,
   USER_INFO: `${API_BASE_URL}/api/auth/user-info`,
+  USER_BY_STUDENT_NUMBER: (studentNumber) => `${API_BASE_URL}/api/users/student-number/${studentNumber}`,
   CHANGE_PASSWORD: `${API_BASE_URL}/api/auth/change-password`,
   RESET_PASSWORD: `${API_BASE_URL}/api/auth/reset-password`,
   REGISTER: `${API_BASE_URL}/api/auth/register`,
@@ -140,7 +141,7 @@ function apiRequest(endpoint, options = {}) {
     ...options,
     ...defaultOptions
   }).then(response => {
-    if (response.status === 401 || response.status === 400) {
+    if (response.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('userInfo');
       redirectToLogin('登录已过期，请重新登录');
